@@ -1,1 +1,1 @@
-# Ice-s-Cosmic-Exploration-ICE-
+# Ices Cosmic Exploration (ICE)
