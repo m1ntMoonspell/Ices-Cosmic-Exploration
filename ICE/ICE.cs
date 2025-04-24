@@ -1,16 +1,16 @@
 using ECommons.Automation.NeoTaskManager;
 using ECommons.Configuration;
-using GatherChill.Scheduler;
-using GatherChill.Ui;
-using GatherChill.IPC;
-using GatherChill.Scheduler.Handlers;
+using ICE.Scheduler;
+using ICE.Ui;
+using ICE.IPC;
+using ICE.Scheduler.Handlers;
 
-namespace GatherChill;
+namespace ICE;
 
-public sealed class GatherChill : IDalamudPlugin
+public sealed class ICE : IDalamudPlugin
 {
-    public string Name => "GatherChill";
-    internal static GatherChill P = null!;
+    public string Name => "ICE";
+    internal static ICE P = null!;
     public static Config C => P.config;
     private Config config;
 
@@ -28,7 +28,7 @@ public sealed class GatherChill : IDalamudPlugin
     internal NavmeshIPC navmesh;
     internal PandoraIPC pandora;
 
-    public GatherChill(IDalamudPluginInterface pi)
+    public ICE(IDalamudPluginInterface pi)
     {
         P = this;
         ECommonsMain.Init(pi, P, ECommons.Module.DalamudReflector, ECommons.Module.ObjectFunctions);
@@ -62,13 +62,12 @@ public sealed class GatherChill : IDalamudPlugin
         {
             settingWindow.IsOpen = true;
         };
-        EzCmd.Add("/gatherchill", OnCommand, """
+        EzCmd.Add("/IceCosmic", OnCommand, """
             Open plugin interface
             """);
-        EzCmd.Add("/icegather", OnCommand);
+        EzCmd.Add("/ice", OnCommand);
         Svc.Framework.Update += Tick;
 
-        UpdateDictionaries();
     }
 
     private void Tick(object _)

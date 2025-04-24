@@ -1,6 +1,6 @@
 ﻿using ECommons.EzIpcManager;
 
-namespace GatherChill.IPC;
+namespace ICE.IPC;
 
 #nullable disable
 public class PandoraIPC

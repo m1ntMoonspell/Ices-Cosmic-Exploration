@@ -2,7 +2,7 @@
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
-namespace GatherChill.Scheduler.Handlers
+namespace ICE.Scheduler.Handlers
 {
     internal class GenericHandlers
     {

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #nullable disable
-namespace GatherChill.IPC
+namespace ICE.IPC
 {
     public class LifestreamIPC
     {

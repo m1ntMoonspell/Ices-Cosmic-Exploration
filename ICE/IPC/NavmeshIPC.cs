@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 
 #nullable disable
-namespace GatherChill.IPC;
+namespace ICE.IPC;
 
 public class NavmeshIPC
 {

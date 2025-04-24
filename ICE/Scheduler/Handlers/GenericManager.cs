@@ -5,7 +5,7 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System.Collections.Generic;
 
-namespace GatherChill.Scheduler.Handlers
+namespace ICE.Scheduler.Handlers
 {
     internal static unsafe class GenericManager
     {

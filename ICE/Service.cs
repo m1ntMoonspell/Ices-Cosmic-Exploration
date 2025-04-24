@@ -1,7 +1,7 @@
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game;
 
-namespace GatherChill
+namespace ICE
 {
     internal class Service
     {

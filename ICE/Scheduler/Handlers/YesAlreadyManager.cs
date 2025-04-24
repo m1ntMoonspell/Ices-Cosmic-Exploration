@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GatherChill.Scheduler.Handlers
+namespace ICE.Scheduler.Handlers
 {
     internal static class YesAlreadyManager
     {

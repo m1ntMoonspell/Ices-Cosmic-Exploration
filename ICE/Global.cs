@@ -17,9 +17,9 @@ global using System.Numerics;
 global using System;
 global using static ECommons.GenericHelpers;
 
-global using static GatherChill.GatherChill;
-global using static GatherChill.Utilities.Utils;
-global using static GatherChill.Utilities.Data;
+global using static ICE.ICE;
+global using static ICE.Utilities.Utils;
+global using static ICE.Utilities.Data;
 
 // tables being used acrossed the plugin
 global using Dalamud.Plugin.Services;

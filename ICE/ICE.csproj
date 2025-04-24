@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <Version>0.0.0.1</Version>
-    <Description>Gathering automation, to the max!.</Description>
+    <Description>Who said we couldn't explore the moon!.</Description>
     <PackageProjectUrl>https://github.com/goatcorp/ICE</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <IsPackable>true</IsPackable>
@@ -11,8 +11,16 @@
     <TargetFramework>net9.0-windows7.0</TargetFramework>
 	<NoWarn>CS8618; CS8625; CS8629; </NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="ICE.json" />
+  </ItemGroup>
 	
   <ItemGroup>
       <ProjectReference Include="..\ECommons\ECommons\ECommons.csproj" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Folder Include="Scheduler\Tasks\" />
   </ItemGroup>
 </Project>
