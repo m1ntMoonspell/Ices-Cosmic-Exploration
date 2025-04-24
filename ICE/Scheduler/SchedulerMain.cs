@@ -6,6 +6,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
+using ICE.Scheduler.Tasks;
 
 #nullable disable
 namespace ICE.Scheduler
@@ -36,7 +37,6 @@ namespace ICE.Scheduler
             return true;
         }
 
-
         internal static void Tick()
         {
             if (AreWeTicking)
@@ -45,7 +45,7 @@ namespace ICE.Scheduler
                 {
                     if (!P.taskManager.IsBusy)
                     {
-
+                        TaskAcceptGold.Enqueue();
                     }
                 }
             }

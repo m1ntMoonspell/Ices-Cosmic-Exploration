@@ -1,17 +1,5 @@
 ﻿using ICE.Scheduler;
-using Dalamud.Interface.Colors;
-using Dalamud.Interface.Style;
-using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility.Raii;
-using Lumina.Excel.Sheets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Lumina.Data.Parsing.Uld.UldRoot;
-using ECommons.Logging;
-using static Lumina.Data.Parsing.Uld.NodeData;
 
 namespace ICE.Ui
 {
@@ -47,7 +35,25 @@ namespace ICE.Ui
         /// </summary>
         public override void Draw()
         {
+            ImGui.Text("Automatically Turnin Leve ASAP");
 
+            using (ImRaii.Disabled(SchedulerMain.AreWeTicking))
+            {
+                if (ImGui.Button("Start"))
+                {
+                    SchedulerMain.EnablePlugin();
+                }
+            }
+
+            ImGui.SameLine();
+
+            using (ImRaii.Disabled(!SchedulerMain.AreWeTicking))
+            {
+                if (ImGui.Button("Stop"))
+                {
+                    SchedulerMain.DisablePlugin();
+                }
+            }
         }
     }
 }
