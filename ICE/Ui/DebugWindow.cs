@@ -295,6 +295,29 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Test Buttons"))
         {
+            var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
+            //  4 - Col 2  - Unknown 7
+            //  8 - Col 3  - Unknown 0
+            // 10 - Col 4  - Unknown 1
+            //  3 - Col 7  - Unknown 12
+            //  7 - Col 8  - Unknown 2
+            //  2 - Col 10 - Unknown 13
+            //  5 - Col 11 - Unknown 3
+            //  1 - Col 13 - Unknown 14
+            //  5 - Col 14 - Unknown 4
+            //  0          - Unknown 5
+            //  0          - Unknown 6
+            //  0          - Unknown 8
+            //  1          - Unknown 9 
+            //  1          - Unknown 10
+            //  1          - Unknown 11
+
+
+            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown1.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown2.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown3.ToInt()}");
+            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown4.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown5.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown6.ToInt()}");
+            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown7.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown8.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown9.ToInt()}");
+            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown10.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown11.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown12.ToInt()}");
+            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown13.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown14.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown0.ToInt()}");
             if (ImGui.Button("Find Mission"))
             {
                 TaskMissionFind.Enqueue();
@@ -314,10 +337,10 @@ internal class DebugWindow : Window
     {
         var itemSheet = Svc.Data.GetExcelSheet<Item>();
 
-        if (ImGui.BeginTable("Mission Info List", 11, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
+        if (ImGui.BeginTable("Mission Info List", 17, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
         {
             ImGui.TableSetupColumn("ID");
-            ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, 25);
             ImGui.TableSetupColumn("Job", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("2nd Job", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Rank", ImGuiTableColumnFlags.WidthFixed, 100);
@@ -327,7 +350,12 @@ internal class DebugWindow : Window
             ImGui.TableSetupColumn("Amount###SubItem1Amount", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("SubItem 2", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Amount###SubItem2Amount", ImGuiTableColumnFlags.WidthFixed, 100);
-
+            ImGui.TableSetupColumn("Exp Type 1###MissionExpType1", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Exp Amount 1###MissionExpAmount1", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Exp Type 2###MissionExpType2", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Exp Amount 2###MissionExpAmount2", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Exp Type 3###MissionExpType3", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Exp Amount 3###MissionExpAmount3", ImGuiTableColumnFlags.WidthFixed, 100);
 
             ImGui.TableHeadersRow();
 
@@ -385,6 +413,16 @@ internal class DebugWindow : Window
 
                         ImGui.TableNextColumn();
                         ImGui.Text($"{subRecipe.Value}");
+                    }
+
+                    ImGui.TableSetColumnIndex(10);
+                    foreach (var exp in entry.Value.ExperienceRewards)
+                    {
+                        ImGui.TableNextColumn();
+                        ImGui.Text($"{exp.Type}");
+
+                        ImGui.TableNextColumn();
+                        ImGui.Text($"{exp.Amount}");
                     }
                 }
 

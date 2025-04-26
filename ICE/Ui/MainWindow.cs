@@ -57,6 +57,8 @@ namespace ICE.Ui
         private static int selectedRankIndex = 0;
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
+        private static bool delayGrab = C.DelayGrab;
+
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
         /// </summary>
@@ -68,6 +70,8 @@ namespace ICE.Ui
                                 "So if you have both C & D checkmarks, it will check C first -> Check D for potentional Missions.\n" +
                                 "ALSO. It will cycle through missions until it finds one that you have selected\n" +
                                 "Still a WIP. So there will be bugs. (I have a feeling other languages might have problems)");
+
+            ImGui.Spacing();
 
             using (ImRaii.Disabled(SchedulerMain.AreWeTicking))
             {
@@ -84,6 +88,15 @@ namespace ICE.Ui
                 if (ImGui.Button("Stop"))
                 {
                     SchedulerMain.DisablePlugin();
+                }
+            }
+
+            if (ImGui.Checkbox("Add delay to grabbing mission", ref delayGrab))
+            {
+                if (delayGrab != C.DelayGrab)
+                {
+                    C.DelayGrab = delayGrab;
+                    C.Save();
                 }
             }
 

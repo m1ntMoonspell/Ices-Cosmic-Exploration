@@ -24,8 +24,7 @@ namespace ICE.Scheduler.Tasks
             P.taskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
             P.taskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             P.taskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.taskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
-
+            P.taskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission"); //
         }
 
         internal static bool? UpdateValues()
@@ -163,8 +162,9 @@ namespace ICE.Scheduler.Tasks
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
                 PluginLog.Debug("found mission was false");
-                var entry = C.EnabledMission.FirstOrDefault();
-                var rank = MissionInfoDict[entry.Id].Rank;
+                var rank = C.EnabledMission.Select(e => MissionInfoDict[e.Id].Rank)
+                                           .Where(rank => rank <= 4)
+                                           .Max();
 
                 foreach (var m in x.StellerMissions)
                 {

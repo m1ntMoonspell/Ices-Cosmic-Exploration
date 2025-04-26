@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FFXIVClientStructs.FFXIV.Client.Game.WKS;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +9,13 @@ namespace ICE.Scheduler.Tasks
 {
     internal class TaskAbandon
     {
+
     }
+
+    /*
+    internal static unsafe void updated()
+        {
+            var test = WKSManager.Instance()->CurrentMissionUnitRowId;
+        }
+    */
 }

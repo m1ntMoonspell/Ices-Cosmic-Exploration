@@ -60,6 +60,10 @@ namespace ICE.Scheduler
                             {
                                 TaskStartCrafting.Enqueue();
                             }
+                            if (C.DelayGrab)
+                            {
+                                P.taskManager.EnqueueDelay(1000);
+                            }
                         });
                     }
                 }

@@ -48,6 +48,10 @@ public static unsafe class Data
         public uint RecipeId { get; set; } = 0;
         public uint SilverRequirement { get; set; }
         public uint GoldRequirement { get; set; }
+        public uint CosmoCredit { get; set; }
+        public uint LunarCredit { get; set; }
+
+        public List<(int Type, int Amount)> ExperienceRewards { get; set; }
     }
 
     public static Dictionary<uint, MissionListInfo> MissionInfoDict = new Dictionary<uint, MissionListInfo>();
