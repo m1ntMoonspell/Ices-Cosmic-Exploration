@@ -13,6 +13,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 
@@ -136,9 +137,215 @@ public static unsafe class Utils
         return addon != null && addon->IsVisible && addon->IsReady;
     }
 
+    public static unsafe bool IsNodeVisible(string addonName, params int[] ids)
+    {
+        var ptr = Svc.GameGui.GetAddonByName(addonName, 1);
+        if (ptr == nint.Zero)
+            return false;
+
+        var addon = (AtkUnitBase*)ptr;
+        var node = GetNodeByIDChain(addon->GetRootNode(), ids);
+        return node != null && node->IsVisible();
+    }
+
+    public static unsafe string GetNodeText(string addonName, params int[] nodeNumbers)
+    {
+
+        var ptr = Svc.GameGui.GetAddonByName(addonName, 1);
+
+        var addon = (AtkUnitBase*)ptr;
+        var uld = addon->UldManager;
+
+        AtkResNode* node = null;
+        var debugString = string.Empty;
+        for (var i = 0; i < nodeNumbers.Length; i++)
+        {
+            var nodeNumber = nodeNumbers[i];
+
+            var count = uld.NodeListCount;
+
+            node = uld.NodeList[nodeNumber];
+            debugString += $"[{nodeNumber}]";
+
+            // More nodes to traverse
+            if (i < nodeNumbers.Length - 1)
+            {
+                uld = ((AtkComponentNode*)node)->Component->UldManager;
+            }
+        }
+
+        if (node->Type == NodeType.Counter)
+            return ((AtkCounterNode*)node)->NodeText.ToString();
+
+        var textNode = (AtkTextNode*)node;
+        return textNode->NodeText.GetText();
+    }
+
+    private static unsafe AtkResNode* GetNodeByIDChain(AtkResNode* node, params int[] ids)
+    {
+        if (node == null || ids.Length <= 0)
+            return null;
+
+        if (node->NodeId == ids[0])
+        {
+            if (ids.Length == 1)
+                return node;
+
+            var newList = new List<int>(ids);
+            newList.RemoveAt(0);
+
+            var childNode = node->ChildNode;
+            if (childNode != null)
+                return GetNodeByIDChain(childNode, [.. newList]);
+
+            if ((int)node->Type >= 1000)
+            {
+                var componentNode = node->GetAsAtkComponentNode();
+                var component = componentNode->Component;
+                var uldManager = component->UldManager;
+                childNode = uldManager.NodeList[0];
+                return childNode == null ? null : GetNodeByIDChain(childNode, [.. newList]);
+            }
+
+            return null;
+        }
+
+        //check siblings
+        var sibNode = node->PrevSiblingNode;
+        return sibNode != null ? GetNodeByIDChain(sibNode, ids) : null;
+    }
+
     #endregion
 
     #region LoadOnBoot
+
+    public static void DictionaryCreation()
+    {
+
+        var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
+        var MoonRecipeSheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
+        var RecipeSheet = Svc.Data.GetExcelSheet<Recipe>();
+        var ItemSheet = Svc.Data.GetExcelSheet<Item>();
+
+        foreach (var item in MoonMissionSheet)
+        {
+            uint keyId = item.RowId;
+            string LeveName = item.Unknown0.ToString();
+
+            if (LeveName == "")
+                continue;
+
+            uint JobId = item.Unknown1;
+            uint Job2 = item.Unknown2;
+
+            if (JobId == 8)
+                CRPMissions.Add(LeveName);
+            else if (JobId == 9)
+                BSMMissions.Add(LeveName);
+            else if (JobId == 10)
+                ARMMissions.Add(LeveName);
+            else if (JobId == 11)
+                GSMMissions.Add(LeveName);
+            else if (JobId == 12)
+                LTWMissions.Add(LeveName);
+            else if (JobId == 13)
+                WVRMissions.Add(LeveName);
+            else if (JobId == 14)
+                ALCMissions.Add(LeveName);
+            else if (JobId == 15)
+                CULMissions.Add(LeveName);
+
+            uint silver = item.Unknown5;
+            uint gold = item.Unknown6;
+
+            uint rank = item.Unknown17;
+            uint RecipeId = item.Unknown12;
+
+            if (!MissionInfoDict.ContainsKey(keyId))
+            {
+                MissionInfoDict[keyId] = new MissionListInfo()
+                {
+                    Name = LeveName,
+                    JobId = JobId,
+                    JobId2 = Job2,
+                    Rank = rank,
+                    RecipeId = RecipeId,
+                    SilverRequirement = silver,
+                    GoldRequirement = gold,
+                };
+            }
+        }
+
+        foreach (var item in MoonRecipeSheet)
+        {
+            // Moon Recipe Sheet -> Check to see if row 0-4 has recipies
+            // The last entry in this that isn't 0 is the main item
+            // Maybe store each recipeID as a list? And work backwards...
+            List<uint> MissionRecipies = new List<uint>();
+            Dictionary<uint, int> RequiredCrafts = new Dictionary<uint, int>();
+            RequiredCrafts.Clear();
+            uint MainRecipe = 0;
+
+            if (item.Unknown0 == 0)
+                continue;
+
+            if (!MissionRecipies.Contains(item.Unknown0) && item.Unknown0 != 0)
+            {
+                MainRecipe = item.Unknown0;
+            }
+            if (!MissionRecipies.Contains(item.Unknown1) && item.Unknown1 != 0)
+            {
+                MainRecipe = item.Unknown1;
+            }
+            if (!MissionRecipies.Contains(item.Unknown2) && item.Unknown2 != 0)
+            {
+                MainRecipe = item.Unknown2;
+            }
+            if (!MissionRecipies.Contains(item.Unknown3) && item.Unknown3 != 0)
+            {
+                MainRecipe = item.Unknown3;
+            }
+            if (!MissionRecipies.Contains(item.Unknown4) && item.Unknown4 != 0)
+            {
+                MainRecipe = item.Unknown4;
+            }
+
+            MissionRecipies.Add(MainRecipe);
+
+            if (MissionRecipies.Count != 0)
+            {
+                foreach (var entry in MissionRecipies)
+                {
+                    var recipieRow = RecipeSheet.GetRow(entry);
+
+                    var itemResult = recipieRow.ItemResult.Value.RowId;
+
+                    for (int i = 0; i < 8; i++)
+                    {
+                        uint recipieIngrediant = recipieRow.Ingredient[i].Value.RowId;
+                        int amountNeeded = recipieRow.AmountIngredient[i];
+
+                        if (recipieIngrediant == 0)
+                            break;
+
+                        if (!RequiredCrafts.ContainsKey(recipieIngrediant))
+                        {
+                            RequiredCrafts.Add(recipieIngrediant, amountNeeded);
+                        }
+                    }
+
+                    if (!MoonRecipies.ContainsKey(item.RowId))
+                    {
+                        MoonRecipies.Add(item.RowId, new MoonRecipieInfo
+                        {
+                            MainItem = itemResult,
+                            RecipieItems = RequiredCrafts
+                        });
+                    }
+                }
+            }
+        }
+    }
 
     #endregion
 

@@ -1,5 +1,6 @@
 ﻿using ICE.Scheduler;
 using Dalamud.Interface.Utility.Raii;
+using System.Collections.Generic;
 
 namespace ICE.Ui
 {
@@ -30,12 +31,43 @@ namespace ICE.Ui
 
         public void Dispose() {  }
 
+        private static List<(string Name, uint Id)> jobOptions = new()
+        {
+            ("CRP", 9),
+            ("BSM", 10),
+            ("ARM", 11),
+            ("GSM", 12),
+            ("LTW", 13),
+            ("WVR", 14),
+            ("ALC", 15),
+            ("CUL", 16),
+        };
+
+        private static List<(uint RankId, string RankName)> rankOptions = new()
+        {
+            (1, "D"),
+            (2, "C"),
+            (3, "B"),
+            (4, "A"),
+        };
+
+        private static int selectedIndex = 0; // Index of the currently selected job
+        private static uint selectedJobId = jobOptions[selectedIndex].Id;
+
+        private static int selectedRankIndex = 0;
+        private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
+
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
         /// </summary>
         public override void Draw()
         {
-            ImGui.Text("Automatically Turnin Leve ASAP");
+            ImGui.Text("Run");
+
+            ImGuiEx.HelpMarker("Please note: this will try and run based off of every rank that it can.\n" +
+                                "So if you have both C & D checkmarks, it will check C first -> Check D for potentional Missions.\n" +
+                                "ALSO. It will cycle through missions until it finds one that you have selected\n" +
+                                "Still a WIP. So there will be bugs. (I have a feeling other languages might have problems)");
 
             using (ImRaii.Disabled(SchedulerMain.AreWeTicking))
             {
@@ -53,6 +85,90 @@ namespace ICE.Ui
                 {
                     SchedulerMain.DisablePlugin();
                 }
+            }
+
+            if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedIndex].Name))
+            {
+                for (int i = 0; i < jobOptions.Count; i++)
+                {
+                    bool isSelected = (i == selectedIndex);
+                    if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                    {
+                        selectedIndex = i;
+                        selectedJobId = jobOptions[i].Id;
+                    }
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+                ImGui.EndCombo();
+            }
+
+            if (ImGui.BeginCombo("Rank", rankOptions[selectedRankIndex].RankName))
+            {
+                for (int i = 0; i < rankOptions.Count; i++)
+                {
+                    bool isSelected = (i == selectedRankIndex);
+                    if (ImGui.Selectable(rankOptions[i].RankName, isSelected))
+                    {
+                        selectedRankIndex = i;
+                        selectedRankName = rankOptions[i].RankName;
+                    }
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+                ImGui.EndCombo();
+            }
+
+            if (ImGui.BeginTable("###MissionList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+            {
+                ImGui.TableSetupColumn("###Enable");
+                ImGui.TableSetupColumn("###MissionName");
+
+                ImGui.TableNextRow();
+
+                ImGui.TableSetColumnIndex(1);
+                ImGui.Text($"Rank {selectedRankName} Missions");
+                foreach (var entry in MissionInfoDict)
+                {
+                    if (entry.Value.JobId != selectedJobId)
+                        continue;
+
+                    if (selectedRankIndex == 3)
+                    {
+                        if (!ARankIds.Contains(entry.Value.Rank))
+                            continue;
+                    }
+                    else if (entry.Value.Rank != rankOptions[selectedRankIndex].RankId)
+                        continue;
+
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0);
+                    bool temp = C.EnabledMission.Any(x => x.Id == entry.Key);
+                    if (ImGui.Checkbox($"###{entry.Value.Name} + {entry.Key}", ref temp))
+                    {
+                        if (temp)
+                        {
+                            if (!C.EnabledMission.Any(x => x.Id == entry.Key))
+                            {
+                                C.EnabledMission.Add((entry.Key, entry.Value.Name));
+                                C.Save();
+                            }
+                        }
+                        else if (!temp)
+                        {
+                            if (C.EnabledMission.Any(x => x.Id == entry.Key))
+                            {
+                                C.EnabledMission.Remove((entry.Key, entry.Value.Name));
+                                C.Save();
+                            }
+                        }
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"{entry.Value.Name}");
+                }
+
+                ImGui.EndTable();
             }
         }
     }

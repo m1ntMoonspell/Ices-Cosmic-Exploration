@@ -27,6 +27,7 @@ public sealed class ICE : IDalamudPlugin
     internal LifestreamIPC lifestream;
     internal NavmeshIPC navmesh;
     internal PandoraIPC pandora;
+    internal ArtisanIPC artisan;
 
     public ICE(IDalamudPluginInterface pi)
     {
@@ -45,6 +46,7 @@ public sealed class ICE : IDalamudPlugin
         lifestream = new();
         navmesh = new();
         pandora = new();
+        artisan = new();
 
         // all the windows
         windowSystem = new();
@@ -68,6 +70,7 @@ public sealed class ICE : IDalamudPlugin
         EzCmd.Add("/ice", OnCommand);
         Svc.Framework.Update += Tick;
 
+        DictionaryCreation();
     }
 
     private void Tick(object _)

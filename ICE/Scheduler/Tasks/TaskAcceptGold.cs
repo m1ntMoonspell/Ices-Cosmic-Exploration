@@ -14,9 +14,16 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? TurninGold()
         {
+            uint currentScore = 0;
+            uint goldScore = 0;
+
             if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var x) && x.IsAddonReady)
             {
-                if (x.GoldScore >= x.CurrentScore && PlayerNotBusy())
+                currentScore = x.CurrentScore;
+                goldScore = x.GoldScore;
+                bool scorecheck = currentScore != 0 && goldScore != 0;
+
+                if (goldScore <= currentScore && PlayerNotBusy() && scorecheck)
                 {
                     if (EzThrottler.Throttle("Turning in item"))
                     {
