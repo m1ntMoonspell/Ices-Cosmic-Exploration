@@ -87,9 +87,9 @@ namespace ICE.Scheduler.Tasks
                 x.ProvisionalMissions();
                 foreach (var m in x.StellerMissions)
                 {
-                    var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Name == m.Name);
+                    var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId);
 
-                    if (weatherMissionEntry.Name == null)
+                    if (weatherMissionEntry == default)
                         continue;
 
                     if (EzThrottler.Throttle("Selecting Weather Mission"))
@@ -103,7 +103,7 @@ namespace ICE.Scheduler.Tasks
                 }
             }
 
-            if (SchedulerMain.MissionName == string.Empty)
+            if (SchedulerMain.MissionId == 0)
             {
                 PluginLog.Debug("No mission was found under weather, continuing on");
                 return true;
@@ -115,7 +115,7 @@ namespace ICE.Scheduler.Tasks
         internal unsafe static bool? FindBasicMission()
         {
             PluginLog.Debug($"[Basic Mission Start] | Mission Name: {SchedulerMain.MissionName} | SchedulerMain.MissionId: {SchedulerMain.MissionId}");
-            if (SchedulerMain.MissionName != string.Empty)
+            if (SchedulerMain.MissionId != 0)
             {
                 PluginLog.Debug("You already have a mission found, skipping finding a basic mission");
                 return true;
@@ -126,9 +126,9 @@ namespace ICE.Scheduler.Tasks
             {
                 foreach (var m in x.StellerMissions)
                 {
-                    var basicMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Name == m.Name);
+                    var basicMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId);
 
-                    if (basicMissionEntry.Name == null)
+                    if (basicMissionEntry == default)
                         continue;
 
                     if (EzThrottler.Throttle("Selecting Basic Mission"))
@@ -142,7 +142,7 @@ namespace ICE.Scheduler.Tasks
                 }
             }
 
-            if (SchedulerMain.MissionName == string.Empty)
+            if (SchedulerMain.MissionId == 0)
             {
                 PluginLog.Debug("No mission was found under basic missions, continuing on");
                 return true;
@@ -154,7 +154,7 @@ namespace ICE.Scheduler.Tasks
         internal unsafe static bool? FindResetMission()
         {
             PluginLog.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName} | SchedulerMain.MissionId {SchedulerMain.MissionId}");
-            if (SchedulerMain.MissionName != string.Empty)
+            if (SchedulerMain.MissionId != 0)
             {
                 PluginLog.Debug("You already have a mission found, skipping finding a basic mission");
                 return true;
@@ -168,7 +168,7 @@ namespace ICE.Scheduler.Tasks
 
                 foreach (var m in x.StellerMissions)
                 {
-                    var missionEntry = MissionInfoDict.FirstOrDefault(e => e.Value.Name == m.Name);
+                    var missionEntry = MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
                     if (missionEntry.Value == null)
                         continue;
@@ -207,11 +207,9 @@ namespace ICE.Scheduler.Tasks
             }
             else if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
-                var MissionEntry = MissionInfoDict.FirstOrDefault(z => z.Value.Name == SchedulerMain.MissionName);
-
-                if (MissionEntry.Value.Name == null)
+                if (!MissionInfoDict.ContainsKey(SchedulerMain.MissionId))
                 {
-                    PluginLog.Debug("No values were found... which is odd. Stopping the process");
+                    PluginLog.Debug($"No values were found for mission id {SchedulerMain.MissionId}... which is odd. Stopping the process");
                     P.taskManager.Abort();
                 }
 
