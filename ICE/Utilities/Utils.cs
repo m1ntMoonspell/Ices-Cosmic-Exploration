@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Textures;
+using ECommons;
 using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices.Legacy;
 using ECommons.ExcelServices;
@@ -221,16 +222,19 @@ public static unsafe class Utils
 
     public static void DictionaryCreation()
     {
-
         var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
         var MoonRecipeSheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
         var RecipeSheet = Svc.Data.GetExcelSheet<Recipe>();
         var ItemSheet = Svc.Data.GetExcelSheet<Item>();
+        var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
 
         foreach (var item in MoonMissionSheet)
         {
+            List<(int Type, int Amount)> Exp = new List<(int Type, int Amount)>();
             uint keyId = item.RowId;
             string LeveName = item.Unknown0.ToString();
+            LeveName = LeveName.Replace("<nbsp>", " ");
+            LeveName = LeveName.Replace("<->", "");
 
             if (LeveName == "")
                 continue;
@@ -261,6 +265,31 @@ public static unsafe class Utils
             uint rank = item.Unknown17;
             uint RecipeId = item.Unknown12;
 
+            // Col 3 -> Cosmocredits - Unknown 0
+            // Col 4 -> Lunar Credits - Unknown 1
+            // Col 7 ->  Lv. 1 Type - Unknown 12
+            // Col 8 ->  Lv. 1 Exp - Unknown 2
+            // Col 10 -> Lv. 2 Type - Unknown 13
+            // Col 11 -> Lv. 2 Exp - Unknown 3
+            // Col 13 -> Lv. 3 Type - Unknown 14
+            // Col 14 -> Lv. 3 Exp - Unknown 4
+
+            uint Cosmo = ExpSheet.GetRow(keyId).Unknown0;
+            uint Lunar = ExpSheet.GetRow(keyId).Unknown1;
+
+            if (ExpSheet.GetRow(keyId).Unknown2 != 0)
+            {
+                Exp.Add((ExpSheet.GetRow(keyId).Unknown12, ExpSheet.GetRow(keyId).Unknown2));
+            }
+            if (ExpSheet.GetRow(keyId).Unknown3 != 0)
+            {
+                Exp.Add((ExpSheet.GetRow(keyId).Unknown13, ExpSheet.GetRow(keyId).Unknown3));
+            }
+            if (ExpSheet.GetRow(keyId).Unknown4 != 0)
+            {
+                Exp.Add((ExpSheet.GetRow(keyId).Unknown14, ExpSheet.GetRow(keyId).Unknown4));
+            }
+
             if (!MissionInfoDict.ContainsKey(keyId))
             {
                 MissionInfoDict[keyId] = new MissionListInfo()
@@ -272,6 +301,9 @@ public static unsafe class Utils
                     RecipeId = RecipeId,
                     SilverRequirement = silver,
                     GoldRequirement = gold,
+                    CosmoCredit = Cosmo,
+                    LunarCredit = Lunar,
+                    ExperienceRewards = Exp
                 };
             }
         }

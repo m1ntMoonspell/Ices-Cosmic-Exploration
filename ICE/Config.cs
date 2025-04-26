@@ -10,6 +10,8 @@ public class Config : IEzConfig
 
     public List<(uint Id, string Name)> EnabledMission = new List<(uint Id, string Name)>();
 
+    public bool DelayGrab = false;
+
     public void Save()
     {
         EzConfig.Save();

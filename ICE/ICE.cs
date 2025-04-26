@@ -115,5 +115,9 @@ public sealed class ICE : IDalamudPlugin
             settingWindow.IsOpen = true;
             return;
         }
+        else if (firstArg.ToLower() == "clear")
+        {
+            C.EnabledMission.Clear();
+        }
     }
 }

@@ -38,7 +38,9 @@ namespace ICE.Scheduler.Tasks
             {
                 uint tempScore = 0;
                 string currentScoreText = GetNodeText("WKSMissionInfomation", 27);
-                currentScoreText = currentScoreText.Replace(",", "");
+                currentScoreText = currentScoreText.Replace(",", ""); // English client comma's
+                currentScoreText = currentScoreText.Replace(" ", ""); // French client spacing
+                currentScoreText = currentScoreText.Replace(".", ""); // French client spacing
                 if (uint.TryParse(currentScoreText, out tempScore))
                 {
                     currentScore = tempScore;

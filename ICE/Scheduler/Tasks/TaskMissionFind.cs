@@ -24,8 +24,7 @@ namespace ICE.Scheduler.Tasks
             P.taskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
             P.taskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             P.taskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.taskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
-
+            P.taskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission"); //
         }
 
         internal static bool? UpdateValues()
