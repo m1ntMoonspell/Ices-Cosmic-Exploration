@@ -143,7 +143,7 @@ namespace ICE.Ui
                 ImGui.Text($"Rank {selectedRankName} Missions");
                 foreach (var entry in MissionInfoDict)
                 {
-                    if (entry.Value.JobId != selectedJobId)
+                    if (entry.Value.JobId != selectedJobId - 1)
                         continue;
 
                     if (selectedRankIndex == 3)
