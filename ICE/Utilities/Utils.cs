@@ -266,8 +266,8 @@ public static unsafe class Utils
                 MissionInfoDict[keyId] = new MissionListInfo()
                 {
                     Name = LeveName,
-                    JobId = JobId,
-                    JobId2 = Job2,
+                    JobId = JobId - 1,
+                    JobId2 = Job2 - 1,
                     Rank = rank,
                     RecipeId = RecipeId,
                     SilverRequirement = silver,
