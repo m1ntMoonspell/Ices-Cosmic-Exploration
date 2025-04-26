@@ -85,9 +85,10 @@ namespace ICE.Scheduler.Tasks
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
                 x.ProvisionalMissions();
+                var currentClassJob = GetClassJobId();
                 foreach (var m in x.StellerMissions)
                 {
-                    var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId);
+                    var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
 
                     if (weatherMissionEntry == default)
                         continue;
@@ -163,18 +164,28 @@ namespace ICE.Scheduler.Tasks
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
                 PluginLog.Debug("found mission was false");
-                var entry = C.EnabledMission.FirstOrDefault();
-                var rank = MissionInfoDict[entry.Id].Rank;
+                var currentClassJob = GetClassJobId();
+                var ranks = C.EnabledMission
+                    .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                    .Select(e => MissionInfoDict[e.Id].Rank)
+                    .ToList();
+                if (ranks.Count == 0)
+                {
+                    PluginLog.Debug("No missions selected in UI, would abandon every mission");
+                    return false;
+                }
+
+                var rankToReset = ranks.Max();
 
                 foreach (var m in x.StellerMissions)
                 {
                     var missionEntry = MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
-                    if (missionEntry.Value == null)
+                    if (missionEntry.Value == null || missionEntry.Value.JobId != currentClassJob)
                         continue;
 
-                    PluginLog.Debug($"Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank: {rank}");
-                    if (missionEntry.Value.Rank == rank)
+                    PluginLog.Debug($"Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}");
+                    if (missionEntry.Value.Rank == rankToReset || (missionEntry.Value.Rank >= 4 && rankToReset >= 4))
                     {
                         if (EzThrottler.Throttle("Selecting Abandon Mission"))
                         {
