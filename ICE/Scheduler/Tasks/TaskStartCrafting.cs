@@ -86,7 +86,7 @@ namespace ICE.Scheduler.Tasks
             {
                 PluginLog.Debug($"MissionID: {SchedulerMain.MissionId}");
                 var MainRecipe = MoonRecipies[SchedulerMain.MissionId + 1];
-                string mainItem = itemSheet.GetRow(MainRecipe.MainItem).Name.ToString();
+                string mainItem = itemSheet.GetRow(MainRecipe.MainItem).Name.ToString(); //
 
                 string subItem = "";
 

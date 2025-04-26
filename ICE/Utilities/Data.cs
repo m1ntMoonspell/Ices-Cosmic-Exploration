@@ -65,6 +65,9 @@ public static unsafe class Data
         /// </summary>
         public Dictionary<uint, int> RecipieItems = new Dictionary<uint, int>();
 
+        public Dictionary<uint, int> MainItems = new Dictionary<uint, int>();
+        public bool PreCrafts { get; set; } = false;
+
     }
 
     public static Dictionary<uint, MoonRecipieInfo> MoonRecipies = new();
