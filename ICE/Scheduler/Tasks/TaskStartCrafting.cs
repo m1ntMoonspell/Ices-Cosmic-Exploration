@@ -39,6 +39,8 @@ namespace ICE.Scheduler.Tasks
 
             if (P.artisan.GetEnduranceStatus() == false)
             {
+                P.artisan.SetEnduranceStatus(false);
+
                 if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                 {
                     if (EzThrottler.Throttle("Opening Steller Missions"))
