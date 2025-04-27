@@ -78,6 +78,7 @@ namespace ICE.Scheduler.Tasks
                                 PluginInfo($"Found an item that needs to be crafted: {itemId}");
                                 int craftAmount = pre.Value - currentAmount;
                                 P.Artisan.CraftItem(pre.Key, craftAmount);
+                                P.TaskManager.EnqueueDelay(1500);
                             }
                             break; // <-- Important: break out after starting a pre-craft to avoid multiple crafts at once
                         }
@@ -101,6 +102,7 @@ namespace ICE.Scheduler.Tasks
                                 int craftamount = main.Value - currentAmount;
                                 PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {main.Key} | {craftamount}");
                                 P.Artisan.CraftItem(main.Key, main.Value);
+                                P.TaskManager.EnqueueDelay(1500);
                                 allCrafted = false;
                                 break;
                             }
