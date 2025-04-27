@@ -8,8 +8,8 @@ namespace ICE.Scheduler.Tasks
     {
         public static void Enqueue()
         {
-            P.taskManager.Enqueue(() => CloseMissionWindow(), "Closing Mission Window");
-            P.taskManager.Enqueue(() => OpenMissionWindow(), "Opening Mission Window");
+            P.TaskManager.Enqueue(() => CloseMissionWindow(), "Closing Mission Window");
+            P.TaskManager.Enqueue(() => OpenMissionWindow(), "Opening Mission Window");
         }
 
         internal unsafe static bool? CloseMissionWindow()

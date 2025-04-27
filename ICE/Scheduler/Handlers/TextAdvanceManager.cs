@@ -1,9 +1,5 @@
 ﻿using ECommons.EzSharedDataManager;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ICE.Scheduler.Handlers
 {
@@ -35,7 +31,7 @@ namespace ICE.Scheduler.Handlers
         {
             if (EzSharedData.TryGet<HashSet<string>>("TextAdvance.StopRequests", out var data))
             {
-                data.Add(P.Name);
+                data.Add(Name);
             }
         }
 
@@ -43,7 +39,7 @@ namespace ICE.Scheduler.Handlers
         {
             if (EzSharedData.TryGet<HashSet<string>>("TextAdvance.StopRequests", out var data))
             {
-                data.Remove(P.Name);
+                data.Remove(Name);
             }
         }
     }

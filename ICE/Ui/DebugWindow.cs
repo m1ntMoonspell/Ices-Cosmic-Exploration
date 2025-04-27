@@ -297,7 +297,7 @@ internal class DebugWindow : Window
         if (ImGui.TreeNode("Test Buttons"))
         {
             ImGui.Text($"Current Mission: {CurrentLunarMission}");
-            ImGui.Text($"Artisan Endurance: {P.artisan.GetEnduranceStatus()}");
+            ImGui.Text($"Artisan Endurance: {P.Artisan.GetEnduranceStatus()}");
 
             var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
             //  4 - Col 2  - Unknown 7
@@ -324,11 +324,11 @@ internal class DebugWindow : Window
             }
             if (ImGui.Button("Clear Task"))
             {
-                P.taskManager.Abort();
+                P.TaskManager.Abort();
             }
             if (ImGui.Button("Artisan Craft"))
             {
-                P.artisan.CraftItem(36176, 1);
+                P.Artisan.CraftItem(36176, 1);
             }
 
             ImGui.TreePop();

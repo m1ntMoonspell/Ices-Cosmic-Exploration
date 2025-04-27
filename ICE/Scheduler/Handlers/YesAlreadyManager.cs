@@ -35,7 +35,7 @@ namespace ICE.Scheduler.Handlers
         {
             if (EzSharedData.TryGet<HashSet<string>>("YesAlready.StopRequests", out var data))
             {
-                data.Add(P.Name);
+                data.Add(Name);
             }
         }
 
@@ -43,7 +43,7 @@ namespace ICE.Scheduler.Handlers
         {
             if (EzSharedData.TryGet<HashSet<string>>("YesAlready.StopRequests", out var data))
             {
-                data.Remove(P.Name);
+                data.Remove(Name);
             }
         }
     }

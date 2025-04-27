@@ -5,15 +5,17 @@ using ICE.Ui;
 using ICE.IPC;
 using ICE.Scheduler.Handlers;
 using Lumina;
+using ECommons.Schedulers;
 
 namespace ICE;
 
 public sealed class ICE : IDalamudPlugin
 {
-    public string Name => "ICE";
+    public static string Name => "ICE";
+    public static Config C => P.Config;
+
     internal static ICE P = null!;
-    public static Config C => P.config;
-    private Config config;
+    private Config Config;
 
     // Window's that I use, base window to the settings... need these to actually show shit 
     internal WindowSystem windowSystem;
@@ -22,32 +24,28 @@ public sealed class ICE : IDalamudPlugin
     internal DebugWindow debugWindow;
 
     // Taskmanager from Ecommons
-    internal TaskManager taskManager;
+    internal TaskManager TaskManager;
 
     // Internal IPC's that I use for... well plugins. 
-    internal LifestreamIPC lifestream;
-    internal NavmeshIPC navmesh;
-    internal PandoraIPC pandora;
-    internal ArtisanIPC artisan;
+    internal LifestreamIPC Lifestream;
+    internal NavmeshIPC Navmesh;
+    internal PandoraIPC Pandora;
+    internal ArtisanIPC Artisan;
 
     public ICE(IDalamudPluginInterface pi)
     {
         P = this;
-        ECommonsMain.Init(pi, P, ECommons.Module.DalamudReflector, ECommons.Module.ObjectFunctions);
-        new ECommons.Schedulers.TickScheduler(Load);
-    }
+        ECommonsMain.Init(pi, P, Module.DalamudReflector, ECommons.Module.ObjectFunctions);
 
-    public void Load()
-    {
         EzConfig.Migrate<Config>();
-        config = EzConfig.Init<Config>();
+        Config = EzConfig.Init<Config>();
 
         //IPC's that are used
-        taskManager = new();
-        lifestream = new();
-        navmesh = new();
-        pandora = new();
-        artisan = new();
+        TaskManager = new();
+        Lifestream = new();
+        Navmesh = new();
+        Pandora = new();
+        Artisan = new();
 
         // all the windows
         windowSystem = new();
@@ -55,7 +53,13 @@ public sealed class ICE : IDalamudPlugin
         settingWindow = new();
         debugWindow = new();
 
-        taskManager = new(new(abortOnTimeout: true, timeLimitMS: 20000, showDebug: true));
+        EzCmd.Add("/IceCosmic", OnCommand, """
+            Open plugin interface
+            """);
+        EzCmd.Add("/ice", OnCommand);
+        Svc.Framework.Update += Tick;
+
+        TaskManager = new(new(abortOnTimeout: true, timeLimitMS: 20000, showDebug: true));
         Svc.PluginInterface.UiBuilder.Draw += windowSystem.Draw;
         Svc.PluginInterface.UiBuilder.OpenMainUi += () =>
         {
@@ -65,12 +69,6 @@ public sealed class ICE : IDalamudPlugin
         {
             settingWindow.IsOpen = true;
         };
-        EzCmd.Add("/IceCosmic", OnCommand, """
-            Open plugin interface
-            """);
-        EzCmd.Add("/ice", OnCommand);
-        Svc.Framework.Update += Tick;
-
         DictionaryCreation();
     }
 
@@ -89,9 +87,9 @@ public sealed class ICE : IDalamudPlugin
     {
         Safe(() => Svc.Framework.Update -= Tick);
         Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
-        ECommonsMain.Dispose();
         Safe(TextAdvancedManager.UnlockTA);
         Safe(YesAlreadyManager.Unlock);
+        ECommonsMain.Dispose();
     }
 
     private void OnCommand(string command, string args)

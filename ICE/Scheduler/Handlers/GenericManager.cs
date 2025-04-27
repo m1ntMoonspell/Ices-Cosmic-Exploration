@@ -51,8 +51,8 @@ namespace ICE.Scheduler.Handlers
             {
                 //by Taurenkey https://github.com/PunishXIV/PandorasBox/blob/24a4352f5b01751767c7ca7f1d4b48369be98711/PandorasBox/Features/UI/AutoSelectTurnin.cs
 
-                var featureEnabled = (P.pandora.GetFeatureEnabled("Auto-select Turn-ins") ?? false);
-                var configEnabled = (P.pandora.GetConfigEnabled("Auto-select Turn-ins", "AutoSelect") ?? false);
+                var featureEnabled = (P.Pandora.GetFeatureEnabled("Auto-select Turn-ins") ?? false);
+                var configEnabled = (P.Pandora.GetConfigEnabled("Auto-select Turn-ins", "AutoSelect") ?? false);
 
                 var isenabled = featureEnabled && configEnabled;
 
@@ -62,7 +62,7 @@ namespace ICE.Scheduler.Handlers
                     {
                         if (EzThrottler.Throttle("Enabling AutoSelect", 1000))
                         {
-                            P.pandora.PauseFeature("Auto-select Turn-ins", 1100);
+                            P.Pandora.PauseFeature("Auto-select Turn-ins", 1100);
                         }
                     }
 

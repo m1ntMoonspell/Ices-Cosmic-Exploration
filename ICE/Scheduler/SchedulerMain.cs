@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using ICE.Scheduler.Tasks;
 
-#nullable disable
 namespace ICE.Scheduler
 {
     internal static unsafe class SchedulerMain
@@ -29,8 +28,8 @@ namespace ICE.Scheduler
         {
             EnableTicking = false;
 
-            P.navmesh.Stop();
-            P.taskManager.Abort();
+            // P.Navmesh.Stop(); not sure why we have this?
+            P.TaskManager.Abort();
 
             NavDestination = Vector3.Zero;
 
@@ -47,25 +46,23 @@ namespace ICE.Scheduler
             {
                 if (GenericThrottle)
                 {
-                    if (!P.taskManager.IsBusy)
+                    if (P.TaskManager.Tasks.Count == 0)
                     {
+                        Svc.Log.Debug("Current mission: {0}", CurrentLunarMission);
                         if (CurrentLunarMission == 0)
                         {
+                            DictionaryCreation();
                             TaskRefresh.Enqueue();
                             TaskMissionFind.Enqueue();
                             if (C.DelayGrab)
                             {
-                                P.taskManager.EnqueueDelay(1000);
+                                P.TaskManager.EnqueueDelay(1000);
                             }
                         }
                         else
                         {
-                            P.taskManager.Enqueue(() => PluginLog.Information($"Current have the mission: {CurrentLunarMission}, starting the crafting process"));
+                            P.TaskManager.Enqueue(() => PluginLog.Information($"Current have the mission: {CurrentLunarMission}, starting the crafting process"));
                             TaskStartCrafting.Enqueue();
-                            if (C.DelayGrab)
-                            {
-                                P.taskManager.EnqueueDelay(1000);
-                            }
                         }
                     }
                 }
