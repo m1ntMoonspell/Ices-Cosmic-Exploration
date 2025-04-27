@@ -144,10 +144,9 @@ namespace ICE.Ui
 
                 ImGui.TableSetColumnIndex(1);
                 ImGui.Text($"Rank {selectedRankName} Missions");
-                foreach (var entry in MissionInfoDict.OrderBy(x => x.Value.Name))
                 ImGui.TableNextColumn();
                 ImGui.Text("Rewards");
-                foreach (var entry in MissionInfoDict)
+                foreach (var entry in MissionInfoDict.OrderBy(x => x.Value.Name))
                 {
                     if (entry.Value.JobId != selectedJobId - 1)
                         continue;
