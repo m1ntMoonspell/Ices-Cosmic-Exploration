@@ -84,7 +84,11 @@ namespace ICE.Scheduler.Handlers
                     }
                 }
             }
-
+            else
+            {
+                // Clear slots when not ticking to prevent unbounded growth
+                SlotsFilled.Clear();
+            }
         }
     }
 }

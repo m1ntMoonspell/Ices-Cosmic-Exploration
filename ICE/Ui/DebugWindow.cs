@@ -29,7 +29,9 @@ internal class DebugWindow : Window
         P.windowSystem.AddWindow(this);
     }
 
-    public void Dispose() { }
+    public void Dispose() { 
+        P.windowSystem.RemoveWindow(this);
+    }
 
     // variables that hold the "ref"s for ImGui
 
