@@ -19,6 +19,7 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
+using static Dalamud.Game.Text.SeStringHandling.Payloads.ItemPayload;
 
 namespace ICE.Utilities;
 
@@ -274,8 +275,13 @@ public static unsafe class Utils
                     var item1Amount = toDoRow.Unknown6;
                     var item1Id = MoonItemInfo.GetRow(toDoRow.Unknown3).Unknown0;
                     var item1Name = ItemSheet.GetRow(item1Id).Name.ToString();
-
-                    var item1RecipeRow = RecipeSheet.FirstOrDefault(e => e.ItemResult.RowId == item1Id);
+                    var item1RecipeRow = RecipeSheet.Where(e => e.ItemResult.RowId == item1Id)
+                                                    .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 || 
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 || 
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 || 
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 || 
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
+                                                    .First();
                     PluginDebug($"Recipe Row ID: {item1RecipeRow.RowId} | for item: {item1Id}");
                     for (var i = 0; i <= 5; i++)
                     {
@@ -312,7 +318,13 @@ public static unsafe class Utils
 
                         if (subitem != 0)
                         {
-                            var subitemRecipe = RecipeSheet.FirstOrDefault(x => x.ItemResult.RowId == subitem);
+                            var subitemRecipe = RecipeSheet.Where(e => e.ItemResult.RowId == item2Id)
+                                                    .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
+                                                    .First();
                             if (subitemRecipe.RowId != 0)
                             {
                                 var subItemAmount = item2RecipeRow.AmountIngredient[i].ToInt();
@@ -331,7 +343,13 @@ public static unsafe class Utils
                     var item3Id = MoonItemInfo.GetRow(toDoRow.Unknown5).Unknown0;
                     var item3Name = ItemSheet.GetRow(item3Id).Name.ToString();
 
-                    var item3RecipeRow = RecipeSheet.FirstOrDefault(e => e.ItemResult.RowId == item3Id);
+                    var item3RecipeRow = RecipeSheet.Where(e => e.ItemResult.RowId == item3Id)
+                                                    .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
+                                                    .First();
                     PluginDebug($"Recipe Row ID: {item3RecipeRow.RowId} | for item: {item3Id}");
                     for (var i = 0; i <= 5; i++)
                     {
