@@ -29,7 +29,9 @@ namespace ICE.Ui
             AllowPinning = false;
         }
 
-        public void Dispose() {  }
+        public void Dispose() { 
+            P.windowSystem.RemoveWindow(this);
+        }
 
         private static List<(string Name, uint Id)> jobOptions = new()
         {

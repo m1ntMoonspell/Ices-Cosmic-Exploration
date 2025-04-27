@@ -1,5 +1,6 @@
 using ECommons.Automation.NeoTaskManager;
 using ECommons.Configuration;
+using ECommons.EzIpcManager;
 using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;
@@ -89,6 +90,16 @@ public sealed class ICE : IDalamudPlugin
     {
         Safe(() => Svc.Framework.Update -= Tick);
         Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
+        
+        // Cleanup IPC objects
+        Safe(() => { lifestream = null; });
+        Safe(() => { navmesh = null; });
+        Safe(() => { pandora = null; });
+        Safe(() => { artisan = null; });
+        
+        // Shutdown taskManager
+        Safe(() => taskManager?.Abort());
+        
         ECommonsMain.Dispose();
         Safe(TextAdvancedManager.UnlockTA);
         Safe(YesAlreadyManager.Unlock);
