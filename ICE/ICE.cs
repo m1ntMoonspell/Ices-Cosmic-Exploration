@@ -1,5 +1,6 @@
 using ECommons.Automation.NeoTaskManager;
 using ECommons.Configuration;
+using ECommons.EzIpcManager;
 using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;

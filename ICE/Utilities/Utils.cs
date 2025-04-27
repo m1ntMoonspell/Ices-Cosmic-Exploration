@@ -426,4 +426,15 @@ public static unsafe class Utils
 
     #endregion
 
+    #region Cosmic Exploration Display
+
+    public static Dictionary<int, String> ExpDictionary = new Dictionary<int, String>
+    {
+        { 1, "I" },
+        { 2, "II" },
+        { 3, "III" },
+        { 4, "IV" }
+    };
+
+    #endregion
 }

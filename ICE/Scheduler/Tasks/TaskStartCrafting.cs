@@ -17,7 +17,7 @@ namespace ICE.Scheduler.Tasks
     {
         public static void Enqueue()
         {
-            if (P.Artisan.IsBusy() || (Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.Crafting] || Svc.Condition[ConditionFlag.MeldingMateria]))
+            if (P.Artisan.IsBusy())
             {
                 Svc.Log.Debug("Artisan is busy or we stuck in crafting animations, returning...");
                 P.TaskManager.EnqueueDelay(1500);
@@ -41,7 +41,7 @@ namespace ICE.Scheduler.Tasks
 
             var itemSheet = Svc.Data.GetExcelSheet<Item>();
 
-            if (P.Artisan.GetEnduranceStatus() == false)
+            if (!P.Artisan.IsBusy())
             {
                 if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                 {
