@@ -16,17 +16,22 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
-            P.taskManager.Enqueue(() => UpdateValues());
-            P.taskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
-            P.taskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
-            P.taskManager.EnqueueDelay(100);
-            P.taskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
-            P.taskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
-            P.taskManager.EnqueueDelay(100);
-            P.taskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
-            P.taskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
-            P.taskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.taskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission"); //
+            P.TaskManager.Enqueue(() => UpdateValues());
+            P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
+            P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
+            P.TaskManager.EnqueueDelay(200);
+            P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
+            P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
+            P.TaskManager.EnqueueDelay(200);
+            P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
+            P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
+            P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
+            P.TaskManager.EnqueueDelay(1500);
+
+            if (CurrentLunarMission > 0 && P.TaskManager.Tasks.Count == 0)
+            {
+                P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
+            }
         }
 
         internal static bool? UpdateValues()
@@ -225,7 +230,7 @@ namespace ICE.Scheduler.Tasks
                 if (!MissionInfoDict.ContainsKey(MissionId))
                 {
                     PluginLog.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
-                    P.taskManager.Abort();
+                    P.TaskManager.Abort();
                 }
 
                 if (EzThrottler.Throttle("Firing off to initiate quest"))

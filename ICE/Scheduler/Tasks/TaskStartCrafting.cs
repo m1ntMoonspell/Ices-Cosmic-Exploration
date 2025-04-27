@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
+using ECommons.GameHelpers;
 using ECommons.Logging;
 using ECommons.Reflection;
 using ECommons.Throttlers;
@@ -16,31 +17,32 @@ namespace ICE.Scheduler.Tasks
     {
         public static void Enqueue()
         {
-            if (P.artisan.GetEnduranceStatus() == true)
+            if (P.Artisan.IsBusy())
             {
-                SetArtisanEndur(false);
+                Svc.Log.Debug("Artisan is busy or we stuck in crafting animations, returning...");
+                P.TaskManager.EnqueueDelay(1500);
+                return;
             }
-            P.taskManager.Enqueue(() => SetArtisanEndur(false), "Setting Artisan Endurance to false");
-            P.taskManager.Enqueue(() => StartCrafting(), "Starting Crafting Process", DConfig);
-            P.taskManager.Enqueue(() => CurrentLunarMission == 0);
+
+            Svc.Log.Debug("Artisan is not busy...");
+            P.TaskManager.Enqueue(() => P.Artisan.SetEnduranceStatus(false), "Ensuring endurance is off");
+            P.TaskManager.Enqueue(StartCrafting, "Starting Crafting Process", DConfig);
+            P.TaskManager.EnqueueDelay(1500);
         }
 
-        internal unsafe static void SetArtisanEndur(bool enable)
+        internal unsafe static void SetArtisanEndurance(bool enable)
         {
-            P.artisan.SetEnduranceStatus(enable);
+            P.Artisan.SetEnduranceStatus(enable);
         }
 
-        internal static bool? StartCrafting()
+        internal static void StartCrafting()
         {
-            uint currentScore = 0;
-            uint goldScore = 0;
+            var (currentScore, goldScore) = GetCurrentScores();
 
             var itemSheet = Svc.Data.GetExcelSheet<Item>();
 
-            if (P.artisan.GetEnduranceStatus() == false)
+            if (!P.Artisan.IsBusy())
             {
-                P.artisan.SetEnduranceStatus(false);
-
                 if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                 {
                     if (EzThrottler.Throttle("Opening Steller Missions"))
@@ -75,7 +77,8 @@ namespace ICE.Scheduler.Tasks
                             {
                                 PluginInfo($"Found an item that needs to be crafted: {itemId}");
                                 int craftAmount = pre.Value - currentAmount;
-                                P.artisan.CraftItem(pre.Key, craftAmount);
+                                P.Artisan.CraftItem(pre.Key, craftAmount);
+                                P.TaskManager.EnqueueDelay(1500);
                             }
                             break; // <-- Important: break out after starting a pre-craft to avoid multiple crafts at once
                         }
@@ -89,16 +92,17 @@ namespace ICE.Scheduler.Tasks
                     {
                         var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
                         var currentAmount = GetItemCount((int)itemId);
-                        
+
                         PluginDebug($"[Main Item(s)] ItemId: {itemId} | Current Amount {currentAmount} | Amount Wanted: {main.Value} | RecipeId: {main.Key}");
 
-                        if (currentAmount < main.Value)
+                        if (currentAmount < main.Value || (currentScore < goldScore && Svc.Condition[ConditionFlag.PreparingToCraft])) // if not hit gold and there is still some items (aka its still in preparing to craft animation) we want to send it anyway
                         {
                             if (EzThrottler.Throttle("Starting Main Craft", 4000))
                             {
                                 int craftamount = main.Value - currentAmount;
                                 PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {main.Key} | {craftamount}");
-                                P.artisan.CraftItem(main.Key, main.Value);
+                                P.Artisan.CraftItem(main.Key, main.Value);
+                                P.TaskManager.EnqueueDelay(1500);
                                 allCrafted = false;
                                 break;
                             }
@@ -110,21 +114,7 @@ namespace ICE.Scheduler.Tasks
 
                 if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady && allCrafted)
                 {
-                    uint tempScore = 0;
-                    string currentScoreText = GetNodeText("WKSMissionInfomation", 27);
-                    currentScoreText = currentScoreText.Replace(",", ""); // English client comma's
-                    currentScoreText = currentScoreText.Replace(" ", ""); // French client spacing
-                    currentScoreText = currentScoreText.Replace(".", ""); // French client spacing
-                    if (uint.TryParse(currentScoreText, out tempScore))
-                    {
-                        currentScore = tempScore;
-                    }
-                    else
-                    {
-                        currentScore = 0;
-                    }
-
-                    goldScore = MissionInfoDict[CurrentLunarMission].GoldRequirement;
+                    (currentScore, goldScore) = GetCurrentScores();
 
                     if (currentScore != 0)
                     {
@@ -134,14 +124,34 @@ namespace ICE.Scheduler.Tasks
                             if (EzThrottler.Throttle("Turning in item"))
                             {
                                 z.Report();
-                                return true;
                             }
                         }
                     }
                 }
             }
+        }
 
-            return false;
+        internal static (uint currentScore, uint goldScore) GetCurrentScores()
+        {
+            if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
+            {
+                var goldScore = MissionInfoDict[CurrentLunarMission].GoldRequirement;
+
+                string currentScoreText = GetNodeText("WKSMissionInfomation", 27);
+                currentScoreText = currentScoreText.Replace(",", ""); // English client comma's
+                currentScoreText = currentScoreText.Replace(" ", ""); // French client spacing
+                currentScoreText = currentScoreText.Replace(".", ""); // French client spacing
+                if (uint.TryParse(currentScoreText, out uint tempScore))
+                {
+                    return (tempScore, goldScore);
+                }
+                else
+                {
+                    return (0, goldScore);
+                }
+            }
+
+            return (0, 0);
         }
     }
 }

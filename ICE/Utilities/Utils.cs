@@ -226,6 +226,7 @@ public static unsafe class Utils
 
     public static unsafe void DictionaryCreation()
     {
+        MoonRecipies = [];
         Svc.Data.GameData.Options.PanicOnSheetChecksumMismatch = false;
 
         var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();

@@ -12,6 +12,7 @@ namespace ICE.IPC
         public const string Name = "Artisan";
         public ArtisanIPC() => EzIPC.Init(this, Name, SafeWrapper.AnyException);
 
+        [EzIPC] public Func<bool> IsBusy;
         [EzIPC] public Func<bool> GetEnduranceStatus;
         [EzIPC] public Action<bool> SetEnduranceStatus;
         [EzIPC] public Func<bool> IsListRunning;
