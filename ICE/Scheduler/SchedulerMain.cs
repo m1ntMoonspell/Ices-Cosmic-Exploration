@@ -38,7 +38,6 @@ namespace ICE.Scheduler
         }
 
         internal static string MissionName = string.Empty;
-        internal static uint MissionId = 0;
         internal static bool inMission = false;
         internal static bool Abandon = false;
 
@@ -50,21 +49,24 @@ namespace ICE.Scheduler
                 {
                     if (!P.taskManager.IsBusy)
                     {
-                        Abandon = false;
-
-                        TaskRefresh.Enqueue();
-                        TaskMissionFind.Enqueue();
-                        P.taskManager.Enqueue(() =>
+                        if (CurrentLunarMission == 0)
                         {
-                            if (!Abandon)
-                            {
-                                TaskStartCrafting.Enqueue();
-                            }
+                            TaskRefresh.Enqueue();
+                            TaskMissionFind.Enqueue();
                             if (C.DelayGrab)
                             {
                                 P.taskManager.EnqueueDelay(1000);
                             }
-                        });
+                        }
+                        else
+                        {
+                            P.taskManager.Enqueue(() => PluginLog.Information($"Current have the mission: {CurrentLunarMission}, starting the crafting process"));
+                            TaskStartCrafting.Enqueue();
+                            if (C.DelayGrab)
+                            {
+                                P.taskManager.EnqueueDelay(1000);
+                            }
+                        }
                     }
                 }
             }

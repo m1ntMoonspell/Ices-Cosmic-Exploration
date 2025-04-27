@@ -4,6 +4,7 @@ using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;
 using ICE.Scheduler.Handlers;
+using Lumina;
 
 namespace ICE;
 
