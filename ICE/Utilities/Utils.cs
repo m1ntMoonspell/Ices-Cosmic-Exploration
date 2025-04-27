@@ -239,8 +239,12 @@ public static unsafe class Utils
             if (LeveName == "")
                 continue;
 
-            uint JobId = item.Unknown1;
-            uint Job2 = item.Unknown2;
+            int JobId = item.Unknown1 - 1;
+            int Job2 = item.Unknown2;
+            if (item.Unknown2 != 0)
+            {
+                Job2 = Job2 - 1;
+            }
 
             if (JobId == 8)
                 CRPMissions.Add(LeveName);
@@ -295,8 +299,8 @@ public static unsafe class Utils
                 MissionInfoDict[keyId] = new MissionListInfo()
                 {
                     Name = LeveName,
-                    JobId = JobId - 1,
-                    JobId2 = Job2 - 1,
+                    JobId = ((uint)JobId),
+                    JobId2 = ((uint)Job2),
                     Rank = rank,
                     RecipeId = RecipeId,
                     SilverRequirement = silver,

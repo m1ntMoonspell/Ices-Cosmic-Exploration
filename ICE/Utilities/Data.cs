@@ -44,6 +44,7 @@ public static unsafe class Data
         public uint JobId { get; set; }
         public uint JobId2 { get; set; } = 0;
         public uint JobId3 { get; set; } = 0;
+        public uint ToDoSlot { get; set; }
         public uint Rank { get; set; }
         public uint RecipeId { get; set; } = 0;
         public uint SilverRequirement { get; set; }
@@ -65,8 +66,9 @@ public static unsafe class Data
         /// </summary>
         public Dictionary<uint, int> RecipieItems = new Dictionary<uint, int>();
 
-        public Dictionary<uint, int> MainItems = new Dictionary<uint, int>();
+        public Dictionary<uint, int> MainCraftsDict = new Dictionary<uint, int>();
         public bool PreCrafts { get; set; } = false;
+        public Dictionary<uint, int> PreCraftDict = new Dictionary<uint, int>();
 
     }
 
