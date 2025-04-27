@@ -134,15 +134,18 @@ namespace ICE.Ui
                 ImGui.EndCombo();
             }
 
-            if (ImGui.BeginTable("###MissionList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+            if (ImGui.BeginTable("###MissionList", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
             {
                 ImGui.TableSetupColumn("###Enable");
                 ImGui.TableSetupColumn("###MissionName");
+                ImGui.TableSetupColumn("###Reward");
 
                 ImGui.TableNextRow();
 
                 ImGui.TableSetColumnIndex(1);
                 ImGui.Text($"Rank {selectedRankName} Missions");
+                ImGui.TableNextColumn();
+                ImGui.Text("Rewards");
                 foreach (var entry in MissionInfoDict)
                 {
                     if (entry.Value.JobId != selectedJobId - 1)
@@ -181,6 +184,8 @@ namespace ICE.Ui
 
                     ImGui.TableNextColumn();
                     ImGui.Text($"{entry.Value.Name}");
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"{String.Join(" | ", entry.Value.ExperienceRewards.Select(exp => ExpDictionary[exp.Type] + ": " + exp.Amount))}");
                 }
 
                 ImGui.EndTable();
