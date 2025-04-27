@@ -25,6 +25,8 @@ public static unsafe class Data
 
     public static HashSet<uint> ARankIds = new HashSet<uint>() { 4, 5, 6 };
 
+    public static HashSet<int> CrafterJobList = new() { 8, 9, 10, 11, 12, 13, 14, 15 };
+
     #region Dictionaries
 
     /// <summary>
@@ -59,17 +61,9 @@ public static unsafe class Data
 
     public class MoonRecipieInfo
     {
-        public uint MainItem { get; set; }
-        /// <summary>
-        /// uint - itemId <br></br>
-        /// int - amount necessary for craft
-        /// </summary>
-        public Dictionary<uint, int> RecipieItems = new Dictionary<uint, int>();
-
-        public Dictionary<uint, int> MainCraftsDict = new Dictionary<uint, int>();
+        public Dictionary<ushort, int> MainCraftsDict = new Dictionary<ushort, int>();
         public bool PreCrafts { get; set; } = false;
-        public Dictionary<uint, int> PreCraftDict = new Dictionary<uint, int>();
-
+        public Dictionary<ushort, int> PreCraftDict = new Dictionary<ushort, int>();
     }
 
     public static Dictionary<uint, MoonRecipieInfo> MoonRecipies = new();

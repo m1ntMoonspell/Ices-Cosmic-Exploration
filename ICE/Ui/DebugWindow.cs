@@ -5,6 +5,7 @@ using Dalamud.Interface.Utility.Raii;
 using ECommons.GameHelpers;
 using ECommons.Logging;
 using ECommons.UIHelpers.AddonMasterImplementations;
+using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using ICE.Scheduler;
 using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
@@ -32,7 +33,7 @@ internal class DebugWindow : Window
 
     // variables that hold the "ref"s for ImGui
 
-    public override void Draw()
+    public override unsafe void Draw()
     {
         var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
 
@@ -295,6 +296,9 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Test Buttons"))
         {
+            ImGui.Text($"Current Mission: {CurrentLunarMission}");
+            ImGui.Text($"Artisan Endurance: {P.artisan.GetEnduranceStatus()}");
+
             var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
             //  4 - Col 2  - Unknown 7
             //  8 - Col 3  - Unknown 0
@@ -312,12 +316,8 @@ internal class DebugWindow : Window
             //  1          - Unknown 10
             //  1          - Unknown 11
 
+            ImGui.Text($"{WKSManager.Instance()->CurrentMissionUnitRowId}");
 
-            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown1.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown2.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown3.ToInt()}");
-            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown4.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown5.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown6.ToInt()}");
-            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown7.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown8.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown9.ToInt()}");
-            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown10.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown11.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown12.ToInt()}");
-            ImGui.Text($"UK1: {ExpSheet.GetRow(20).Unknown13.ToInt()} | UN2: {ExpSheet.GetRow(20).Unknown14.ToInt()} | UN3: {ExpSheet.GetRow(20).Unknown0.ToInt()}");
             if (ImGui.Button("Find Mission"))
             {
                 TaskMissionFind.Enqueue();
@@ -326,6 +326,72 @@ internal class DebugWindow : Window
             {
                 P.taskManager.Abort();
             }
+            if (ImGui.Button("Artisan Craft"))
+            {
+                P.artisan.CraftItem(36176, 1);
+            }
+
+            ImGui.TreePop();
+        }
+
+        if (ImGui.TreeNode("Test Section"))
+        {
+            var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
+            var moonRow = MoonMissionSheet.GetRow(26);
+            ImGui.Text($"{moonRow.Unknown1} \n" +
+                       $"{moonRow.Unknown2} \n" +
+                       $"{moonRow.Unknown3} \n" +
+                       $"{moonRow.Unknown4} \n" +
+                       $"{moonRow.Unknown5} \n" +
+                       $"{moonRow.Unknown6} \n" +
+                       $"{moonRow.Unknown7} \n" +
+                       $"{moonRow.Unknown8} \n" +
+                       $"{moonRow.Unknown9} \n" +
+                       $"{moonRow.Unknown10} \n" +
+                       $"{moonRow.Unknown11} \n" +
+                       $"{moonRow.Unknown12} \n" +
+                       $"{moonRow.Unknown13} \n" +
+                       $"{moonRow.Unknown14} \n" +
+                       $"{moonRow.Unknown15} \n" +
+                       $"{moonRow.Unknown16} \n" +
+                       $"{moonRow.Unknown17} \n" +
+                       $"{moonRow.Unknown18} \n" +
+                       $"{moonRow.Unknown19} \n" +
+                       $"{moonRow.Unknown20} \n");
+
+            var toDoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
+            var toDoRow = toDoSheet.GetRow(168);
+
+            ImGui.Text($"     TODO         \n" +
+                       $"{toDoRow.Unknown0}\n" +
+                       $"{toDoRow.Unknown1}\n" +
+                       $"{toDoRow.Unknown2}\n" +
+                       $"{toDoRow.Unknown3}\n" + // need Item 1
+                       $"{toDoRow.Unknown4}\n" + // Item 2
+                       $"{toDoRow.Unknown5}\n" + // Item 3
+                       $"{toDoRow.Unknown6}\n" + // Item 1 Amount
+                       $"{toDoRow.Unknown7}\n" + // Item 2 Amount
+                       $"{toDoRow.Unknown8}\n" + // Item Amount 3 end
+                       $"{toDoRow.Unknown9}\n" +
+                       $"{toDoRow.Unknown10}\n" +
+                       $"{toDoRow.Unknown11}\n" +
+                       $"{toDoRow.Unknown12}\n" +
+                       $"{toDoRow.Unknown13}\n" +
+                       $"{toDoRow.Unknown14}\n" +
+                       $"{toDoRow.Unknown15}\n" +
+                       $"{toDoRow.Unknown16}\n" +
+                       $"{toDoRow.Unknown17}\n" +
+                       $"{toDoRow.Unknown18}\n");
+
+            ImGui.Spacing();
+            var moonItemSheet = Svc.Data.GetExcelSheet<WKSItemInfo>();
+            var moonItemRow = moonItemSheet.GetRow(523);
+
+            ImGui.Text($"  WKS Item Info\n" +
+                       $"{moonItemRow.Unknown0}\n" +
+                       $"{moonItemRow.Unknown1}\n" +
+                       $"{moonItemRow.Unknown2}\n" +
+                       $"{moonItemRow.Unknown3}\n");
 
             ImGui.TreePop();
         }
@@ -383,49 +449,6 @@ internal class DebugWindow : Window
                 var RecipeSearch = entry.Value.RecipeId;
                 ImGui.Text($"{RecipeSearch}");
 
-                if (RecipeSearch != 0)
-                {
-                    ImGui.TableNextColumn();
-                    ImGui.Text($"{MoonRecipies[RecipeSearch].MainItem}");
-                    if (ImGui.IsItemHovered())
-                    {
-                        if (itemSheet.TryGetRow(MoonRecipies[RecipeSearch].MainItem, out var item))
-                        {
-                            ImGui.BeginTooltip();
-                            ImGui.Text($"{item.Name}");
-                            ImGui.EndTooltip();
-                        }
-                    }
-
-                    foreach (var subRecipe in MoonRecipies[RecipeSearch].RecipieItems)
-                    {
-                        ImGui.TableNextColumn();
-                        ImGui.Text($"{subRecipe.Key}");
-                        if (ImGui.IsItemHovered())
-                        {
-                            if (itemSheet.TryGetRow(subRecipe.Key, out var item))
-                            {
-                                ImGui.BeginTooltip();
-                                ImGui.Text($"{item.Name}");
-                                ImGui.EndTooltip();
-                            }
-                        }
-
-                        ImGui.TableNextColumn();
-                        ImGui.Text($"{subRecipe.Value}");
-                    }
-
-                    ImGui.TableSetColumnIndex(10);
-                    foreach (var exp in entry.Value.ExperienceRewards)
-                    {
-                        ImGui.TableNextColumn();
-                        ImGui.Text($"{exp.Type}");
-
-                        ImGui.TableNextColumn();
-                        ImGui.Text($"{exp.Amount}");
-                    }
-                }
-
             }
 
             ImGui.EndTable();
@@ -436,35 +459,35 @@ internal class DebugWindow : Window
     {
         if (ImGui.BeginTable("Mission Info List", 11, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
         {
-            ImGui.TableSetupColumn("MainId/Key", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("MainItem", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Item1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Required1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Item2", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Required2", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Item3", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Required3", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Bool", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Main Item 1", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Main Item 2", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Main Item 3", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Subcraft 1", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Subcraft 2", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Subcraft 3", ImGuiTableColumnFlags.WidthFixed, 100);
 
             ImGui.TableHeadersRow();
 
             foreach (var entry in MoonRecipies)
             {
                 ImGui.TableNextRow();
-
-                // Mission Name
                 ImGui.TableSetColumnIndex(0);
+
                 ImGui.Text($"{entry.Key}");
 
                 ImGui.TableNextColumn();
-                ImGui.Text($"{entry.Value.MainItem}");
+                ImGui.Text($"{entry.Value.PreCrafts}");
 
-                foreach (var subEntry in entry.Value.RecipieItems)
+                ImGui.TableNextColumn();
+                if (entry.Value.PreCrafts == true)
                 {
-                    ImGui.TableNextColumn();
-                    ImGui.Text($"{subEntry.Key}");
-
-                    ImGui.TableNextColumn();
-                    ImGui.Text($"{subEntry.Value}");
+                    foreach (var sub in entry.Value.PreCraftDict)
+                    {
+                        ImGui.Text($"Recipe: {sub.Key} | Amount: {sub.Value}");
+                        ImGui.TableNextColumn();
+                    }
                 }
             }
 

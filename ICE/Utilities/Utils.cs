@@ -13,8 +13,10 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using Lumina;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 
@@ -88,6 +90,8 @@ public static unsafe class Utils
     : InventoryManager.Instance()->GetInventoryItemCount((uint)itemID) + InventoryManager.Instance()->GetInventoryItemCount((uint)itemID + 500_000);
 
     public static Vector3 NavDestination = Vector3.Zero;
+
+    public static unsafe uint CurrentLunarMission => WKSManager.Instance()->CurrentMissionUnitRowId;
 
     #endregion
 
@@ -220,17 +224,23 @@ public static unsafe class Utils
 
     #region LoadOnBoot
 
-    public static void DictionaryCreation()
+    public static unsafe void DictionaryCreation()
     {
+        Svc.Data.GameData.Options.PanicOnSheetChecksumMismatch = false;
+
         var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
         var MoonRecipeSheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
         var RecipeSheet = Svc.Data.GetExcelSheet<Recipe>();
         var ItemSheet = Svc.Data.GetExcelSheet<Item>();
         var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
+        var ToDoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
+        var MoonItemInfo = Svc.Data.GetExcelSheet<WKSItemInfo>();
 
         foreach (var item in MoonMissionSheet)
         {
             List<(int Type, int Amount)> Exp = new List<(int Type, int Amount)>();
+            Dictionary<ushort, int> MainItems = new Dictionary<ushort, int>();
+            Dictionary<ushort, int> PreCrafts = new Dictionary<ushort, int>();
             uint keyId = item.RowId;
             string LeveName = item.Unknown0.ToString();
             LeveName = LeveName.Replace("<nbsp>", " ");
@@ -246,28 +256,115 @@ public static unsafe class Utils
                 Job2 = Job2 - 1;
             }
 
-            if (JobId == 8)
-                CRPMissions.Add(LeveName);
-            else if (JobId == 9)
-                BSMMissions.Add(LeveName);
-            else if (JobId == 10)
-                ARMMissions.Add(LeveName);
-            else if (JobId == 11)
-                GSMMissions.Add(LeveName);
-            else if (JobId == 12)
-                LTWMissions.Add(LeveName);
-            else if (JobId == 13)
-                WVRMissions.Add(LeveName);
-            else if (JobId == 14)
-                ALCMissions.Add(LeveName);
-            else if (JobId == 15)
-                CULMissions.Add(LeveName);
-
             uint silver = item.Unknown5;
             uint gold = item.Unknown6;
 
             uint rank = item.Unknown17;
             uint RecipeId = item.Unknown12;
+
+            uint toDoValue = item.Unknown7;
+            if (CrafterJobList.Contains(JobId))
+            {
+                bool preCraftsbool = false;
+
+                var toDoRow = ToDoSheet.GetRow(toDoValue);
+                if (toDoRow.Unknown3 != 0) // shouldn't be 0, 1st item entry
+                {
+                    var item1Amount = toDoRow.Unknown6;
+                    var item1Id = MoonItemInfo.GetRow(toDoRow.Unknown3).Unknown0;
+                    var item1Name = ItemSheet.GetRow(item1Id).Name.ToString();
+
+                    var item1RecipeRow = RecipeSheet.FirstOrDefault(e => e.ItemResult.RowId == item1Id);
+                    PluginDebug($"Recipe Row ID: {item1RecipeRow.RowId} | for item: {item1Id}");
+                    for (var i = 0; i <= 5; i++)
+                    {
+                        var subitem = item1RecipeRow.Ingredient[i].Value.RowId;
+                        PluginDebug($"subItemId: {subitem}");
+
+                        if (subitem != 0)
+                        {
+                            var subitemRecipe = RecipeSheet.FirstOrDefault(x => x.ItemResult.RowId == subitem);
+                            if (subitemRecipe.RowId != 0)
+                            {
+                                var subItemAmount = item1RecipeRow.AmountIngredient[i].ToInt();
+                                subItemAmount = subItemAmount * item1Amount;
+                                PreCrafts.Add(((ushort)subitemRecipe.RowId), subItemAmount);
+                                preCraftsbool = true;
+                            }
+                        }
+                    }
+                    var item1RecipeId = item1RecipeRow.RowId;
+                    MainItems.Add(((ushort)item1RecipeId), item1Amount);
+                }
+                if (toDoRow.Unknown4 != 0) // shouldn't be 0, 1st item entry
+                {
+                    var item2Amount = toDoRow.Unknown7;
+                    var item2Id = MoonItemInfo.GetRow(toDoRow.Unknown4).Unknown0;
+                    var item2Name = ItemSheet.GetRow(item2Id).Name.ToString();
+
+                    var item2RecipeRow = RecipeSheet.FirstOrDefault(e => e.ItemResult.RowId == item2Id);
+                    PluginDebug($"Recipe Row ID: {item2RecipeRow.RowId} | for item: {item2Id}");
+                    for (var i = 0; i <= 5; i++)
+                    {
+                        var subitem = item2RecipeRow.Ingredient[i].Value.RowId;
+                        PluginDebug($"subItemId: {subitem}");
+
+                        if (subitem != 0)
+                        {
+                            var subitemRecipe = RecipeSheet.FirstOrDefault(x => x.ItemResult.RowId == subitem);
+                            if (subitemRecipe.RowId != 0)
+                            {
+                                var subItemAmount = item2RecipeRow.AmountIngredient[i].ToInt();
+                                subItemAmount = subItemAmount * item2Amount;
+                                PreCrafts.Add(((ushort)subitemRecipe.RowId), subItemAmount);
+                                preCraftsbool = true;
+                            }
+                        }
+                    }
+                    var item2RecipeId = item2RecipeRow.RowId;
+                    MainItems.Add(((ushort)item2RecipeId), item2Amount);
+                }
+                if (toDoRow.Unknown5 != 0) // shouldn't be 0, 1st item entry
+                {
+                    var item3Amount = toDoRow.Unknown8;
+                    var item3Id = MoonItemInfo.GetRow(toDoRow.Unknown5).Unknown0;
+                    var item3Name = ItemSheet.GetRow(item3Id).Name.ToString();
+
+                    var item3RecipeRow = RecipeSheet.FirstOrDefault(e => e.ItemResult.RowId == item3Id);
+                    PluginDebug($"Recipe Row ID: {item3RecipeRow.RowId} | for item: {item3Id}");
+                    for (var i = 0; i <= 5; i++)
+                    {
+                        var subitem = item3RecipeRow.Ingredient[i].Value.RowId;
+                        PluginDebug($"subItemId: {subitem}");
+
+                        if (subitem != 0)
+                        {
+                            var subitemRecipe = RecipeSheet.FirstOrDefault(x => x.ItemResult.RowId == subitem);
+                            if (subitemRecipe.RowId != 0)
+                            {
+                                var subItemAmount = item3RecipeRow.AmountIngredient[i].ToInt();
+                                subItemAmount = subItemAmount * item3Amount;
+                                PreCrafts.Add(((ushort)subitemRecipe.RowId), subItemAmount);
+                                preCraftsbool = true;
+                            }
+                        }
+                    }
+                    var item3RecipeId = item3RecipeRow.RowId;
+                    MainItems.Add(((ushort)item3RecipeId), item3Amount);
+                }
+
+                if (!MoonRecipies.ContainsKey(keyId))
+                {
+                    MoonRecipies[keyId] = new MoonRecipieInfo()
+                    {
+                        MainCraftsDict = MainItems,
+                        PreCraftDict = PreCrafts,
+                        PreCrafts = preCraftsbool
+                    };
+                }
+
+            }
+
 
             // Col 3 -> Cosmocredits - Unknown 0
             // Col 4 -> Lunar Credits - Unknown 1
@@ -309,78 +406,6 @@ public static unsafe class Utils
                     LunarCredit = Lunar,
                     ExperienceRewards = Exp
                 };
-            }
-        }
-
-
-
-        foreach (var item in MoonRecipeSheet)
-        {
-            // Moon Recipe Sheet -> Check to see if row 0-4 has recipies
-            // The last entry in this that isn't 0 is the main item
-            // Maybe store each recipeID as a list? And work backwards...
-            List<uint> MissionRecipies = new List<uint>();
-            Dictionary<uint, int> RequiredCrafts = new Dictionary<uint, int>();
-            RequiredCrafts.Clear();
-            uint MainRecipe = 0;
-
-            if (item.Unknown0 == 0)
-                continue;
-
-            if (!MissionRecipies.Contains(item.Unknown0) && item.Unknown0 != 0)
-            {
-                MainRecipe = item.Unknown0;
-            }
-            if (!MissionRecipies.Contains(item.Unknown1) && item.Unknown1 != 0)
-            {
-                MainRecipe = item.Unknown1;
-            }
-            if (!MissionRecipies.Contains(item.Unknown2) && item.Unknown2 != 0)
-            {
-                MainRecipe = item.Unknown2;
-            }
-            if (!MissionRecipies.Contains(item.Unknown3) && item.Unknown3 != 0)
-            {
-                MainRecipe = item.Unknown3;
-            }
-            if (!MissionRecipies.Contains(item.Unknown4) && item.Unknown4 != 0)
-            {
-                MainRecipe = item.Unknown4;
-            }
-
-            MissionRecipies.Add(MainRecipe);
-
-            if (MissionRecipies.Count != 0)
-            {
-                foreach (var entry in MissionRecipies)
-                {
-                    var recipieRow = RecipeSheet.GetRow(entry);
-
-                    var itemResult = recipieRow.ItemResult.Value.RowId;
-
-                    for (int i = 0; i < 8; i++)
-                    {
-                        uint recipieIngrediant = recipieRow.Ingredient[i].Value.RowId;
-                        int amountNeeded = recipieRow.AmountIngredient[i];
-
-                        if (recipieIngrediant == 0)
-                            break;
-
-                        if (!RequiredCrafts.ContainsKey(recipieIngrediant))
-                        {
-                            RequiredCrafts.Add(recipieIngrediant, amountNeeded);
-                        }
-                    }
-
-                    if (!MoonRecipies.ContainsKey(item.RowId))
-                    {
-                        MoonRecipies.Add(item.RowId, new MoonRecipieInfo
-                        {
-                            MainItem = itemResult,
-                            RecipieItems = RequiredCrafts
-                        });
-                    }
-                }
             }
         }
     }
