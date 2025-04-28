@@ -286,7 +286,8 @@ public static unsafe class Utils
                     for (var i = 0; i <= 5; i++)
                     {
                         var subitem = item1RecipeRow.Ingredient[i].Value.RowId;
-                        PluginDebug($"subItemId: {subitem}");
+                        if (subitem != 0)
+                            PluginDebug($"subItemId: {subitem} slot [{i}]");
 
                         if (subitem != 0)
                         {
@@ -303,7 +304,7 @@ public static unsafe class Utils
                     var item1RecipeId = item1RecipeRow.RowId;
                     MainItems.Add(((ushort)item1RecipeId), item1Amount);
                 }
-                if (toDoRow.Unknown4 != 0) // shouldn't be 0, 1st item entry
+                if (toDoRow.Unknown4 != 0) // 2nd item entry
                 {
                     var item2Amount = toDoRow.Unknown7;
                     var item2Id = MoonItemInfo.GetRow(toDoRow.Unknown4).Unknown0;
@@ -314,7 +315,8 @@ public static unsafe class Utils
                     for (var i = 0; i <= 5; i++)
                     {
                         var subitem = item2RecipeRow.Ingredient[i].Value.RowId;
-                        PluginDebug($"subItemId: {subitem}");
+                        if (subitem != 0)
+                            PluginDebug($"subItemId: {subitem} slot [{i}]");
 
                         if (subitem != 0)
                         {
@@ -337,7 +339,7 @@ public static unsafe class Utils
                     var item2RecipeId = item2RecipeRow.RowId;
                     MainItems.Add(((ushort)item2RecipeId), item2Amount);
                 }
-                if (toDoRow.Unknown5 != 0) // shouldn't be 0, 1st item entry
+                if (toDoRow.Unknown5 != 0) // 3rd item entry
                 {
                     var item3Amount = toDoRow.Unknown8;
                     var item3Id = MoonItemInfo.GetRow(toDoRow.Unknown5).Unknown0;
@@ -354,7 +356,8 @@ public static unsafe class Utils
                     for (var i = 0; i <= 5; i++)
                     {
                         var subitem = item3RecipeRow.Ingredient[i].Value.RowId;
-                        PluginDebug($"subItemId: {subitem}");
+                        if (subitem != 0)
+                            PluginDebug($"subItemId: {subitem} slot [{i}]");
 
                         if (subitem != 0)
                         {
@@ -370,6 +373,20 @@ public static unsafe class Utils
                     }
                     var item3RecipeId = item3RecipeRow.RowId;
                     MainItems.Add(((ushort)item3RecipeId), item3Amount);
+                }
+
+                if (preCraftsbool)
+                {
+                    foreach (var preItem in PreCrafts)
+                    {
+                        if (MainItems.ContainsKey(preItem.Key))
+                            PreCrafts.Remove(preItem.Key);
+                    }
+
+                    if (PreCrafts.Count == 0)
+                    {
+                        preCraftsbool = false;
+                    }
                 }
 
                 if (!MoonRecipies.ContainsKey(keyId))
@@ -417,6 +434,7 @@ public static unsafe class Utils
                     Name = LeveName,
                     JobId = ((uint)JobId),
                     JobId2 = ((uint)Job2),
+                    ToDoSlot = toDoValue,
                     Rank = rank,
                     RecipeId = RecipeId,
                     SilverRequirement = silver,

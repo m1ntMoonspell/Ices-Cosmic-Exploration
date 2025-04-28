@@ -11,6 +11,8 @@ public class Config : IEzConfig
     public List<(uint Id, string Name)> EnabledMission = new List<(uint Id, string Name)>();
 
     public bool DelayGrab = false;
+    public bool TurninOnSilver = false;
+    public bool TurninASAP = false;
 
     public void Save()
     {

@@ -60,6 +60,8 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         private static bool delayGrab = C.DelayGrab;
+        private static bool silverTurnin = C.TurninOnSilver;
+        private static bool turninASAP = C.TurninASAP;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -102,6 +104,37 @@ namespace ICE.Ui
                 }
             }
 
+            if (ImGui.Checkbox("Turnin on Silver", ref silverTurnin))
+            {
+                if (turninASAP)
+                {
+                    turninASAP = false;
+                    C.TurninASAP = false;
+                }
+
+                if (silverTurnin != C.TurninOnSilver)
+                {
+                    C.TurninOnSilver = silverTurnin;
+                    C.Save();
+                }
+            }
+
+            if (ImGui.Checkbox("Turnin ASAP", ref turninASAP))
+            {
+                if (silverTurnin)
+                {
+                    silverTurnin = false;
+                    C.TurninOnSilver = false;
+                }
+
+                if (C.TurninASAP != turninASAP)
+                {
+                    C.TurninASAP = turninASAP;
+                    C.Save();
+                }
+            }
+
+            ImGui.SetNextItemWidth(75);
             if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedIndex].Name))
             {
                 for (int i = 0; i < jobOptions.Count; i++)
@@ -118,6 +151,7 @@ namespace ICE.Ui
                 ImGui.EndCombo();
             }
 
+            ImGui.SetNextItemWidth(75);
             if (ImGui.BeginCombo("Rank", rankOptions[selectedRankIndex].RankName))
             {
                 for (int i = 0; i < rankOptions.Count; i++)

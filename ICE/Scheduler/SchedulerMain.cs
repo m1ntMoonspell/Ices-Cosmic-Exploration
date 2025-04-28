@@ -59,10 +59,11 @@ namespace ICE.Scheduler
                                 P.TaskManager.EnqueueDelay(1000);
                             }
                         }
-                        else
+                        else if (CurrentLunarMission != 0 && !Abandon)
                         {
                             P.TaskManager.Enqueue(() => PluginLog.Information($"Current have the mission: {CurrentLunarMission}, starting the crafting process"));
                             TaskStartCrafting.Enqueue();
+                            P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
                         }
                     }
                 }

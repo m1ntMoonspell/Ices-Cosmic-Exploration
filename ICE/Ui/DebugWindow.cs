@@ -10,6 +10,7 @@ using ICE.Scheduler;
 using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
@@ -338,6 +339,12 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Test Section"))
         {
+            if (ImGui.Button("Export to CVS"))
+            {
+                ExportMissionInfoToCsv(MissionInfoDict, @"D:\Missions.csv");
+
+            }
+
             var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
             var moonRow = MoonMissionSheet.GetRow(26);
             ImGui.Text($"{moonRow.Unknown1} \n" +
@@ -463,12 +470,12 @@ internal class DebugWindow : Window
         {
             ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Bool", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Main Item 1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Main Item 2", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Main Item 3", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Subcraft 1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Subcraft 2", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Subcraft 3", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Pre-Craft 1", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Pre-Craft 2", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Pre-Craft 3", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("MainCraft 1", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("MainCraft 2", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("MainCraft 3", ImGuiTableColumnFlags.WidthFixed, 100);
 
             ImGui.TableHeadersRow();
 
@@ -491,9 +498,66 @@ internal class DebugWindow : Window
                         ImGui.TableNextColumn();
                     }
                 }
+
+                ImGui.TableSetColumnIndex(4);
+                foreach(var main in entry.Value.MainCraftsDict)
+                {
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"Recipe: {main.Key} | Amount: {main.Value}");
+                }
             }
 
             ImGui.EndTable();
         }
     }
+
+    public static void ExportMissionInfoToCsv(Dictionary<uint, MissionListInfo> dict, string filePath)
+    {
+        using (var writer = new StreamWriter(filePath))
+        {
+            // Write the header
+            writer.Write("Key,Name,JobId,JobId2,JobId3,ToDoSlot,Rank,RecipeId,SilverRequirement,GoldRequirement,CosmoCredit,LunarCredit");
+
+            // Find the max number of ExperienceRewards across all missions
+            int maxRewards = dict.Values.Max(info => info.ExperienceRewards?.Count ?? 0);
+
+            // Add headers for each possible reward
+            for (int i = 1; i <= maxRewards; i++)
+            {
+                writer.Write($",Type{i},Amount{i}");
+            }
+
+            writer.WriteLine(); // End header line
+
+            foreach (var kvp in dict)
+            {
+                var info = kvp.Value;
+
+                // Escape name if needed
+                string safeName = info.Name.Contains(",") ? $"\"{info.Name}\"" : info.Name;
+
+                writer.Write($"{kvp.Key},{safeName},{info.JobId},{info.JobId2},{info.JobId3},{info.ToDoSlot},{info.Rank},{info.RecipeId},{info.SilverRequirement},{info.GoldRequirement},{info.CosmoCredit},{info.LunarCredit}");
+
+                if (info.ExperienceRewards != null)
+                {
+                    foreach (var reward in info.ExperienceRewards)
+                    {
+                        writer.Write($",{reward.Type},{reward.Amount}");
+                    }
+                }
+
+                // Fill missing cells if this mission has fewer rewards
+                int rewardCount = info.ExperienceRewards?.Count ?? 0;
+                for (int i = rewardCount; i < maxRewards; i++)
+                {
+                    writer.Write(",,");
+
+                }
+
+                writer.WriteLine();
+            }
+        }
+    }
+
+
 }

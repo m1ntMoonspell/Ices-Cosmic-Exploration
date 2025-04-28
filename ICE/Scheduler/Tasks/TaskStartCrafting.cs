@@ -25,14 +25,158 @@ namespace ICE.Scheduler.Tasks
             }
 
             Svc.Log.Debug("Artisan is not busy...");
-            P.TaskManager.Enqueue(() => P.Artisan.SetEnduranceStatus(false), "Ensuring endurance is off");
-            P.TaskManager.Enqueue(StartCrafting, "Starting Crafting Process", DConfig);
+            P.TaskManager.Enqueue(() => P.Artisan.SetEnduranceStatus(false), "Ensuring endurance is off", DConfig);
+            P.TaskManager.Enqueue(() => StartCraftingOld(), "Starting old crafting mothod", DConfig);
+            // P.TaskManager.Enqueue(StartCrafting, "Starting Crafting Process", DConfig);
             P.TaskManager.EnqueueDelay(1500);
         }
 
         internal unsafe static void SetArtisanEndurance(bool enable)
         {
             P.Artisan.SetEnduranceStatus(enable);
+        }
+
+        internal static bool? StartCraftingOld()
+        {
+            // this version is to be depreciated post artisan update. 
+
+            uint currentScore = 0;
+            uint goldScore = 0;
+            uint silverScore = 0;
+
+            var itemSheet = Svc.Data.GetExcelSheet<Item>();
+
+            if (P.Artisan.GetEnduranceStatus() == false && !IsAddonActive("Synthesis"))
+            {
+                P.Artisan.SetEnduranceStatus(false);
+
+                if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
+                {
+                    if (EzThrottler.Throttle("Opening Steller Missions"))
+                    {
+                        PluginLog.Debug("Opening Mission Menu");
+                        hud.Mission();
+                    }
+                }
+
+                var RecipeSheet = Svc.Data.GetExcelSheet<Recipe>();
+                var currentMission = CurrentLunarMission;
+                bool foundPreCraft = false;
+                bool allCrafted = true;
+
+                PluginLog.Debug($"Current Mission: {currentMission} | Found Pre-Craft? {foundPreCraft}");
+
+                if (MoonRecipies[currentMission].PreCrafts)
+                {
+                    PluginDebug("Pre-crafts are part of the list, checking to see if any need crafting");
+                    foreach (var pre in MoonRecipies[currentMission].PreCraftDict)
+                    {
+                        var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
+                        var currentAmount = GetItemCount((int)itemId);
+                        PluginDebug($"Checking Pre-crafts to see if {itemId} has enough.");
+                        PluginDebug($"Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
+
+                        if (currentAmount < pre.Value)
+                        {
+                            foundPreCraft = true; // <--- Mark that a pre-craft is needed!
+
+                            if (EzThrottler.Throttle("Starting pre-craft", 4000))
+                            {
+                                PluginInfo($"Found an item that needs to be crafted: {itemId}");
+                                int craftAmount = pre.Value - currentAmount;
+                                P.Artisan.CraftItem(pre.Key, craftAmount);
+                            }
+                            break; // <-- Important: break out after starting a pre-craft to avoid multiple crafts at once
+                        }
+                    }
+                }
+
+                if (!foundPreCraft)
+                {
+                    PluginLog.Debug("No pre-crafts remaining! Crafting the main item");
+                    foreach (var main in MoonRecipies[currentMission].MainCraftsDict)
+                    {
+                        var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
+                        PluginLog.Debug($"Checking ItemID: {itemId}");
+                        var currentAmount = GetItemCount((int)itemId);
+                        PluginLog.Debug($"Current Item Count is: {currentAmount}");
+
+                        PluginLog.Debug($"Checking if the currentAmount: {currentAmount} is < Amount Needed: {main.Value}");
+
+                        if (currentAmount < main.Value)
+                        {
+                            PluginLog.Debug("Current amount IS < Amount Needed, checking to see if you can craft");
+                            if (EzThrottler.Throttle("Starting Main Craft", 4000))
+                            {
+                                int craftamount = main.Value - currentAmount;
+                                PluginLog.Debug($"Telling Artisan to use recipe: {main.Key} | {craftamount}");
+                                P.Artisan.CraftItem(main.Key, craftamount);
+                                allCrafted = false;
+                                break;
+                            }
+                            PluginLog.Debug($"Currently being throttled, breaking");
+                            allCrafted = false;
+                            break;
+                        }
+                    }
+                    PluginDebug("all items were crafted!");
+                }
+
+
+
+                if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady && allCrafted)
+                {
+                    uint tempScore = 0;
+                    string currentScoreText = GetNodeText("WKSMissionInfomation", 27);
+                    currentScoreText = currentScoreText.Replace(",", ""); // English client comma's
+                    currentScoreText = currentScoreText.Replace(" ", ""); // French client spacing
+                    currentScoreText = currentScoreText.Replace(".", ""); // French client spacing
+                    if (uint.TryParse(currentScoreText, out tempScore))
+                    {
+                        currentScore = tempScore;
+                    }
+                    else
+                    {
+                        currentScore = 0;
+                    }
+
+                    goldScore = MissionInfoDict[CurrentLunarMission].GoldRequirement;
+                    silverScore = MissionInfoDict[CurrentLunarMission].SilverRequirement;
+
+                    if (currentScore != 0)
+                    {
+                        PluginDebug("Score != 0");
+                        if (currentScore >= silverScore && C.TurninOnSilver)
+                        {
+                            if (EzThrottler.Throttle("Turning in item"))
+                            {
+                                z.Report();
+                                return true;
+                            }
+                        }
+
+                        if (C.TurninASAP)
+                        {
+                            if (EzThrottler.Throttle("Turning in item"))
+                            {
+                                z.Report();
+                                return true;
+                            }
+                        }
+
+                        if (PlayerNotBusy() && !Svc.Condition[ConditionFlag.PreparingToCraft])
+                        {
+                            if (EzThrottler.Throttle("Turning in item"))
+                            {
+                                z.Report();
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         internal static void StartCrafting()

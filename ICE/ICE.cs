@@ -56,6 +56,8 @@ public sealed class ICE : IDalamudPlugin
 
         EzCmd.Add("/IceCosmic", OnCommand, """
             Open plugin interface
+            " " start - starts the loops
+            " " stop - stops the loops
             """);
         EzCmd.Add("/ice", OnCommand);
         Svc.Framework.Update += Tick;
@@ -118,6 +120,14 @@ public sealed class ICE : IDalamudPlugin
         else if (firstArg.ToLower() == "clear")
         {
             C.EnabledMission.Clear();
+        }
+        else if (firstArg.ToLower() == "stop")
+        {
+            SchedulerMain.DisablePlugin();
+        }
+        else if (firstArg.ToLower() == "start")
+        {
+            SchedulerMain.EnablePlugin();
         }
     }
 }

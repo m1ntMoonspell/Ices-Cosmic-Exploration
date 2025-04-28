@@ -26,12 +26,16 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
             P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.TaskManager.EnqueueDelay(1500);
-
-            if (CurrentLunarMission > 0 && P.TaskManager.Tasks.Count == 0)
+            P.TaskManager.Enqueue(() => CurrentLunarMission != 0);
+            P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
+            P.TaskManager.Enqueue(() =>
             {
-                P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
-            }
+                if (SchedulerMain.Abandon)
+                {
+                    P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
+                    SchedulerMain.Abandon = false;
+                }
+            });
         }
 
         internal static bool? UpdateValues()
