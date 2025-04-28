@@ -282,6 +282,7 @@ public static unsafe class Utils
                                                                 e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 || 
                                                                 e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
                                                     .First();
+                    var craftingType = item1RecipeRow.CraftType.Value.RowId;
                     PluginDebug($"Recipe Row ID: {item1RecipeRow.RowId} | for item: {item1Id}");
                     for (var i = 0; i <= 5; i++)
                     {
@@ -291,7 +292,13 @@ public static unsafe class Utils
 
                         if (subitem != 0)
                         {
-                            var subitemRecipe = RecipeSheet.FirstOrDefault(x => x.ItemResult.RowId == subitem);
+                            var subitemRecipe = RecipeSheet.Where(x => x.ItemResult.RowId == subitem)
+                                                           .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
+                                                           .FirstOrDefault();
                             if (subitemRecipe.RowId != 0)
                             {
                                 var subItemAmount = item1RecipeRow.AmountIngredient[i].ToInt();
@@ -321,12 +328,12 @@ public static unsafe class Utils
                         if (subitem != 0)
                         {
                             var subitemRecipe = RecipeSheet.Where(e => e.ItemResult.RowId == item2Id)
-                                                    .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 ||
-                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 ||
-                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 ||
-                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 ||
-                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
-                                                    .First();
+                                                           .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 ||
+                                                                       e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
+                                                           .First();
                             if (subitemRecipe.RowId != 0)
                             {
                                 var subItemAmount = item2RecipeRow.AmountIngredient[i].ToInt();

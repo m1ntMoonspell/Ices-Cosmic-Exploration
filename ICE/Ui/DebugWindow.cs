@@ -405,6 +405,13 @@ internal class DebugWindow : Window
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNode("IPC Testing"))
+        {
+            ImGui.Text($"Artisan Is Busy? {P.Artisan.IsBusy()}");
+
+            ImGui.TreePop();
+        }
+
 
     }
 
@@ -419,12 +426,9 @@ internal class DebugWindow : Window
             ImGui.TableSetupColumn("Job", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("2nd Job", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Rank", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("ToDo ID", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("RecipeID", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("MainItem", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Required Item", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Amount###SubItem1Amount", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("SubItem 2", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Amount###SubItem2Amount", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Silver Requirement", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Exp Type 1###MissionExpType1", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Exp Amount 1###MissionExpAmount1", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Exp Type 2###MissionExpType2", ImGuiTableColumnFlags.WidthFixed, 100);
@@ -438,6 +442,7 @@ internal class DebugWindow : Window
             {
                 ImGui.TableNextRow();
 
+                // Mission ID
                 ImGui.TableSetColumnIndex(0);
                 ImGui.Text($"{entry.Key}");
 
@@ -445,14 +450,37 @@ internal class DebugWindow : Window
                 ImGui.TableNextColumn();
                 ImGui.Text(entry.Value.Name);
 
+                // JobId Attached to it
                 ImGui.TableNextColumn();
                 ImGui.Text($"{entry.Value.JobId}");
 
+                // 2nd Job for quest
                 ImGui.TableNextColumn();
                 ImGui.Text($"{entry.Value.JobId2}");
 
+                // Rank of the mission
                 ImGui.TableNextColumn();
-                ImGui.Text($"{entry.Value.Rank}");
+                string rank = "";
+                if (entry.Value.Rank == 1)
+                    rank = "D";
+                else if (entry.Value.Rank == 2)
+                    rank = "C";
+                else if (entry.Value.Rank == 3)
+                    rank = "B";
+                else if (entry.Value.Rank == 4)
+                    rank = "A-1";
+                else if (entry.Value.Rank == 5)
+                    rank = "A-2";
+                else if (entry.Value.Rank == 6)
+                    rank = "A-3";
+                else
+                {
+                    rank = entry.Value.Rank.ToString();
+                }
+                ImGui.Text($"{rank}");
+
+                ImGui.TableNextColumn();
+                ImGui.Text($"{entry.Value.ToDoSlot}");
 
                 ImGui.TableNextColumn();
                 var RecipeSearch = entry.Value.RecipeId;
@@ -466,9 +494,12 @@ internal class DebugWindow : Window
 
     private void Table2()
     {
-        if (ImGui.BeginTable("Mission Info List", 11, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
+        var MainMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
+
+        if (ImGui.BeginTable("Mission Info List", 9, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
         {
             ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Bool", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Pre-Craft 1", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Pre-Craft 2", ImGuiTableColumnFlags.WidthFixed, 100);
@@ -487,6 +518,10 @@ internal class DebugWindow : Window
                 ImGui.Text($"{entry.Key}");
 
                 ImGui.TableNextColumn();
+                var missionName = MissionInfoDict.First(x => x.Key == entry.Key).Value.Name;
+                ImGui.Text($"{missionName}");
+
+                ImGui.TableNextColumn();
                 ImGui.Text($"{entry.Value.PreCrafts}");
 
                 ImGui.TableNextColumn();
@@ -499,7 +534,7 @@ internal class DebugWindow : Window
                     }
                 }
 
-                ImGui.TableSetColumnIndex(4);
+                ImGui.TableSetColumnIndex(5);
                 foreach(var main in entry.Value.MainCraftsDict)
                 {
                     ImGui.TableNextColumn();

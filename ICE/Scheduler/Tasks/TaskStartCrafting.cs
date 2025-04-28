@@ -31,6 +31,21 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.EnqueueDelay(1500);
         }
 
+        internal static bool? IsArtisanBusy()
+        {
+            if (!P.Artisan.IsBusy())
+            {
+                return true;
+            }
+            else
+            {
+                if (EzThrottler.Throttle("Waiting for Artisan to not be busy"))
+                    PluginLog.Debug("Waiting for Artisan to not be busy");
+            }
+
+            return false;
+        }
+
         internal unsafe static void SetArtisanEndurance(bool enable)
         {
             P.Artisan.SetEnduranceStatus(enable);
@@ -212,15 +227,20 @@ namespace ICE.Scheduler.Tasks
                         var currentAmount = GetItemCount((int)itemId);
                         PluginDebug($"Checking Pre-crafts to see if {itemId} has enough.");
                         PluginDebug($"Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
+                        var goalAmount = pre.Value;
+                        if (C.CraftMultipleMissionItems)
+                        {
+                            goalAmount = pre.Value * 2;
+                        }
 
-                        if (currentAmount < pre.Value)
+                        if (currentAmount < goalAmount)
                         {
                             foundPreCraft = true; // <--- Mark that a pre-craft is needed!
 
                             if (EzThrottler.Throttle("Starting pre-craft", 4000))
                             {
                                 PluginInfo($"Found an item that needs to be crafted: {itemId}");
-                                int craftAmount = pre.Value - currentAmount;
+                                int craftAmount = goalAmount - currentAmount;
                                 P.Artisan.CraftItem(pre.Key, craftAmount);
                                 P.TaskManager.EnqueueDelay(1500);
                             }
@@ -238,14 +258,19 @@ namespace ICE.Scheduler.Tasks
                         var currentAmount = GetItemCount((int)itemId);
 
                         PluginDebug($"[Main Item(s)] ItemId: {itemId} | Current Amount {currentAmount} | Amount Wanted: {main.Value} | RecipeId: {main.Key}");
+                        var goalAmount = main.Value;
+                        if (C.CraftMultipleMissionItems)
+                        {
+                            goalAmount = main.Value * 2;
+                        }
 
-                        if (currentAmount < main.Value || (currentScore < goldScore && Svc.Condition[ConditionFlag.PreparingToCraft])) // if not hit gold and there is still some items (aka its still in preparing to craft animation) we want to send it anyway
+                        if (currentAmount < goalAmount || (currentScore < goldScore && Svc.Condition[ConditionFlag.PreparingToCraft])) // if not hit gold and there is still some items (aka its still in preparing to craft animation) we want to send it anyway
                         {
                             if (EzThrottler.Throttle("Starting Main Craft", 4000))
                             {
-                                int craftamount = main.Value - currentAmount;
+                                int craftamount = goalAmount - currentAmount;
                                 PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {main.Key} | {craftamount}");
-                                P.Artisan.CraftItem(main.Key, main.Value);
+                                P.Artisan.CraftItem(main.Key, goalAmount);
                                 P.TaskManager.EnqueueDelay(1500);
                                 allCrafted = false;
                                 break;
