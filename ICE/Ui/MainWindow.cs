@@ -9,6 +9,7 @@ using static ICE.Utilities.Data;
 using ICE.Ui;
 using ImGuiNET;
 using Dalamud.Interface.Windowing;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 
 namespace ICE.Ui
 {
@@ -84,6 +85,7 @@ namespace ICE.Ui
         private static bool craftx2 = C.CraftMultipleMissionItems;
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
+        private static bool SortByName = C.TableSortByName;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -147,6 +149,20 @@ namespace ICE.Ui
                 }
             }
 
+            // Checkbox: If Silver is enabled, allow for x2 crafting
+            if (silverTurnin)
+            {
+                ImGui.SameLine();
+                if (ImGui.Checkbox("Craft item twice", ref craftx2))
+                {
+                    if (craftx2 != C.CraftMultipleMissionItems)
+                    {
+                        C.CraftMultipleMissionItems = craftx2;
+                        C.Save();
+                    }
+                }
+            }
+
             // Checkbox: Turn in ASAP.
             if (ImGui.Checkbox("Turnin ASAP", ref turninASAP))
             {
@@ -161,20 +177,8 @@ namespace ICE.Ui
                 C.Save();
             }
 
-            if (silverTurnin)
-            {
-                ImGui.SameLine();
-                if (ImGui.Checkbox("Craft item twice", ref craftx2))
-                {
-                    if (craftx2 != C.CraftMultipleMissionItems)
-                    {
-                        C.CraftMultipleMissionItems = craftx2;
-                        C.Save();
-                    }
-                }
-
-                // Checkbox: Hide unsupported missions.
-                if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
+            // Checkbox: Hide unsupported missions.
+            if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
             {
                 C.HideUnsupportedMissions = hideUnsupported;
                 C.Save();
@@ -224,11 +228,18 @@ namespace ICE.Ui
 
             ImGui.Spacing();
 
+            // Checkbox: Option to sort by ID vs by Name
+            if (ImGui.Checkbox("Sort by Name", ref SortByName))
+            {
+                if (SortByName != C.TableSortByName)
+                {
+                    C.TableSortByName = SortByName;
+                    C.Save();
+                }
+            }
+
             // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-            if (ImGui.BeginTable("###MissionList", 4,
-                                  ImGuiTableFlags.SizingFixedFit |
-                                  ImGuiTableFlags.RowBg |
-                                  ImGuiTableFlags.Borders))
+            if (ImGui.BeginTable("###MissionList", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
             {
                 // First column: checkbox (empty header)
                 ImGui.TableSetupColumn("##Enable");
@@ -242,8 +253,11 @@ namespace ICE.Ui
                 // Render the header row
                 ImGui.TableHeadersRow();
 
-                // Iterate through all missions, filtered by job and rank
-                foreach (var entry in MissionInfoDict.OrderBy(x => x.Value.Name))
+                IEnumerable<KeyValuePair<uint, MissionListInfo>> missions = MissionInfoDict;
+                if (SortByName)
+                    missions = missions.OrderBy(x => x.Value.Name);
+
+                foreach (var entry in missions)
                 {
                     // Filter by selected job ID (note: JobId is zero-based, our IDs start at 9)
                     if (entry.Value.JobId != selectedJobId - 1)

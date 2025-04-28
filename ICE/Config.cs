@@ -18,10 +18,11 @@ namespace ICE
         // Turnin options
         public bool TurninOnSilver { get; set; } = false;
         public bool TurninASAP { get; set; } = false;
+        public bool CraftMultipleMissionItems = false;
 
-    public bool DelayGrab = false;
-    public bool TurninOnSilver = false;
-    public bool TurninASAP = false;
+        // Table settings
+        public bool HideUnsupportedMissions = false;
+        public bool TableSortByName = true;
 
         public void Save()
         {
