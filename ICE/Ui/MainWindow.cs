@@ -2,17 +2,9 @@
 using ICE.Scheduler;
 using Dalamud.Interface.Utility.Raii;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using ICE;
-using static ICE.Utilities.Data;
-using ICE.Ui;
-using ImGuiNET;
-using Dalamud.Interface.Windowing;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
-using System.Reflection;
 using ICE.Enums;
+using Dalamud.Interface.Colors;
+using System.Drawing;
 
 namespace ICE.Ui
 {
@@ -214,26 +206,36 @@ namespace ICE.Ui
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
-                        .Where(m => m.Value.Rank == rank.RankId);
+                        .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
+                        .Where(m => !m.Value.IsCriticalMission)
+                        .Where(m => m.Value.Time == 0)
+                        .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
                 DrawMissionsDropDown($"Class {rank.RankName} Missions", missions);
             }
 
-            //IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
-            //        MissionInfoDict
-            //            .Where(m => m.Value.JobId == selectedJobId - 1)
-            //            .Where(m => m.Value.Time == 0);
-            //timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            //DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.Time != 0);
+            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
+            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
 
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
+                        .Where(m => !m.Value.IsCriticalMission);
+            weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
+            DrawMissionsDropDown($"Weather-restricted Missions", weatherRestrictedMissions);
 
-            //IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
-            //        MissionInfoDict
-            //            .Where(m => m.Value.JobId == selectedJobId - 1)
-            //            .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
-            //weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
-            //DrawMissionsDropDown($"Weather-restricted Missions", weatherRestrictedMissions);
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> criticalMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.IsCriticalMission);
+            criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
+            DrawMissionsDropDown($"Critical Missions", criticalMissions);
 
             ImGui.EndTabItem();
         }
@@ -244,7 +246,7 @@ namespace ICE.Ui
             {
                 ImGui.Spacing();
                 // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-                if (ImGui.BeginTable("###MissionList", 9, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+                if (ImGui.BeginTable("###MissionList", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
                 {
                     var sortSpecs = ImGui.TableGetSortSpecs();
 
@@ -253,7 +255,7 @@ namespace ICE.Ui
                     // Second column: ID
                     ImGui.TableSetupColumn("ID");
                     // Third column: dynamic header showing selected rank missions
-                    ImGui.TableSetupColumn("Mission Name");
+                    ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed);
                     // Fourth column: Rewards
                     ImGui.TableSetupColumn("Cosmocredits");
                     ImGui.TableSetupColumn("Lunar Credits");
@@ -264,10 +266,10 @@ namespace ICE.Ui
                         ImGui.TableSetupColumn(exp.Value);
                     }
 
+                    ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
+
                     // Render the header row
                     ImGui.TableHeadersRow();
-
-
                     
 
                     foreach (var entry in missions)
@@ -328,6 +330,18 @@ namespace ICE.Ui
                             ImGui.TableNextColumn();
                             ImGui.Text(entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString());
                         }
+                        
+                        // debug
+                        ImGui.TableNextColumn();
+                        if (entry.Value.Weather != CosmicWeather.FairSkies)
+                        {
+                            ImGui.Text(entry.Value.Weather.ToString());
+                        }
+                        else if (entry.Value.Time != 0)
+                        {
+
+                            ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
+                        }
                     }
 
                     ImGui.EndTable();
@@ -341,6 +355,8 @@ namespace ICE.Ui
 
             if (!tab)
                 return;
+
+            DrawLink("Say no to global warming, support Ice today: ", "https://ko-fi.com/ice643269", "https://ko-fi.com/ice643269");
 
             // Checkbox: Add delay to grabbing mission.
             if (ImGui.Checkbox("Add delay to grabbing mission", ref delayGrab))
@@ -404,5 +420,27 @@ namespace ICE.Ui
 
             ImGui.EndTabItem();
         }
+
+        public static void DrawLink(string label, string link, string url)
+        {
+            ImGui.Text(label);
+            ImGui.SameLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.TankBlue);
+            ImGui.Text(link);
+            ImGui.PopStyleColor();
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            if (ImGui.IsItemClicked())
+            {
+                Dalamud.Utility.Util.OpenLink(url);
+            }
+        }
     }
 }
+
+    
+
