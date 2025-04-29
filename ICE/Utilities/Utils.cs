@@ -273,7 +273,7 @@ public static unsafe class Utils
             uint silver = item.Unknown5;
             uint gold = item.Unknown6;
 
-            uint timeAndWeather = item.Unknown7;
+            uint timeAndWeather = item.Unknown18;
             uint time = 0;
             CosmicWeather weather = CosmicWeather.FairSkies;
             if (timeAndWeather <= 12)
@@ -286,6 +286,8 @@ public static unsafe class Utils
             }
 
             uint rank = item.Unknown17;
+            bool isCritical = item.Unknown20;
+
             uint RecipeId = item.Unknown12;
 
             uint toDoValue = item.Unknown7;
@@ -466,6 +468,7 @@ public static unsafe class Utils
                     JobId2 = ((uint)Job2),
                     ToDoSlot = toDoValue,
                     Rank = rank,
+                    IsCriticalMission = isCritical,
                     Time = time,
                     Weather = weather,
                     RecipeId = RecipeId,
