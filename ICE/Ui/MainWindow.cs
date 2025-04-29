@@ -69,10 +69,23 @@ namespace ICE.Ui
             (4, "A"),
         };
 
+        private static List<(uint Id, string SortOptionName, Func<IEnumerable<KeyValuePair<uint, MissionListInfo>>, IEnumerable<KeyValuePair<uint, MissionListInfo>>> SortFunc)> sortOptions = new()
+        {
+            (0, "", missions => missions),
+            (1, "Name", missions => missions.OrderBy(x => x.Value.Name)),
+            (2, "Mission ID", missions => missions),
+            (3, "Cosmocredits", missions => missions.OrderBy(x => x.Value.CosmoCredit)),
+            (4, "Lunar Credits", missions => missions.OrderBy(x => x.Value.LunarCredit)),
+            (5, "Research I", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount)),
+            (6, "Research II", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount)),
+            (7, "Research III", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount)),
+            (8, "Research IV", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount))
+        };
+
         // Index of the currently selected job in jobOptions.
-        private static int selectedIndex = 0;
+        private static int selectedJobIndex = 0;
         // ID of the currently selected crafting job.
-        private static uint selectedJobId = jobOptions[selectedIndex].Id;
+        private static uint selectedJobId = jobOptions[selectedJobIndex].Id;
 
         // Index of the currently selected rank in rankOptions.
         private static int selectedRankIndex = 0;
@@ -85,13 +98,28 @@ namespace ICE.Ui
         private static bool craftx2 = C.CraftMultipleMissionItems;
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
-        private static bool SortByName = C.TableSortByName;
+        private static int SortOption = C.TableSortOption;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
         /// </summary>
         public override void Draw()
         {
+            using var tabbar = ImRaii.TabBar("ConfigTabs###GatherBuddyConfigTabs", ImGuiTabBarFlags.Reorderable);
+            if (!tabbar)
+                return;
+
+            DrawMissionsTab();
+            DrawConfigTab();
+        }
+
+        public void DrawMissionsTab()
+        {
+            var tab = ImRaii.TabItem("Missions");
+
+            if (!tab)
+                return;
+
             // Title text for the run controls.
             ImGui.Text("Run");
 
@@ -124,6 +152,179 @@ namespace ICE.Ui
                     SchedulerMain.DisablePlugin();
                 }
             }
+
+            // Crafting Job selection combo.
+            ImGui.SetNextItemWidth(150);
+            if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedJobIndex].Name))
+            {
+                for (int i = 0; i < jobOptions.Count; i++)
+                {
+                    bool isSelected = (i == selectedJobIndex);
+                    if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                    {
+                        selectedJobIndex = i;
+                        selectedJobId = jobOptions[i].Id;
+                    }
+                    if (isSelected)
+                    {
+                        ImGui.SetItemDefaultFocus();
+                    }
+                }
+                ImGui.EndCombo();
+            }
+
+            // Checkbox: Hide unsupported missions.
+            if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
+            {
+                C.HideUnsupportedMissions = hideUnsupported;
+                C.Save();
+            }
+
+            ImGui.Spacing();
+
+            if (ImGui.BeginCombo("Sort By", sortOptions[SortOption].SortOptionName))
+            {
+                for (int i = 0; i < sortOptions.Count; i++)
+                {
+                    bool isSelected = (i == SortOption);
+                    if (ImGui.Selectable(sortOptions[i].SortOptionName, isSelected))
+                    {
+                        SortOption = i;
+                    }
+                    if (isSelected)
+                    {
+                        ImGui.SetItemDefaultFocus();
+                    }
+                    if (SortOption != C.TableSortOption)
+                    {
+                        C.TableSortOption = SortOption;
+                        C.Save();
+                    }
+                }
+                ImGui.EndCombo();
+            }
+
+            ImGui.Text($"SortOption: {SortOption}");
+
+            // Rank selection combo.
+            ImGui.SetNextItemWidth(100);
+            foreach (var rank in rankOptions.OrderBy(r => r.RankName))
+            {
+                if (ImGui.CollapsingHeader($"Rank {rank.RankName}"))
+                {
+                    ImGui.Spacing();
+                    // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
+                    if (ImGui.BeginTable("###MissionList", 9, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+                    {
+                        var sortSpecs = ImGui.TableGetSortSpecs();
+
+                        // First column: checkbox (empty header)
+                        ImGui.TableSetupColumn("Enable##Enable");
+                        // Second column: ID
+                        ImGui.TableSetupColumn("ID");
+                        // Third column: dynamic header showing selected rank missions
+                        ImGui.TableSetupColumn("Mission Name");
+                        // Fourth column: Rewards
+                        ImGui.TableSetupColumn("Cosmocredits");
+                        ImGui.TableSetupColumn("Lunar Credits");
+                        ImGui.TableSetupColumn("I");
+                        ImGui.TableSetupColumn("II");
+                        ImGui.TableSetupColumn("III");
+                        ImGui.TableSetupColumn("IV");
+
+                        // Render the header row
+                        ImGui.TableHeadersRow();
+
+                        IEnumerable<KeyValuePair<uint, MissionListInfo>> missions = MissionInfoDict;
+                        missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
+                        //missions = missions.OrderBy(m => m.Value.LunarCredit);
+
+                        foreach (var entry in missions)
+                        {
+                            // Filter by selected job ID (note: JobId is zero-based, our IDs start at 9)
+                            if (entry.Value.JobId != selectedJobId - 1)
+                                continue;
+
+                            // Determine if this is an A-rank mission
+                            bool isARank = ARankIds.Contains(entry.Value.Rank);
+                            if (entry.Value.Rank != rank.RankId)
+                                continue;
+
+                            // Skip unsupported missions if the user has chosen to hide them
+                            bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
+                            if (unsupported && hideUnsupported)
+                                continue;
+
+                            // Start a new row
+                            ImGui.TableNextRow();
+
+                            // Column 0: Enable checkbox
+                            ImGui.TableSetColumnIndex(0);
+                            bool enabled = C.EnabledMission.Any(x => x.Id == entry.Key);
+                            using (ImRaii.Disabled(unsupported))
+                            {
+                                if (ImGui.Checkbox($"###{entry.Value.Name} + {entry.Key}", ref enabled))
+                                {
+                                    if (enabled)
+                                    {
+                                        C.EnabledMission.Add((entry.Key, entry.Value.Name));
+                                    }
+                                    else
+                                    {
+                                        C.EnabledMission.Remove((entry.Key, entry.Value.Name));
+                                    }
+                                    C.Save();
+                                }
+                            }
+
+                            // Column 1: Mission ID
+                            ImGui.TableNextColumn();
+                            ImGui.Text($"{entry.Key}");
+
+                            // Column 2: Mission Name
+                            ImGui.TableNextColumn();
+                            if (unsupported)
+                            {
+                                ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), entry.Value.Name);
+                                if (ImGui.IsItemHovered())
+                                {
+                                    ImGui.SetTooltip("Currently not supported");
+                                }
+                            }
+                            else
+                            {
+                                ImGui.Text($"{entry.Value.Name}");
+                            }
+
+                            // Column 3: Rewards
+                            ImGui.TableNextColumn();
+                            ImGui.Text(entry.Value.CosmoCredit.ToString());
+                            ImGui.TableNextColumn();
+                            ImGui.Text(entry.Value.LunarCredit.ToString());
+                            ImGui.TableNextColumn();
+                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount.ToString());
+                            ImGui.TableNextColumn();
+                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount.ToString());
+                            ImGui.TableNextColumn();
+                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount.ToString());
+                            ImGui.TableNextColumn();
+                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount.ToString());
+                        }
+
+                        ImGui.EndTable();
+                    }
+                }
+            }
+
+            ImGui.EndTabItem();
+        }
+
+        public void DrawConfigTab()
+        {
+            var tab = ImRaii.TabItem("Config");
+
+            if (!tab)
+                return;
 
             // Checkbox: Add delay to grabbing mission.
             if (ImGui.Checkbox("Add delay to grabbing mission", ref delayGrab))
@@ -185,159 +386,7 @@ namespace ICE.Ui
                 C.Save();
             }
 
-            // Checkbox: Hide unsupported missions.
-            if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
-            {
-                C.HideUnsupportedMissions = hideUnsupported;
-                C.Save();
-            }
-
-            ImGui.Spacing();
-
-            // Crafting Job selection combo.
-            ImGui.SetNextItemWidth(150);
-            if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedIndex].Name))
-            {
-                for (int i = 0; i < jobOptions.Count; i++)
-                {
-                    bool isSelected = (i == selectedIndex);
-                    if (ImGui.Selectable(jobOptions[i].Name, isSelected))
-                    {
-                        selectedIndex = i;
-                        selectedJobId = jobOptions[i].Id;
-                    }
-                    if (isSelected)
-                    {
-                        ImGui.SetItemDefaultFocus();
-                    }
-                }
-                ImGui.EndCombo();
-            }
-
-            // Rank selection combo.
-            ImGui.SetNextItemWidth(100);
-            if (ImGui.BeginCombo("Rank", rankOptions[selectedRankIndex].RankName))
-            {
-                for (int i = 0; i < rankOptions.Count; i++)
-                {
-                    bool isSelected = (i == selectedRankIndex);
-                    if (ImGui.Selectable(rankOptions[i].RankName, isSelected))
-                    {
-                        selectedRankIndex = i;
-                        selectedRankName = rankOptions[i].RankName;
-                    }
-                    if (isSelected)
-                    {
-                        ImGui.SetItemDefaultFocus();
-                    }
-                }
-                ImGui.EndCombo();
-            }
-
-            ImGui.Spacing();
-
-            // Checkbox: Option to sort by ID vs by Name
-            if (ImGui.Checkbox("Sort by Name", ref SortByName))
-            {
-                if (SortByName != C.TableSortByName)
-                {
-                    C.TableSortByName = SortByName;
-                    C.Save();
-                }
-            }
-
-            // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-            if (ImGui.BeginTable("###MissionList", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
-            {
-                // First column: checkbox (empty header)
-                ImGui.TableSetupColumn("##Enable");
-                // Second column: ID
-                ImGui.TableSetupColumn("ID");
-                // Third column: dynamic header showing selected rank missions
-                ImGui.TableSetupColumn($"Rank {selectedRankName} Missions");
-                // Fourth column: Rewards
-                ImGui.TableSetupColumn("Rewards");
-
-                // Render the header row
-                ImGui.TableHeadersRow();
-
-                IEnumerable<KeyValuePair<uint, MissionListInfo>> missions = MissionInfoDict;
-                if (SortByName)
-                    missions = missions.OrderBy(x => x.Value.Name);
-
-                foreach (var entry in missions)
-                {
-                    // Filter by selected job ID (note: JobId is zero-based, our IDs start at 9)
-                    if (entry.Value.JobId != selectedJobId - 1)
-                        continue;
-
-                    // Determine if this is an A-rank mission
-                    bool isARank = ARankIds.Contains(entry.Value.Rank);
-                    // Filter by selected rank
-                    if (selectedRankIndex == 3
-                        ? !isARank
-                        : entry.Value.Rank != rankOptions[selectedRankIndex].RankId)
-                        continue;
-
-                    // Skip unsupported missions if the user has chosen to hide them
-                    bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
-                    if (unsupported && hideUnsupported)
-                        continue;
-
-                    // Start a new row
-                    ImGui.TableNextRow();
-
-                    // Column 0: Enable checkbox
-                    ImGui.TableSetColumnIndex(0);
-                    bool enabled = C.EnabledMission.Any(x => x.Id == entry.Key);
-                    using (ImRaii.Disabled(unsupported))
-                    {
-                        if (ImGui.Checkbox($"###{entry.Value.Name} + {entry.Key}", ref enabled))
-                        {
-                            if (enabled)
-                            {
-                                C.EnabledMission.Add((entry.Key, entry.Value.Name));
-                            }
-                            else
-                            {
-                                C.EnabledMission.Remove((entry.Key, entry.Value.Name));
-                            }
-                            C.Save();
-                        }
-                    }
-
-                    // Column 1: Mission ID
-                    ImGui.TableNextColumn();
-                    ImGui.Text($"{entry.Key}");
-
-                    // Column 2: Mission Name
-                    ImGui.TableNextColumn();
-                    if (unsupported)
-                    {
-                        ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), entry.Value.Name);
-                        if (ImGui.IsItemHovered())
-                        {
-                            ImGui.SetTooltip("Currently not supported");
-                        }
-                    }
-                    else
-                    {
-                        ImGui.Text($"{entry.Value.Name}");
-                    }
-
-                    // Column 3: Rewards
-                    ImGui.TableNextColumn();
-                    ImGui.Text(
-                        string.Join(
-                            " | ",
-                            entry.Value.ExperienceRewards
-                                .Select(exp => ExpDictionary[exp.Type] + ": " + exp.Amount)
-                        )
-                    );
-                }
-
-                ImGui.EndTable();
-            }
+            ImGui.EndTabItem();
         }
     }
 }
