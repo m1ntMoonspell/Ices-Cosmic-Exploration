@@ -4,6 +4,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using ECommons.GameHelpers;
 using ECommons.Logging;
+using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using ICE.Scheduler;
@@ -408,6 +409,11 @@ internal class DebugWindow : Window
         if (ImGui.TreeNode("IPC Testing"))
         {
             ImGui.Text($"Artisan Is Busy? {P.Artisan.IsBusy()}");
+            ImGui.Text($"{EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft")}");
+            if (ImGui.Button("Artisan, craft this"))
+            {
+                P.Artisan.CraftItem(36208, 1);
+            }
 
             ImGui.TreePop();
         }
