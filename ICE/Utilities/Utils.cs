@@ -16,6 +16,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using ICE.Enums;
 using Lumina;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
@@ -272,6 +273,18 @@ public static unsafe class Utils
             uint silver = item.Unknown5;
             uint gold = item.Unknown6;
 
+            uint timeAndWeather = item.Unknown7;
+            uint time = 0;
+            CosmicWeather weather = CosmicWeather.FairSkies;
+            if (timeAndWeather <= 12)
+            {
+                time = timeAndWeather;
+            }
+            else
+            {
+                weather = (CosmicWeather)(timeAndWeather - 12);
+            }
+
             uint rank = item.Unknown17;
             uint RecipeId = item.Unknown12;
 
@@ -453,6 +466,8 @@ public static unsafe class Utils
                     JobId2 = ((uint)Job2),
                     ToDoSlot = toDoValue,
                     Rank = rank,
+                    Time = time,
+                    Weather = weather,
                     RecipeId = RecipeId,
                     SilverRequirement = silver,
                     GoldRequirement = gold,
