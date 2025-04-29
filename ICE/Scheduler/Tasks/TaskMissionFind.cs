@@ -16,7 +16,7 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
-            P.TaskManager.Enqueue(() => UpdateValues());
+            P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
             P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
             P.TaskManager.EnqueueDelay(200);
@@ -26,16 +26,17 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
             P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.TaskManager.Enqueue(() => CurrentLunarMission != 0);
+            P.TaskManager.Enqueue(() => CurrentLunarMission != 0, "Waiting for Lunar Mission value to change");
             P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
             P.TaskManager.Enqueue(() =>
             {
                 if (SchedulerMain.Abandon)
                 {
                     P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
+                    P.TaskManager.EnqueueDelay(25);
                     SchedulerMain.Abandon = false;
                 }
-            });
+            }, "Checking if you are abandoning mission");
         }
 
         internal static bool? UpdateValues()

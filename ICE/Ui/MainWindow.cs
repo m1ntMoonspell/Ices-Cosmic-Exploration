@@ -142,11 +142,19 @@ namespace ICE.Ui
                     C.TurninASAP = false;
                 }
 
+                if (C.CraftMultipleMissionItems)
+                {
+                    C.CraftMultipleMissionItems = false;
+                    craftx2 = false;
+                }
+
                 if (silverTurnin != C.TurninOnSilver)
                 {
                     C.TurninOnSilver = silverTurnin;
                     C.Save();
                 }
+
+
             }
 
             // Checkbox: If Silver is enabled, allow for x2 crafting

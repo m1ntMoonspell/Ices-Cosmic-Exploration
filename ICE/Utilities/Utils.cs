@@ -408,7 +408,6 @@ public static unsafe class Utils
 
             }
 
-
             // Col 3 -> Cosmocredits - Unknown 0
             // Col 4 -> Lunar Credits - Unknown 1
             // Col 7 ->  Lv. 1 Type - Unknown 12
