@@ -245,8 +245,18 @@ namespace ICE.Ui
 
                             // Determine if this is an A-rank mission
                             bool isARank = ARankIds.Contains(entry.Value.Rank);
-                            if (entry.Value.Rank != rank.RankId)
-                                continue;
+
+                            if (rank.RankName == "A")
+                            {
+                                if (!ARankIds.Contains(entry.Value.Rank))
+                                    continue;
+                            }
+                            else
+                            {
+                                if (entry.Value.Rank != rank.RankId)
+                                    continue;
+                            }
+
 
                             // Skip unsupported missions if the user has chosen to hide them
                             bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
