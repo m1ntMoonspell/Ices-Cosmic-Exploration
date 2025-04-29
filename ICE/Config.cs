@@ -22,7 +22,7 @@ namespace ICE
 
         // Table settings
         public bool HideUnsupportedMissions { get; set; } = false;
-        public bool TableSortByName { get; set; } = true;
+        public int TableSortOption = 0;
 
         public void Save()
         {
