@@ -29,8 +29,9 @@ namespace ICE.Scheduler.Tasks
             }
             else
             {
-                P.TaskManager.EnqueueDelay(300);
+                P.TaskManager.EnqueueDelay(750);
             }
+            P.TaskManager.Enqueue(() => WaitingForCrafting(), "Waiting for you to not be in a crafting animation", DConfig);
         }
 
         internal static bool? IsArtisanBusy()
@@ -87,16 +88,18 @@ namespace ICE.Scheduler.Tasks
 
                 PluginDebug($"Current Mission: {currentMission} | Found Pre-Craft? {foundPreCraft}");
 
+                // Score checker section. 
                 foreach (var mainItem in MoonRecipies[currentMission].MainCraftsDict)
                 {
                     var itemId = RecipeSheet.GetRow(mainItem.Key).ItemResult.Value.RowId;
                     var currentAmount = GetItemCount((int)itemId);
                     var goalAmount = mainItem.Value;
+                    var baseGoal = goalAmount;
                     if (C.CraftMultipleMissionItems)
                     {
                         goalAmount = mainItem.Value * 2;
                     }
-                    if (currentAmount < goalAmount)
+                    if (currentAmount < goalAmount && (currentAmount < baseGoal && currentScore != goldScore))
                     {
                         PluginDebug("Score checker can't be done, you still have items to craft");
                         allCrafted = false;
@@ -171,7 +174,7 @@ namespace ICE.Scheduler.Tasks
                         if (currentSubItemAmount >= subItemNeed)
                         {
                             PluginDebug($"[Main Item(s) You have the required amount to make the necessary amount of main items. Continuing on]");
-                            if (EzThrottler.Throttle("[Main Item(s)] Crafting Main Item(s)"))
+                            if (EzThrottler.Throttle("[Main Item(s)] Crafting Main Item(s)", 4000))
                             {
                                 int craftAmount = mainNeed - currentAmount;
                                 PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {main.Key} | {craftAmount}");
@@ -201,7 +204,7 @@ namespace ICE.Scheduler.Tasks
 
                         if (currentAmount < goalAmount)
                         {
-                            if (EzThrottler.Throttle($"Starting pre-craft {pre.Key}", 1000))
+                            if (EzThrottler.Throttle($"Starting pre-craft {pre.Key}", 4000))
                             {
                                 PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId}");
                                 int craftAmount = goalAmount - currentAmount;
@@ -239,6 +242,18 @@ namespace ICE.Scheduler.Tasks
             }
 
             return (0, 0, 0);
+        }
+
+        internal static bool? WaitingForCrafting()
+        {
+            if (!Svc.Condition[ConditionFlag.Crafting] && 
+                !Svc.Condition[ConditionFlag.Crafting40] &&
+                !Svc.Condition[ConditionFlag.PreparingToCraft])
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
