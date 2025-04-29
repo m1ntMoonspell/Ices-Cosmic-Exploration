@@ -225,10 +225,12 @@ namespace ICE.Ui
                         // Fourth column: Rewards
                         ImGui.TableSetupColumn("Cosmocredits");
                         ImGui.TableSetupColumn("Lunar Credits");
-                        ImGui.TableSetupColumn("I");
-                        ImGui.TableSetupColumn("II");
-                        ImGui.TableSetupColumn("III");
-                        ImGui.TableSetupColumn("IV");
+
+                        IOrderedEnumerable<KeyValuePair<int, string>> orderedExp = ExpDictionary.ToList().OrderBy(exp => exp.Key);
+                        foreach (var exp in orderedExp)
+                        {
+                            ImGui.TableSetupColumn(exp.Value);
+                        }
 
                         // Render the header row
                         ImGui.TableHeadersRow();
@@ -243,8 +245,7 @@ namespace ICE.Ui
                             if (entry.Value.JobId != selectedJobId - 1)
                                 continue;
 
-                            // Determine if this is an A-rank mission
-                            bool isARank = ARankIds.Contains(entry.Value.Rank);
+                            // Only draw missions of the correct rank under this tab
                             if (entry.Value.Rank != rank.RankId)
                                 continue;
 
@@ -299,14 +300,11 @@ namespace ICE.Ui
                             ImGui.Text(entry.Value.CosmoCredit.ToString());
                             ImGui.TableNextColumn();
                             ImGui.Text(entry.Value.LunarCredit.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount.ToString());
+                            foreach (var expType in orderedExp)
+                            {
+                                ImGui.TableNextColumn();
+                                ImGui.Text(entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString());
+                            }
                         }
 
                         ImGui.EndTable();
