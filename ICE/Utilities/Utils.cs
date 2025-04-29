@@ -40,6 +40,12 @@ public static unsafe class Utils
             PluginLog.Debug(message);
     }
 
+    public static void PluginWarning(string message)
+    {
+        if (EzThrottler.Throttle(message, 1000))
+            PluginLog.Warning(message);
+    }
+
     #endregion
 
     #region Player Information

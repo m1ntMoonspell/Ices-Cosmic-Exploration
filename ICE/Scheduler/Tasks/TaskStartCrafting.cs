@@ -29,11 +29,11 @@ namespace ICE.Scheduler.Tasks
             // P.TaskManager.Enqueue(StartCrafting, "Starting Crafting Process", DConfig);
             if (C.DelayGrab)
             {
-                P.TaskManager.EnqueueDelay(1500);
+                P.TaskManager.EnqueueDelay(4000);
             }
             else
             {
-                P.TaskManager.EnqueueDelay(750);
+                P.TaskManager.EnqueueDelay(2000);
             }
             P.TaskManager.Enqueue(() => WaitingForCrafting(), "Waiting for you to not be in a crafting animation", DConfig);
         }
@@ -144,6 +144,7 @@ namespace ICE.Scheduler.Tasks
                             if (EzThrottler.Throttle("Turning in item", 100))
                             {
                                 z.Report();
+                                return false;
                             }
                         }
 
@@ -154,6 +155,7 @@ namespace ICE.Scheduler.Tasks
                             if (EzThrottler.Throttle("Turning in item", 100))
                             {
                                 z.Report();
+                                return false;
                             }
                         }
 
@@ -164,6 +166,7 @@ namespace ICE.Scheduler.Tasks
                             if (EzThrottler.Throttle("Turning in item"))
                             {
                                 z.Report();
+                                return false;
                             }
                         }
                     }
@@ -208,7 +211,7 @@ namespace ICE.Scheduler.Tasks
                             }
                             else if (EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft") < 3000)
                             {
-                                PluginDebug($"It seems like artisan failed to start crafting the item. Starting failsafe mode");
+                                PluginWarning($"[Main-craft failsafe] It seems like artisan failed to start crafting the item. Starting failsafe mode");
                                 if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
                                 {
                                     if (!m.SelectedCraftingItem.Contains($"{mainItemName}"))
@@ -219,6 +222,7 @@ namespace ICE.Scheduler.Tasks
                                             {
                                                 if (item.Name.Contains(mainItemName))
                                                 {
+                                                    PluginDebug($"[Main-craft failsafe] Selecting item: {mainItemName}");
                                                     item.Select();
                                                 }
                                                 else
@@ -230,8 +234,10 @@ namespace ICE.Scheduler.Tasks
                                     }
                                     else
                                     {
+                                        PluginDebug($"[Main-craft failsafe] Starting Crafting Process (if not throttled)");
                                         if (EzThrottler.Throttle("Starting Backup Crafting Process"))
                                         {
+                                            PluginDebug($"[Main-craft failsafe] Starting the backup crafting process");
                                             int craftAmount = mainNeed;
                                             m.NQItemInput();
                                             m.HQItemInput();
@@ -253,9 +259,11 @@ namespace ICE.Scheduler.Tasks
                     {
                         var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
                         var currentAmount = GetItemCount((int)itemId);
-                        PluginDebug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} has enough.");
+                        var PreCraftItemName = Svc.Data.GetExcelSheet<Item>().GetRow(itemId).Name.ToString();
+                        PluginDebug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
                         PluginDebug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
                         var goalAmount = pre.Value;
+
                         PluginDebug($"[Pre-Crafts] Craft x 2 items state: {C.CraftMultipleMissionItems}");
                         if (C.CraftMultipleMissionItems)
                         {
@@ -266,12 +274,51 @@ namespace ICE.Scheduler.Tasks
                         {
                             if (EzThrottler.Throttle($"Starting pre-craft {pre.Key}", 4000))
                             {
-                                PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId}");
+                                PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
                                 int craftAmount = goalAmount - currentAmount;
                                 PluginDebug($"[Pre-Crafts] Telling Artisan to craft: {pre.Key} with the amount: {craftAmount}");
                                 P.Artisan.CraftItem(pre.Key, craftAmount);
+                                break;
                             }
-                            break; // <-- Important: break out after starting a pre-craft to avoid multiple crafts at once
+                            else if (EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft") < 3000)
+                            {
+                                PluginWarning($"[Pre-craft failsafe] It seems like artisan failed to start crafting the item. Starting failsafe mode");
+                                if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
+                                {
+                                    if (!m.SelectedCraftingItem.Contains($"{PreCraftItemName}"))
+                                    {
+                                        if (EzThrottler.Throttle("Selecting Item"))
+                                        {
+                                            foreach (var item in m.CraftingItems)
+                                            {
+                                                if (item.Name.Contains(PreCraftItemName))
+                                                {
+                                                    PluginDebug($"[Pre-craft failsafe] Selecting {PreCraftItemName} in recipe log");
+                                                    item.Select();
+                                                }
+                                                else
+                                                {
+                                                    continue;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        PluginDebug($"[Pre-craft failsafe] Starting Crafting Process (if not throttled)");
+                                        if (EzThrottler.Throttle("Starting Backup Crafting Process", 1500))
+                                        {
+                                            PluginDebug($"[Pre-craft failsafe] Starting Backup Crafting process for: {PreCraftItemName}");
+                                            int craftAmount = goalAmount;
+                                            m.NQItemInput();
+                                            m.HQItemInput();
+                                            P.Artisan.SetEnduranceStatus(true);
+                                            ManualItemAmount = craftAmount;
+                                            ManualItemId = (int)itemId;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
