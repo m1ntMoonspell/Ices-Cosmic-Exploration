@@ -412,7 +412,7 @@ internal class DebugWindow : Window
             ImGui.Text($"{EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft")}");
             if (ImGui.Button("Artisan, craft this"))
             {
-                P.Artisan.CraftItem(36208, 1);
+                P.Artisan.CraftItem(36026, 1);
             }
 
             ImGui.TreePop();

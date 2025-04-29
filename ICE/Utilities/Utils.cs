@@ -33,7 +33,12 @@ public static unsafe class Utils
 
     public static void PluginVerbos(string message) => PluginLog.Verbose(message);
     public static void PluginInfo(string message) => PluginLog.Information(message);
-    public static void PluginDebug(string message) => PluginLog.Debug(message);
+
+    public static void PluginDebug(string message)
+    {
+        if (EzThrottler.Throttle(message, 1000))
+            PluginLog.Debug(message);
+    }
 
     #endregion
 

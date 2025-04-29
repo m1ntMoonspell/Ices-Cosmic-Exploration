@@ -15,6 +15,10 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskStartCrafting
     {
+        private static bool ManualSetEndurance = false;
+        private static int ManualItemId = 0;
+        private static int ManualItemAmount = 0;
+
         public static void Enqueue()
         {
             P.TaskManager.Enqueue(() => IsArtisanBusy(), "Checking to see if artisan is busy");
@@ -62,7 +66,23 @@ namespace ICE.Scheduler.Tasks
 
             var itemSheet = Svc.Data.GetExcelSheet<Item>();
 
-            if ((P.Artisan.GetEnduranceStatus() == false && !IsAddonActive("Synthesis")) || P.Artisan.IsBusy())
+            if (ManualSetEndurance)
+            {
+                if (GetItemCount(ManualItemId) <= ManualItemAmount)
+                {
+                    PluginDebug("[Manual Endurance Endurance] Endurance mode was set manually, waiting for ItemCount to meet requirement");
+                    return false;
+                }
+                else
+                {
+                    ManualSetEndurance = false;
+                    ManualItemAmount = 0;
+                    ManualItemId = 0;
+                    PluginDebug($"[Manual Endurance] The item amount has been met, stopping the craft ");
+                    return false;
+                }
+            }
+            else if ((P.Artisan.GetEnduranceStatus() == false && !IsAddonActive("Synthesis")) || !P.Artisan.IsBusy())
             {
                 P.Artisan.SetEnduranceStatus(false);
 
@@ -151,14 +171,18 @@ namespace ICE.Scheduler.Tasks
 
                 foreach (var main in MoonRecipies[currentMission].MainCraftsDict)
                 {
-                    var itemId = RecipeSheet.GetRow(main.Key).ItemRequired.Value.RowId;
+                    var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
                     var subItem = RecipeSheet.GetRow(main.Key).Ingredient[0].Value.RowId; // need to directly reference this in the future
                     var mainNeed = main.Value;
                     var subItemNeed = RecipeSheet.GetRow(main.Key).AmountIngredient[0].ToInt() * main.Value;
                     var currentAmount = GetItemCount((int)itemId);
                     var currentSubItemAmount = GetItemCount((int)subItem);
+                    var mainItemName = Svc.Data.GetExcelSheet<Item>().GetRow(itemId).Name.ToString();
 
-                    PluginDebug($"[Main Item(s)] Main ItemID: {itemId} | Current Amount: {currentAmount} | RecipeId {main.Key}");
+                    PluginDebug($"RecipeID: {main.Key}");
+                    PluginDebug($"ItemID: {itemId}");
+
+                    PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
                     PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
                     if (C.CraftMultipleMissionItems)
                     {
@@ -170,17 +194,53 @@ namespace ICE.Scheduler.Tasks
                     {
                         subItemNeed = subItemNeed - currentAmount;
 
-                        PluginDebug($"[Main Item(s)] You currently don't have the required amount of items. Checking to see if you have enough pre-crafts");
+                        PluginDebug($"[Main Item(s)] You currently don't have the required amount of item: {Svc.Data.GetExcelSheet<Item>().GetRow(itemId).Name.ToString()}]. Checking to see if you have enough pre-crafts");
                         if (currentSubItemAmount >= subItemNeed)
                         {
-                            PluginDebug($"[Main Item(s) You have the required amount to make the necessary amount of main items. Continuing on]");
+                            PluginDebug($"[Main Item(s) You have the required amount to make the necessary amount of main items. Continuing on");
                             if (EzThrottler.Throttle("[Main Item(s)] Crafting Main Item(s)", 4000))
                             {
                                 int craftAmount = mainNeed - currentAmount;
-                                PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {main.Key} | {craftAmount}");
+                                PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {main.Key} | {craftAmount} for {Svc.Data.GetExcelSheet<Item>().GetRow(itemId).Name.ToString()}]");
                                 P.Artisan.CraftItem(main.Key, craftAmount);
                                 needPreCraft = false;
                                 break;
+                            }
+                            else if (EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft") < 3000)
+                            {
+                                PluginDebug($"It seems like artisan failed to start crafting the item. Starting failsafe mode");
+                                if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
+                                {
+                                    if (!m.SelectedCraftingItem.Contains($"{mainItemName}"))
+                                    {
+                                        if (EzThrottler.Throttle("Selecting Item"))
+                                        {
+                                            foreach (var item in m.CraftingItems)
+                                            {
+                                                if (item.Name.Contains(mainItemName))
+                                                {
+                                                    item.Select();
+                                                }
+                                                else
+                                                {
+                                                    continue;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (EzThrottler.Throttle("Starting Backup Crafting Process"))
+                                        {
+                                            int craftAmount = mainNeed;
+                                            m.NQItemInput();
+                                            m.HQItemInput();
+                                            P.Artisan.SetEnduranceStatus(true);
+                                            ManualItemAmount = craftAmount;
+                                            ManualItemId = (int)itemId;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -216,7 +276,6 @@ namespace ICE.Scheduler.Tasks
                     }
                 }
             }
-
             return false;
         }
 
@@ -246,9 +305,7 @@ namespace ICE.Scheduler.Tasks
 
         internal static bool? WaitingForCrafting()
         {
-            if (!Svc.Condition[ConditionFlag.Crafting] && 
-                !Svc.Condition[ConditionFlag.Crafting40] &&
-                !Svc.Condition[ConditionFlag.PreparingToCraft])
+            if (Svc.Condition[ConditionFlag.NormalConditions])
             {
                 return true;
             }
