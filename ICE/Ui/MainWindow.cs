@@ -204,8 +204,6 @@ namespace ICE.Ui
                 ImGui.EndCombo();
             }
 
-            ImGui.Text($"SortOption: {SortOption}");
-
             // Rank selection combo.
             ImGui.SetNextItemWidth(100);
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
