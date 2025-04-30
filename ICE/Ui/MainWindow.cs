@@ -139,7 +139,7 @@ namespace ICE.Ui
             ImGui.Spacing();
 
             // Start button (disabled while already ticking).
-            using (ImRaii.Disabled(SchedulerMain.AreWeTicking || !usingSupportedJob))
+            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !usingSupportedJob))
             {
                 if (ImGui.Button("Start"))
                 {
@@ -161,7 +161,7 @@ namespace ICE.Ui
             }
 
             // Stop Next Loop
-            using (ImRaii.Disabled(currentJobId >= 16 || !SchedulerMain.AreWeTicking || (SchedulerMain.AreWeTicking && C.StopNextLoop)))
+            using (ImRaii.Disabled(currentJobId >= 16 || (SchedulerMain.State != IceState.Idle && C.StopNextLoop)))
             {
                 if (ImGui.Button("Stop After This"))
                 {
