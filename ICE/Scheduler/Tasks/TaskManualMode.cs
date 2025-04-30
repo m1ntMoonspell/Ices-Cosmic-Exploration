@@ -13,7 +13,7 @@ namespace ICE.Scheduler.Tasks
         public static unsafe uint CurrentLunarMission => WKSManager.Instance()->CurrentMissionUnitRowId;
         public static void ZenMode()
         {
-            if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation") && CurrentLunarMission == 0)
+            if (CurrentLunarMission == 0)
             {
                 if (C.StopNextLoop)
                 {
