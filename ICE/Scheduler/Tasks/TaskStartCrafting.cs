@@ -24,9 +24,6 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => IsArtisanBusy(), "Checking to see if artisan is busy");
 
             Svc.Log.Debug("Artisan is not busy...");
-            P.TaskManager.Enqueue(() => P.Artisan.SetEnduranceStatus(false), "Ensuring endurance is off", DConfig);
-            P.TaskManager.Enqueue(() => StartCraftingOld(), "Starting old crafting mothod", DConfig);
-            // P.TaskManager.Enqueue(StartCrafting, "Starting Crafting Process", DConfig);
             if (C.DelayGrab)
             {
                 P.TaskManager.EnqueueDelay(4000);
@@ -35,12 +32,17 @@ namespace ICE.Scheduler.Tasks
             {
                 P.TaskManager.EnqueueDelay(2000);
             }
+
+            // P.TaskManager.Enqueue(() => P.Artisan.SetEnduranceStatus(false), "Ensuring endurance is off", DConfig);
+            P.TaskManager.Enqueue(() => StartCraftingOld(), "Starting old crafting mothod", DConfig);
+            // P.TaskManager.Enqueue(StartCrafting, "Starting Crafting Process", DConfig);
+
             P.TaskManager.Enqueue(() => WaitingForCrafting(), "Waiting for you to not be in a crafting animation", DConfig);
         }
 
         internal static bool? IsArtisanBusy()
         {
-            if (!P.Artisan.IsBusy())
+            if (!P.Artisan.IsBusy() && !P.Artisan.GetEnduranceStatus())
             {
                 return true;
             }
@@ -82,10 +84,9 @@ namespace ICE.Scheduler.Tasks
                     return false;
                 }
             }
-            else if ((P.Artisan.GetEnduranceStatus() == false && !IsAddonActive("Synthesis")) || !P.Artisan.IsBusy())
+            // else if ((P.Artisan.GetEnduranceStatus() == false && !IsAddonActive("Synthesis")) || !P.Artisan.IsBusy())
+            else if (P.Artisan.GetEnduranceStatus() == false)
             {
-                P.Artisan.SetEnduranceStatus(false);
-
                 if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                 {
                     if (EzThrottler.Throttle("Opening Steller Missions"))
@@ -163,7 +164,7 @@ namespace ICE.Scheduler.Tasks
                         if (PlayerNotBusy() && !Svc.Condition[ConditionFlag.PreparingToCraft])
                         {
                             PluginDebug($"[Score Checker] Conditions for gold was met. Turning in");
-                            if (EzThrottler.Throttle("Turning in item"))
+                            if (EzThrottler.Throttle("Turning in item", 100))
                             {
                                 z.Report();
                                 return false;
@@ -187,7 +188,7 @@ namespace ICE.Scheduler.Tasks
 
                     PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
                     PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
-                    if (C.CraftMultipleMissionItems)
+                    if (currentAmount == mainNeed || C.CraftMultipleMissionItems)
                     {
                         subItemNeed = subItemNeed * 2;
                         mainNeed = mainNeed * 2;
