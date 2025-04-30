@@ -67,7 +67,7 @@ namespace ICE.Scheduler.Tasks
                         }
                     }
 
-                    StartMission();
+                    StartMission(isGatherer);
 
                     return;
                 }
@@ -125,10 +125,9 @@ namespace ICE.Scheduler.Tasks
             {
                 if (CurrentLunarMission != 0)
                 {
-                    var currentClassJob = GetClassJobId();
-                    bool isGatherer = currentClassJob >= 16 && currentClassJob <= 18;
                     if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                     {
+                        var gatherer = isGatherer;
                         if (EzThrottler.Throttle("Opening Steller Missions"))
                         {
                             PluginLog.Debug("Opening Mission Menu");
@@ -139,8 +138,7 @@ namespace ICE.Scheduler.Tasks
                                 PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
                                 await Task.Delay(500);
                             }
-
-                            StartMission();
+                            StartMission(gatherer);
                         }
                     }
                 }
@@ -447,13 +445,13 @@ namespace ICE.Scheduler.Tasks
             return false;
         }
 
-        private static void StartMission()
+        private static void StartMission(bool gatherer)
         {
-            if (C.OnlyGrabMission || MissionInfoDict[currentClassJob].JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
+            if (C.OnlyGrabMission || MissionInfoDict[CurrentLunarMission].JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
             {
                 SchedulerMain.State = IceState.ManualMode;
             }
-            else if (isGatherer)
+            else if (gatherer)
             {
                 //Change to GathererMode Later
                 SchedulerMain.State = IceState.ManualMode;
