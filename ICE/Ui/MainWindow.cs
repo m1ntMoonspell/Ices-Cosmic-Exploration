@@ -148,6 +148,9 @@ namespace ICE.Ui
                 {
                     SchedulerMain.DisablePlugin();
                 }
+
+                ImGui.SameLine();
+                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
             }
 
             // Crafting Job selection combo.

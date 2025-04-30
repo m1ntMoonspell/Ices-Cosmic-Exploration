@@ -19,6 +19,7 @@ namespace ICE.Scheduler
         internal static string MissionName = string.Empty;
         internal static bool inMission = false;
         internal static bool Abandon = false;
+        internal static bool StopBeforeGrab = false;
 
 
         internal static IceState State = IceState.Idle;
