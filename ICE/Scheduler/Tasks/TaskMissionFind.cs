@@ -16,6 +16,10 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
+            if (SchedulerMain.State != IceState.GrabMission)
+                return;
+
+            SchedulerMain.State = IceState.GrabbingMission;
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
             P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
@@ -26,17 +30,40 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
             P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.TaskManager.Enqueue(() => CurrentLunarMission != 0, "Waiting for Lunar Mission value to change");
+            P.TaskManager.EnqueueDelay(50);
             P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
             P.TaskManager.Enqueue(() =>
             {
                 if (SchedulerMain.Abandon)
                 {
                     P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
-                    P.TaskManager.EnqueueDelay(25);
+                    P.TaskManager.EnqueueDelay(250);
                     SchedulerMain.Abandon = false;
+                    SchedulerMain.State = IceState.GrabMission;
                 }
             }, "Checking if you are abandoning mission");
+            P.TaskManager.Enqueue(async () =>
+            {
+                if (CurrentLunarMission != 0)
+                {
+                    if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
+                    {
+                        if (EzThrottler.Throttle("Opening Steller Missions"))
+                        {
+                            PluginLog.Debug("Opening Mission Menu");
+                            hud.Mission();
+
+                            while(!IsAddonActive("WKSMissionInfomation"))
+                            {
+                                PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
+                                await Task.Delay(500);
+                            }
+
+                            SchedulerMain.State = IceState.StartCraft;
+                        }
+                    }
+                }
+            });
         }
 
         internal static bool? UpdateValues()
@@ -91,7 +118,7 @@ namespace ICE.Scheduler.Tasks
             return false;
         }
 
-        internal unsafe static bool? FindWeatherMission()
+        internal unsafe static void FindWeatherMission()
         {
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
@@ -110,10 +137,7 @@ namespace ICE.Scheduler.Tasks
                     if (EzThrottler.Throttle("Selecting Weather Mission"))
                     {
                         PluginLog.Debug($"Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending");
-                        m.Select();
-                        SchedulerMain.MissionName = m.Name;
-                        MissionId = weatherMissionEntry.Id;
-                        return true;
+                        SelectMission(m);
                     }
                 }
             }
@@ -121,19 +145,23 @@ namespace ICE.Scheduler.Tasks
             if (MissionId == 0)
             {
                 PluginLog.Debug("No mission was found under weather, continuing on");
-                return true;
             }
-
-            return false;
         }
 
-        internal unsafe static bool? FindBasicMission()
+        private static void SelectMission(WKSMission.StellarMissions m)
+        {
+            m.Select();
+            SchedulerMain.MissionName = m.Name;
+            MissionId = m.MissionId;
+        }
+
+        internal unsafe static void FindBasicMission()
         {
             PluginLog.Debug($"[Basic Mission Start] | Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}");
             if (MissionId != 0)
             {
                 PluginLog.Debug("You already have a mission found, skipping finding a basic mission");
-                return true;
+                return;
             }
 
 
@@ -149,10 +177,7 @@ namespace ICE.Scheduler.Tasks
                     if (EzThrottler.Throttle("Selecting Basic Mission"))
                     {
                         PluginLog.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending");
-                        SchedulerMain.MissionName = basicMissionEntry.Name;
-                        MissionId = basicMissionEntry.Id;
-                        m.Select();
-                        return true;
+                        SelectMission(m);
                     }
                 }
             }
@@ -160,10 +185,7 @@ namespace ICE.Scheduler.Tasks
             if (MissionId == 0)
             {
                 PluginLog.Debug("No mission was found under basic missions, continuing on");
-                return true;
             }
-
-            return false;
         }
 
         internal unsafe static bool? FindResetMission()
