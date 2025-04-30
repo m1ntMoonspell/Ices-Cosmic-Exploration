@@ -47,7 +47,7 @@ namespace ICE.Scheduler.Handlers
 
         internal static void Tick()
         {
-            if (SchedulerMain.AreWeTicking)
+            if (SchedulerMain.State != IceState.Idle)
             {
                 //by Taurenkey https://github.com/PunishXIV/PandorasBox/blob/24a4352f5b01751767c7ca7f1d4b48369be98711/PandorasBox/Features/UI/AutoSelectTurnin.cs
 

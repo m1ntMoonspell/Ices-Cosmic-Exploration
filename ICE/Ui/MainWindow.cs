@@ -117,7 +117,6 @@ namespace ICE.Ui
 
             // Title text for the run controls.
             ImGui.Text("Run");
-
             // Help marker explaining how missions are selected and run.
             ImGuiEx.HelpMarker(
                 "Please note: this will try and run based off of every rank that it can.\n" +
@@ -126,10 +125,13 @@ namespace ICE.Ui
                 "Unsupported missions will be disabled and shown in red; check 'Hide unsupported missions' to filter them out."
             );
 
+            ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
+
+
             ImGui.Spacing();
 
             // Start button (disabled while already ticking).
-            using (ImRaii.Disabled(SchedulerMain.AreWeTicking))
+            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle))
             {
                 if (ImGui.Button("Start"))
                 {
@@ -140,7 +142,7 @@ namespace ICE.Ui
             ImGui.SameLine();
 
             // Stop button (disabled while not ticking).
-            using (ImRaii.Disabled(!SchedulerMain.AreWeTicking))
+            using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle))
             {
                 if (ImGui.Button("Stop"))
                 {

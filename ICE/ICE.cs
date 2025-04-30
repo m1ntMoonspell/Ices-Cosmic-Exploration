@@ -62,7 +62,7 @@ public sealed class ICE : IDalamudPlugin
         EzCmd.Add("/ice", OnCommand);
         Svc.Framework.Update += Tick;
 
-        TaskManager = new(new(abortOnTimeout: true, timeLimitMS: 20000, showDebug: true));
+        TaskManager = new(new(showDebug: true));
         Svc.PluginInterface.UiBuilder.Draw += windowSystem.Draw;
         Svc.PluginInterface.UiBuilder.OpenMainUi += () =>
         {
@@ -77,7 +77,7 @@ public sealed class ICE : IDalamudPlugin
 
     private void Tick(object _)
     {
-        if (SchedulerMain.AreWeTicking && Svc.ClientState.LocalPlayer != null)
+        if (Svc.ClientState.LocalPlayer != null)
         {
             SchedulerMain.Tick();
         }

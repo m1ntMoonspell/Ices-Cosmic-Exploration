@@ -14,7 +14,7 @@ namespace ICE.Scheduler.Handlers
         {
             if (WasChanged)
             {
-                if (!SchedulerMain.AreWeTicking)
+                if (SchedulerMain.State == IceState.Idle)
                 {
                     WasChanged = false;
                     Unlock();
@@ -23,7 +23,7 @@ namespace ICE.Scheduler.Handlers
             }
             else
             {
-                if (SchedulerMain.AreWeTicking)
+                if (SchedulerMain.State != IceState.Idle)
                 {
                     WasChanged = true;
                     Lock();

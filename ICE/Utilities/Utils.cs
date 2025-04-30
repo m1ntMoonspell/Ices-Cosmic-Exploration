@@ -30,6 +30,7 @@ public static unsafe class Utils
 
     public static bool HasPlugin(string name) => DalamudReflector.TryGetDalamudPlugin(name, out _, false, true);
     internal static bool GenericThrottle => FrameThrottler.Throttle("AutoRetainerGenericThrottle", 10);
+    internal static bool LogThrottle => FrameThrottler.Throttle("AutoRetainerGenericThrottle", 2000);
     public static TaskManagerConfiguration DConfig => new(timeLimitMS: 10 * 60 * 3000, abortOnTimeout: false);
 
     public static void PluginVerbos(string message) => PluginLog.Verbose(message);
