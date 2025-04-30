@@ -51,6 +51,43 @@ namespace ICE.Scheduler.Tasks
         {
             if (SchedulerMain.State != IceState.GrabMission)
                 return;
+            if (CurrentLunarMission != 0)
+            {
+                if (C.EnabledMission.Any(m => m.Id == CurrentLunarMission))
+                {
+                    if (!IsAddonActive("WKSMissionInfomation"))
+                    {
+                        if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                        {
+                            if (EzThrottler.Throttle("Opening Mission Hud", 1000))
+                            {
+                                hud.Mission();
+                            }
+                        }
+                    }
+
+                    MissionId = CurrentLunarMission;
+                    SchedulerMain.MissionName = MissionInfoDict[MissionId].Name;
+                    SchedulerMain.State = IceState.StartCraft;
+
+                    return;
+                }
+                else
+                {
+                    SchedulerMain.Abandon = true;
+                    P.TaskManager.Enqueue(() => AbandonMission(), "Force abandon mission, wrong mission");
+                    P.TaskManager.Enqueue(() =>
+                    {
+                        if (SchedulerMain.Abandon)
+                        {
+                            P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
+                            P.TaskManager.EnqueueDelay(250);
+                            SchedulerMain.Abandon = false;
+                            SchedulerMain.State = IceState.GrabMission;
+                        }
+                    }, "Back to grab new mission");
+                }
+            }
 
             SchedulerMain.State = IceState.GrabbingMission;
 
