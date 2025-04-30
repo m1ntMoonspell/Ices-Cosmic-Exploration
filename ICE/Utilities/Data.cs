@@ -31,7 +31,7 @@ public static unsafe class Data
 
     public static HashSet<int> WeatherMissionList = new() { };
     public static HashSet<int> TimedMissionList = new() { };
-    public static HashSet<int> 
+    public static HashSet<int> CriticalMissions = new() { };
 
     #region Dictionaries
 
