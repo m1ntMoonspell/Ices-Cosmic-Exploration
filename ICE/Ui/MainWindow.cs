@@ -481,14 +481,10 @@ namespace ICE.Ui
                 C.Save();
             }
 
-            onlyGrabMission = isGatherer ? true : C.OnlyGrabMission;
-            using (ImRaii.Disabled(isGatherer))
+            if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
             {
-                if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
-                {
-                    C.OnlyGrabMission = onlyGrabMission;
-                    C.Save();
-                }
+                C.OnlyGrabMission = onlyGrabMission;
+                C.Save();
             }
 
             ImGui.EndTabItem();
