@@ -101,6 +101,7 @@ namespace ICE.Ui
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
+        private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
 
         /// <summary>
@@ -174,33 +175,40 @@ namespace ICE.Ui
 
             ImGui.Spacing();
 
-            // Crafting Job selection combo.
-            ImGui.SetNextItemWidth(150);
-            if (ImGui.BeginCombo("Job", jobOptions[selectedJobIndex].Name))
+            if (C.AutoPickCurrentJob && usingSupportedJob)
+            {    
+                selectedJobIndex = jobOptions.IndexOf(job => job.Id == currentJobId + 1);
+                selectedJobId = jobOptions[selectedJobIndex].Id;
+
+                ImGui.Text($"Job: " + jobOptions[selectedJobIndex].Name);
+            }
+            else
             {
-                for (int i = 0; i < jobOptions.Count; i++)
+                // Crafting Job selection combo.
+                ImGui.SetNextItemWidth(150);
+                if (ImGui.BeginCombo("Job", jobOptions[selectedJobIndex].Name))
                 {
-                    bool isSelected = (i == selectedJobIndex);
-                    if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                    for (int i = 0; i < jobOptions.Count; i++)
                     {
-                        selectedJobIndex = i;
-                        selectedJobId = jobOptions[i].Id;
+                        bool isSelected = (i == selectedJobIndex);
+                        if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                        {
+                            selectedJobIndex = i;
+                            selectedJobId = jobOptions[i].Id;
+                        }
+                        if (isSelected)
+                        {
+                            ImGui.SetItemDefaultFocus();
+                        }
                     }
-                    if (isSelected)
-                    {
-                        ImGui.SetItemDefaultFocus();
-                    }
+                    ImGui.EndCombo();
                 }
-                ImGui.EndCombo();
             }
 
-            using (ImRaii.Disabled(!usingSupportedJob))
+            if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
             {
-                if (ImGui.Button("Pick Current Job"))
-                {
-                    selectedJobIndex = jobOptions.IndexOf(job => job.Id == currentJobId + 1);
-                    selectedJobId = currentJobId + 1;
-                }
+                C.AutoPickCurrentJob = autoPickCurrentJob;
+                C.Save();
             }
 
             ImGui.Spacing();

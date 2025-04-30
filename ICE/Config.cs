@@ -24,6 +24,7 @@ namespace ICE
         public bool HideUnsupportedMissions { get; set; } = false;
         public bool OnlyGrabMission { get; set; } = false;
         public bool StopNextLoop { get; set; } = false;
+        public bool AutoPickCurrentJob { get; set; } = false;
         public int TableSortOption = 0;
 
         public void Save()
