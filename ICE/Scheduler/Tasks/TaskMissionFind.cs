@@ -131,15 +131,14 @@ namespace ICE.Scheduler.Tasks
             return false;
         }
 
-        internal unsafe static bool? FindCriticalMission()
+        internal unsafe static void FindCriticalMission()
         {
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
-                x.CriticalMissions();
+                x.ProvisionalMissions();
                 var currentClassJob = GetClassJobId();
                 foreach (var m in x.StellerMissions)
                 {
-                    PluginDebug($"Mission Id: {m.MissionId}");
                     var criticalMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
 
                     if (criticalMissionEntry == default)
@@ -151,29 +150,23 @@ namespace ICE.Scheduler.Tasks
                     if (EzThrottler.Throttle("Selecting Critical Mission"))
                     {
                         PluginLog.Debug($"Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending");
-                        m.Select();
-                        SchedulerMain.MissionName = m.Name;
-                        MissionId = criticalMissionEntry.Id;
-                        return true;
+                        SelectMission(m);
                     }
                 }
             }
 
             if (MissionId == 0)
             {
-                PluginLog.Debug("No mission was found under critical, continuing on");
-                return true;
+                PluginLog.Debug("No mission was found under weather, continuing on");
             }
-
-            return false;
         }
 
-        internal unsafe static bool? FindWeatherMission()
+        internal unsafe static void FindWeatherMission()
         {
             if (MissionId != 0)
             {
                 PluginLog.Debug("You already have a mission found, skipping finding weather mission");
-                return true;
+                return;
             }
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
