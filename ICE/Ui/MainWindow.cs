@@ -171,8 +171,6 @@ namespace ICE.Ui
                 }
             }
 
-            ImGuiEx.HelpMarker("Only Works With DoH for now");
-
             ImGui.Spacing();
 
             if (C.AutoPickCurrentJob && usingSupportedJob)
