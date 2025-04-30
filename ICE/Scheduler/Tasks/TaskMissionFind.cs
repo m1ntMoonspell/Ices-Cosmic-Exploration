@@ -31,6 +31,16 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
             P.TaskManager.EnqueueDelay(50);
+            P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
+            P.TaskManager.Enqueue(() =>
+            {
+                if (SchedulerMain.Abandon)
+                {
+                    P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
+                    P.TaskManager.EnqueueDelay(250);
+                    SchedulerMain.Abandon = false;
+                }
+            }, "Checking if you are abandoning mission");
             P.TaskManager.Enqueue(async () =>
             {
                 if (CurrentLunarMission != 0)
@@ -47,10 +57,10 @@ namespace ICE.Scheduler.Tasks
                                 PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
                                 await Task.Delay(500);
                             }
+
+                            SchedulerMain.State = IceState.StartCraft;
                         }
                     }
-                    
-                    SchedulerMain.State = IceState.StartCraft;
                 }
             });
         }

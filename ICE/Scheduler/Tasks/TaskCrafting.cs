@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
+using ECommons;
 using ECommons.GameHelpers;
 using ECommons.Logging;
 using ECommons.Reflection;
@@ -88,8 +89,8 @@ namespace ICE.Scheduler.Tasks
                 }
 
                 var needPreCraft = false;
-                var itemsToCraft = new Dictionary<ushort, int>();
-                var preItemsToCraft = new Dictionary<ushort, int>();
+                var itemsToCraft = new Dictionary<ushort, Tuple<int, int>>();
+                var preItemsToCraft = new Dictionary<ushort, Tuple<int, int>>();
 
                 foreach (var main in MoonRecipies[CurrentLunarMission].MainCraftsDict)
                 {
@@ -120,14 +121,13 @@ namespace ICE.Scheduler.Tasks
                         if (currentSubItemAmount >= subItemNeed)
                         {
                             PluginDebug($"[Main Item(s) You have the required amount to make the necessary amount of main items. Continuing on");
-                            if (EzThrottler.Throttle("[Main Item(s)] Crafting Main Item(s)", 4000))
-                            {
-                                int craftAmount = mainNeed - currentAmount;
-                                itemsToCraft.Add(main.Key, craftAmount);
-                            }
+                            int craftAmount = mainNeed - currentAmount;
+                            itemsToCraft.Add(main.Key, new(craftAmount, mainNeed));
                         }
                         else
                         {
+                            int craftAmount = mainNeed - currentAmount;
+                            itemsToCraft.Add(main.Key, new(craftAmount, mainNeed));
                             needPreCraft = true;
                         }
                     }
@@ -155,7 +155,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
                             int craftAmount = goalAmount - currentAmount;
-                            preItemsToCraft.Add(pre.Key, craftAmount);
+                            preItemsToCraft.Add(pre.Key, new(craftAmount, goalAmount));
                         }
                     }
                 }
@@ -172,8 +172,8 @@ namespace ICE.Scheduler.Tasks
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(pre.Key).ItemResult.RowId);
                         P.TaskManager.InsertDelay(1000); // Delay between pre item tasks
-                        P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value, item), "PreCraft item");
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft
                         });
@@ -186,9 +186,10 @@ namespace ICE.Scheduler.Tasks
                     foreach (var main in itemsToCraft)
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(main.Key).ItemResult.RowId);
+                        PluginDebug($"[Main Item(s)] Queueing up for {item.Name}");
                         P.TaskManager.InsertDelay(1000); // Delay between main item tasks
-                        P.TaskManager.Enqueue(() => Craft(main.Key, main.Value, item), "Craft item");
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
