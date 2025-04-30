@@ -49,6 +49,8 @@ namespace ICE.Scheduler.Tasks
             {
                 if (CurrentLunarMission != 0)
                 {
+                    var currentClassJob = GetClassJobId();
+                    bool isGatherer = currentClassJob >= 16 && currentClassJob <= 18;
                     if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                     {
                         if (EzThrottler.Throttle("Opening Steller Missions"))
@@ -62,7 +64,18 @@ namespace ICE.Scheduler.Tasks
                                 await Task.Delay(500);
                             }
 
-                            SchedulerMain.State = IceState.StartCraft;
+                            if (C.OnlyGrabMission)
+                            {
+                                SchedulerMain.State = IceState.ManualMode;
+                            }
+                            else if (isGatherer) {
+                                //Change to GathererMode Later
+                                SchedulerMain.State = IceState.ManualMode;
+                            }
+                            else
+                            {
+                                SchedulerMain.State = IceState.StartCraft;
+                            }
                         }
                     }
                 }

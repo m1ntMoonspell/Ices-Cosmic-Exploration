@@ -1,6 +1,4 @@
 using ICE.Scheduler.Tasks;
-using ECommons.DalamudServices;
-using System.Runtime.Intrinsics.Arm;
 
 namespace ICE.Scheduler
 {
@@ -45,6 +43,9 @@ namespace ICE.Scheduler
                     case IceState.CheckScoreAndTurnIn:
                         TaskScoreCheck.TryCheckScore();
                         break;
+                    case IceState.ManualMode:
+                        TaskManualMode.ZenMode();
+                        break;
                     default:
                         throw new Exception("Invalid state");
                 }
@@ -60,6 +61,7 @@ namespace ICE.Scheduler
         StartCraft,
         CraftInProcess,
         CheckScoreAndTurnIn,
-        WaitForCrafts
+        WaitForCrafts,
+        ManualMode
     }
 }

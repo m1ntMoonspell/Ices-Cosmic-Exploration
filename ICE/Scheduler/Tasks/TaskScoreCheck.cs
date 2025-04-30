@@ -58,7 +58,16 @@ namespace ICE.Scheduler.Tasks
             if (EzThrottler.Throttle("Turning in item", 100))
             {
                 z.Report();
-                SchedulerMain.State = IceState.GrabMission;
+                if (C.StopNextLoop)
+                {
+                    SchedulerMain.DisablePlugin();
+                    C.StopNextLoop = false;
+                    C.Save();
+                } 
+                else
+                {
+                    SchedulerMain.State = IceState.GrabMission;
+                }
             }
         }
     }

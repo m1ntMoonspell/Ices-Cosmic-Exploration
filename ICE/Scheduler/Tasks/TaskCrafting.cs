@@ -256,12 +256,6 @@ namespace ICE.Scheduler.Tasks
         {
             if (Svc.Condition[ConditionFlag.NormalConditions])
             {
-                if (C.StopNextLoop)
-                {
-                    SchedulerMain.DisablePlugin();
-                    C.StopNextLoop = false;
-                    C.Save();
-                }
                 return true;
             }
 
