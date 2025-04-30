@@ -236,7 +236,7 @@ namespace ICE.Ui
             {
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                         .Where(m => !m.Value.IsCriticalMission)
                         .Where(m => m.Value.Time == 0)
