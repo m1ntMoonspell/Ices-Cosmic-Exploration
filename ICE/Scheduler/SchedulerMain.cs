@@ -7,6 +7,8 @@ using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using ICE.Scheduler.Tasks;
+using ECommons.DalamudServices;
+using System.Runtime.Intrinsics.Arm;
 
 namespace ICE.Scheduler
 {
@@ -61,8 +63,13 @@ namespace ICE.Scheduler
                         }
                         else if (CurrentLunarMission != 0 && !Abandon)
                         {
-                            P.TaskManager.Enqueue(() => PluginLog.Information($"Current have the mission: {CurrentLunarMission}, starting the crafting process"));
-                            TaskStartCrafting.Enqueue();
+                            P.TaskManager.Enqueue(() => PluginLog.Information($"Current have the mission: {CurrentLunarMission}"));
+                            uint jobId = Svc.ClientState.LocalPlayer!.ClassJob.RowId;
+                            if (jobId > 8 && jobId <= 15)
+                            {
+                                P.TaskManager.Enqueue(() => PluginLog.Information("Starting the crafting process"));
+                                TaskStartCrafting.Enqueue();
+                            }
                             P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
                         }
                     }

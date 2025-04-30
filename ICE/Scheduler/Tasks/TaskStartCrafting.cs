@@ -360,6 +360,12 @@ namespace ICE.Scheduler.Tasks
         {
             if (Svc.Condition[ConditionFlag.NormalConditions] && !Svc.Condition[ConditionFlag.Crafting]) // crafting condition here likely not needed
             {
+                if (C.StopNextLoop)
+                {
+                    SchedulerMain.DisablePlugin();
+                    C.StopNextLoop = false;
+                    C.Save();
+                }
                 return true;
             }
 
