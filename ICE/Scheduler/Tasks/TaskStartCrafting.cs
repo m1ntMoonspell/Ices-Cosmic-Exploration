@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Conditions;
 using ECommons.GameHelpers;
 using ECommons.Logging;
 using ECommons.Reflection;
@@ -24,13 +24,13 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => IsArtisanBusy(), "Checking to see if artisan is busy");
 
             Svc.Log.Debug("Artisan is not busy...");
-            if (C.DelayGrab)
+            if (C.DelayGrab) // honestly the entire delaygrab seems unnessecary
             {
                 P.TaskManager.EnqueueDelay(4000);
             }
             else
             {
-                P.TaskManager.EnqueueDelay(2000);
+                // P.TaskManager.EnqueueDelay(2000); // Not needed
             }
 
             // P.TaskManager.Enqueue(() => P.Artisan.SetEnduranceStatus(false), "Ensuring endurance is off", DConfig);
@@ -85,11 +85,11 @@ namespace ICE.Scheduler.Tasks
                 }
             }
             // else if ((P.Artisan.GetEnduranceStatus() == false && !IsAddonActive("Synthesis")) || !P.Artisan.IsBusy())
-            else if (P.Artisan.GetEnduranceStatus() == false)
+            else if (!IsAddonActive("Synthesis"))
             {
                 if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                 {
-                    if (EzThrottler.Throttle("Opening Steller Missions"))
+                    if (EzThrottler.Throttle("Opening Stellar Missions"))
                     {
                         PluginLog.Debug("Opening Mission Menu");
                         hud.Mission();
@@ -120,7 +120,9 @@ namespace ICE.Scheduler.Tasks
                     {
                         goalAmount = mainItem.Value * 2;
                     }
-                    if (currentAmount < goalAmount && (currentAmount < baseGoal && currentScore != goldScore))
+                    uint targetScore = C.TurninOnSilver ? silverScore : goldScore;
+
+                    if (currentAmount < goalAmount && (currentAmount < baseGoal && currentScore != targetScore))
                     {
                         PluginDebug("Score checker can't be done, you still have items to craft");
                         allCrafted = false;
@@ -142,6 +144,7 @@ namespace ICE.Scheduler.Tasks
                         if (C.TurninASAP)
                         {
                             PluginDebug("$[Score Checker] Turnin Asap was enabled, and true. Firing off");
+                            P.Artisan.SetEnduranceStatus(false);
                             if (EzThrottler.Throttle("Turning in item", 100))
                             {
                                 z.Report();
@@ -153,6 +156,7 @@ namespace ICE.Scheduler.Tasks
                         if (currentScore >= silverScore && C.TurninOnSilver)
                         {
                             PluginDebug($"Silver was enabled, and you also meet silver threshold. ");
+                            P.Artisan.SetEnduranceStatus(false);
                             if (EzThrottler.Throttle("Turning in item", 100))
                             {
                                 z.Report();
@@ -164,6 +168,7 @@ namespace ICE.Scheduler.Tasks
                         if (PlayerNotBusy() && !Svc.Condition[ConditionFlag.PreparingToCraft])
                         {
                             PluginDebug($"[Score Checker] Conditions for gold was met. Turning in");
+                            P.Artisan.SetEnduranceStatus(false);
                             if (EzThrottler.Throttle("Turning in item", 100))
                             {
                                 z.Report();
@@ -206,11 +211,11 @@ namespace ICE.Scheduler.Tasks
                             {
                                 int craftAmount = mainNeed - currentAmount;
                                 PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {main.Key} | {craftAmount} for {Svc.Data.GetExcelSheet<Item>().GetRow(itemId).Name.ToString()}]");
-                                P.Artisan.CraftItem(main.Key, craftAmount);
+                                // P.Artisan.CraftItem(main.Key, craftAmount); // Just caused issues, failsafe is being forced instead
                                 needPreCraft = false;
                                 break;
                             }
-                            else if (EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft") < 3000)
+                            else if (EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft") < 3950) // temporarily off of 3800
                             {
                                 PluginWarning($"[Main-craft failsafe] It seems like artisan failed to start crafting the item. Starting failsafe mode");
                                 if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
@@ -353,7 +358,7 @@ namespace ICE.Scheduler.Tasks
 
         internal static bool? WaitingForCrafting()
         {
-            if (Svc.Condition[ConditionFlag.NormalConditions])
+            if (Svc.Condition[ConditionFlag.NormalConditions] && !Svc.Condition[ConditionFlag.Crafting]) // crafting condition here likely not needed
             {
                 return true;
             }
