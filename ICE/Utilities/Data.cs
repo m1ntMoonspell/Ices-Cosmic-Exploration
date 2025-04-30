@@ -29,9 +29,9 @@ public static unsafe class Data
 
     public static HashSet<int> CrafterJobList = new() { 8, 9, 10, 11, 12, 13, 14, 15 };
 
-    public static HashSet<int> WeatherMissionList = new() { };
-    public static HashSet<int> TimedMissionList = new() { };
-    public static HashSet<int> CriticalMissions = new() { };
+    public static HashSet<int> WeatherMissionList = new() { 30, 31, 32, };
+    public static HashSet<int> TimedMissionList = new() { 40, 43, };
+    public static HashSet<int> CriticalMissions = new() { 512, 513, 514,  };
 
     #region Dictionaries
 

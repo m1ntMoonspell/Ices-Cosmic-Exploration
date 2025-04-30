@@ -246,16 +246,20 @@ namespace ICE.Ui
             {
                 ImGui.Spacing();
                 // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-                if (ImGui.BeginTable("###MissionList", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+                if (ImGui.BeginTable($"MissionList###{tabName}", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
                 {
                     var sortSpecs = ImGui.TableGetSortSpecs();
+                    float col1Width = 0;
+                    float col2Width = 0;
+                    float col3Width = 0;
+                    float col4Width = 0;
 
                     // First column: checkbox (empty header)
                     ImGui.TableSetupColumn("Enable##Enable");
                     // Second column: ID
-                    ImGui.TableSetupColumn("ID");
+                    ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed, col1Width);
                     // Third column: dynamic header showing selected rank missions
-                    ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed);
+                    ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, col2Width);
                     // Fourth column: Rewards
                     ImGui.TableSetupColumn("Cosmocredits");
                     ImGui.TableSetupColumn("Lunar Credits");
@@ -287,29 +291,39 @@ namespace ICE.Ui
                         bool enabled = C.EnabledMission.Any(x => x.Id == entry.Key);
                         using (ImRaii.Disabled(unsupported))
                         {
-                            if (ImGui.Checkbox($"###{entry.Value.Name} + {entry.Key}", ref enabled))
+                            // Estimate the width of the checkbox (label is invisible, so the box is all that matters)
+                            float cellWidth = ImGui.GetContentRegionAvail().X;
+                            float checkboxWidth = ImGui.GetFrameHeight(); // Width of the square checkbox only
+                            float offset = (cellWidth - checkboxWidth) * 0.5f;
+
+                            if (offset > 0f)
+                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+                            // Use an invisible label for the checkbox to avoid text spacing
+                            if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref enabled))
                             {
                                 if (enabled)
-                                {
                                     C.EnabledMission.Add((entry.Key, entry.Value.Name));
-                                }
                                 else
-                                {
                                     C.EnabledMission.Remove((entry.Key, entry.Value.Name));
-                                }
+
                                 C.Save();
                             }
+
                         }
 
                         // Column 1: Mission ID
                         ImGui.TableNextColumn();
-                        ImGui.Text($"{entry.Key}");
+                        string MissionId = entry.Key.ToString();
+                        col1Width = Math.Max(ImGui.CalcTextSize(MissionId).X + 10, col1Width);
+                        CenterTextInTableCell($"{MissionId}");
 
                         // Column 2: Mission Name
                         ImGui.TableNextColumn();
+                        string MissionName = entry.Value.Name;
                         if (unsupported)
                         {
-                            ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), entry.Value.Name);
+                            ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), MissionName);
                             if (ImGui.IsItemHovered())
                             {
                                 ImGui.SetTooltip("Currently not supported");
@@ -317,18 +331,24 @@ namespace ICE.Ui
                         }
                         else
                         {
-                            ImGui.Text($"{entry.Value.Name}");
+                            ImGui.Text($"{MissionName}");
                         }
+                        col2Width = Math.Max(ImGui.CalcTextSize(MissionName).X + 10, col2Width);
 
                         // Column 3: Rewards
                         ImGui.TableNextColumn();
-                        ImGui.Text(entry.Value.CosmoCredit.ToString());
+                        CenterTextInTableCell(entry.Value.CosmoCredit.ToString());
                         ImGui.TableNextColumn();
-                        ImGui.Text(entry.Value.LunarCredit.ToString());
+                        CenterTextInTableCell(entry.Value.LunarCredit.ToString());
                         foreach (var expType in orderedExp)
                         {
                             ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString());
+                            var relicXp = entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString();
+                            if (relicXp == "0")
+                            {
+                                relicXp = "-";
+                            }
+                            CenterTextInTableCell(relicXp);
                         }
                         
                         // debug
@@ -439,6 +459,34 @@ namespace ICE.Ui
                 Dalamud.Utility.Util.OpenLink(url);
             }
         }
+
+        public static void CenterTextInTableCell(string text)
+        {
+            float cellWidth = ImGui.GetContentRegionAvail().X;
+            float textWidth = ImGui.CalcTextSize(text).X;
+            float offset = (cellWidth - textWidth) * 0.5f;
+
+            if (offset > 0f)
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+            ImGui.TextUnformatted(text);
+        }
+
+        public static void CenterCheckboxInTableCell(string label, ref bool value, ref bool config)
+        {
+            float cellWidth = ImGui.GetContentRegionAvail().X;
+            float checkboxWidth = ImGui.CalcTextSize(label).X + ImGui.GetFrameHeight(); // estimate checkbox width
+            float offset = (cellWidth - checkboxWidth) * 0.5f;
+
+            if (offset > 0f)
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+            if (ImGui.Checkbox(label, ref value))
+            {
+
+            }
+        }
+
     }
 }
 
