@@ -4,6 +4,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 using ECommons;
 using ECommons.ExcelServices;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using ICE.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,7 @@ public static unsafe class Data
     public static HashSet<string> CULMissions = new HashSet<string>();
 
     public static HashSet<uint> ARankIds = new HashSet<uint>() { 4, 5, 6 };
+    public static HashSet<uint> CriticalMissionIds = new HashSet<uint>();
 
     public static HashSet<int> CrafterJobList = new() { 8, 9, 10, 11, 12, 13, 14, 15 };
 
@@ -48,6 +50,9 @@ public static unsafe class Data
         public uint JobId3 { get; set; } = 0;
         public uint ToDoSlot { get; set; }
         public uint Rank { get; set; }
+        public bool IsCriticalMission { get; set; }
+        public uint Time { get; set; }
+        public CosmicWeather Weather { get; set; }
         public uint RecipeId { get; set; } = 0;
         public uint SilverRequirement { get; set; }
         public uint GoldRequirement { get; set; }

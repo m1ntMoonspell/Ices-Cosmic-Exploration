@@ -2,14 +2,9 @@
 using ICE.Scheduler;
 using Dalamud.Interface.Utility.Raii;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using ICE;
-using static ICE.Utilities.Data;
-using ICE.Ui;
-using ImGuiNET;
-using Dalamud.Interface.Windowing;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using ICE.Enums;
+using Dalamud.Interface.Colors;
+using System.Drawing;
 
 namespace ICE.Ui
 {
@@ -66,7 +61,7 @@ namespace ICE.Ui
             (1, "D"),
             (2, "C"),
             (3, "B"),
-            (4, "A"),
+            (4, "A")
         };
 
         private static List<(uint Id, string SortOptionName, Func<IEnumerable<KeyValuePair<uint, MissionListInfo>>, IEnumerable<KeyValuePair<uint, MissionListInfo>>> SortFunc)> sortOptions = new()
@@ -208,123 +203,150 @@ namespace ICE.Ui
             ImGui.SetNextItemWidth(100);
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
-                if (ImGui.CollapsingHeader($"Rank {rank.RankName}"))
-                {
-                    ImGui.Spacing();
-                    // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-                    if (ImGui.BeginTable("###MissionList", 9, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
-                    {
-                        var sortSpecs = ImGui.TableGetSortSpecs();
+                IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
+                        .Where(m => !m.Value.IsCriticalMission)
+                        .Where(m => m.Value.Time == 0)
+                        .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
+                missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
-                        // First column: checkbox (empty header)
-                        ImGui.TableSetupColumn("Enable##Enable");
-                        // Second column: ID
-                        ImGui.TableSetupColumn("ID");
-                        // Third column: dynamic header showing selected rank missions
-                        ImGui.TableSetupColumn("Mission Name");
-                        // Fourth column: Rewards
-                        ImGui.TableSetupColumn("Cosmocredits");
-                        ImGui.TableSetupColumn("Lunar Credits");
-                        ImGui.TableSetupColumn("I");
-                        ImGui.TableSetupColumn("II");
-                        ImGui.TableSetupColumn("III");
-                        ImGui.TableSetupColumn("IV");
-
-                        // Render the header row
-                        ImGui.TableHeadersRow();
-
-                        IEnumerable<KeyValuePair<uint, MissionListInfo>> missions = MissionInfoDict;
-                        missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
-                        //missions = missions.OrderBy(m => m.Value.LunarCredit);
-
-                        foreach (var entry in missions)
-                        {
-                            // Filter by selected job ID (note: JobId is zero-based, our IDs start at 9)
-                            if (entry.Value.JobId != selectedJobId - 1)
-                                continue;
-
-                            // Determine if this is an A-rank mission
-                            bool isARank = ARankIds.Contains(entry.Value.Rank);
-
-                            if (rank.RankName == "A")
-                            {
-                                if (!ARankIds.Contains(entry.Value.Rank))
-                                    continue;
-                            }
-                            else
-                            {
-                                if (entry.Value.Rank != rank.RankId)
-                                    continue;
-                            }
-
-
-                            // Skip unsupported missions if the user has chosen to hide them
-                            bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
-                            if (unsupported && hideUnsupported)
-                                continue;
-
-                            // Start a new row
-                            ImGui.TableNextRow();
-
-                            // Column 0: Enable checkbox
-                            ImGui.TableSetColumnIndex(0);
-                            bool enabled = C.EnabledMission.Any(x => x.Id == entry.Key);
-                            using (ImRaii.Disabled(unsupported))
-                            {
-                                if (ImGui.Checkbox($"###{entry.Value.Name} + {entry.Key}", ref enabled))
-                                {
-                                    if (enabled)
-                                    {
-                                        C.EnabledMission.Add((entry.Key, entry.Value.Name));
-                                    }
-                                    else
-                                    {
-                                        C.EnabledMission.Remove((entry.Key, entry.Value.Name));
-                                    }
-                                    C.Save();
-                                }
-                            }
-
-                            // Column 1: Mission ID
-                            ImGui.TableNextColumn();
-                            ImGui.Text($"{entry.Key}");
-
-                            // Column 2: Mission Name
-                            ImGui.TableNextColumn();
-                            if (unsupported)
-                            {
-                                ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), entry.Value.Name);
-                                if (ImGui.IsItemHovered())
-                                {
-                                    ImGui.SetTooltip("Currently not supported");
-                                }
-                            }
-                            else
-                            {
-                                ImGui.Text($"{entry.Value.Name}");
-                            }
-
-                            // Column 3: Rewards
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.CosmoCredit.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.LunarCredit.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount.ToString());
-                            ImGui.TableNextColumn();
-                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount.ToString());
-                        }
-
-                        ImGui.EndTable();
-                    }
-                }
+                DrawMissionsDropDown($"Class {rank.RankName} Missions", missions);
             }
 
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.Time != 0);
+            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
+            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
+
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
+                        .Where(m => !m.Value.IsCriticalMission);
+            weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
+            DrawMissionsDropDown($"Weather-restricted Missions", weatherRestrictedMissions);
+
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> criticalMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.IsCriticalMission);
+            criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
+            DrawMissionsDropDown($"Critical Missions", criticalMissions);
+
             ImGui.EndTabItem();
+        }
+
+        public void DrawMissionsDropDown(string tabName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions)
+        {
+            if (ImGui.CollapsingHeader(tabName))
+            {
+                ImGui.Spacing();
+                // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
+                if (ImGui.BeginTable("###MissionList", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+                {
+                    var sortSpecs = ImGui.TableGetSortSpecs();
+
+                    // First column: checkbox (empty header)
+                    ImGui.TableSetupColumn("Enable##Enable");
+                    // Second column: ID
+                    ImGui.TableSetupColumn("ID");
+                    // Third column: dynamic header showing selected rank missions
+                    ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed);
+                    // Fourth column: Rewards
+                    ImGui.TableSetupColumn("Cosmocredits");
+                    ImGui.TableSetupColumn("Lunar Credits");
+
+                    IOrderedEnumerable<KeyValuePair<int, string>> orderedExp = ExpDictionary.ToList().OrderBy(exp => exp.Key);
+                    foreach (var exp in orderedExp)
+                    {
+                        ImGui.TableSetupColumn(exp.Value);
+                    }
+
+                    ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
+
+                    // Render the header row
+                    ImGui.TableHeadersRow();
+                    
+
+                    foreach (var entry in missions)
+                    {
+                        // Skip unsupported missions if the user has chosen to hide them
+                        bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
+                        if (unsupported && hideUnsupported)
+                            continue;
+
+                        // Start a new row
+                        ImGui.TableNextRow();
+
+                        // Column 0: Enable checkbox
+                        ImGui.TableSetColumnIndex(0);
+                        bool enabled = C.EnabledMission.Any(x => x.Id == entry.Key);
+                        using (ImRaii.Disabled(unsupported))
+                        {
+                            if (ImGui.Checkbox($"###{entry.Value.Name} + {entry.Key}", ref enabled))
+                            {
+                                if (enabled)
+                                {
+                                    C.EnabledMission.Add((entry.Key, entry.Value.Name));
+                                }
+                                else
+                                {
+                                    C.EnabledMission.Remove((entry.Key, entry.Value.Name));
+                                }
+                                C.Save();
+                            }
+                        }
+
+                        // Column 1: Mission ID
+                        ImGui.TableNextColumn();
+                        ImGui.Text($"{entry.Key}");
+
+                        // Column 2: Mission Name
+                        ImGui.TableNextColumn();
+                        if (unsupported)
+                        {
+                            ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), entry.Value.Name);
+                            if (ImGui.IsItemHovered())
+                            {
+                                ImGui.SetTooltip("Currently not supported");
+                            }
+                        }
+                        else
+                        {
+                            ImGui.Text($"{entry.Value.Name}");
+                        }
+
+                        // Column 3: Rewards
+                        ImGui.TableNextColumn();
+                        ImGui.Text(entry.Value.CosmoCredit.ToString());
+                        ImGui.TableNextColumn();
+                        ImGui.Text(entry.Value.LunarCredit.ToString());
+                        foreach (var expType in orderedExp)
+                        {
+                            ImGui.TableNextColumn();
+                            ImGui.Text(entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString());
+                        }
+                        
+                        // debug
+                        ImGui.TableNextColumn();
+                        if (entry.Value.Weather != CosmicWeather.FairSkies)
+                        {
+                            ImGui.Text(entry.Value.Weather.ToString());
+                        }
+                        else if (entry.Value.Time != 0)
+                        {
+
+                            ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
+                        }
+                    }
+
+                    ImGui.EndTable();
+                }
+            }
         }
 
         public void DrawConfigTab()
@@ -333,6 +355,8 @@ namespace ICE.Ui
 
             if (!tab)
                 return;
+
+            DrawLink("Say no to global warming, support Ice today: ", "https://ko-fi.com/ice643269", "https://ko-fi.com/ice643269");
 
             // Checkbox: Add delay to grabbing mission.
             if (ImGui.Checkbox("Add delay to grabbing mission", ref delayGrab))
@@ -396,5 +420,27 @@ namespace ICE.Ui
 
             ImGui.EndTabItem();
         }
+
+        public static void DrawLink(string label, string link, string url)
+        {
+            ImGui.Text(label);
+            ImGui.SameLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.TankBlue);
+            ImGui.Text(link);
+            ImGui.PopStyleColor();
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            if (ImGui.IsItemClicked())
+            {
+                Dalamud.Utility.Util.OpenLink(url);
+            }
+        }
     }
 }
+
+    
+
