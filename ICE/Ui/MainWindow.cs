@@ -443,6 +443,19 @@ namespace ICE.Ui
             ImGui.EndTabItem();
         }
 
+        public void DrawDebugTab()
+        {
+            var tab = ImRaii.TabItem("Debug");
+
+            if (!tab)
+                return;
+
+            if(ImGui.Button("ExitCraft"))
+            {
+                ExecuteCommand(711);
+            }
+        }
+
         public static void DrawLink(string label, string link, string url)
         {
             ImGui.Text(label);

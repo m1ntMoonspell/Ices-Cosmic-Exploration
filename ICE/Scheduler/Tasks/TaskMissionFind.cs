@@ -14,6 +14,14 @@ namespace ICE.Scheduler.Tasks
     {
         private static uint MissionId = 0;
 
+        public static void EnqueueResumeCheck()
+        {
+            if(CurrentLunarMission != 0)
+            {
+                SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+            }
+        }
+
         public static void Enqueue()
         {
             if (SchedulerMain.State != IceState.GrabMission)
@@ -30,7 +38,7 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
             P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.TaskManager.EnqueueDelay(50);
+            P.TaskManager.EnqueueDelay(250);
             P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
             P.TaskManager.Enqueue(() =>
             {
