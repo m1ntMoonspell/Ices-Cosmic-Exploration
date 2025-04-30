@@ -42,7 +42,7 @@ namespace ICE.Ui
             P.windowSystem.RemoveWindow(this);
         }
 
-        // Available crafting jobs and their IDs.
+        // Available jobs and their IDs.
         private static List<(string Name, uint Id)> jobOptions = new()
         {
             ("CRP", 9),
@@ -53,6 +53,9 @@ namespace ICE.Ui
             ("WVR", 14),
             ("ALC", 15),
             ("CUL", 16),
+            ("MIN", 17),
+            ("BTN", 18),
+            ("FSH", 19),
         };
 
         // Available mission ranks and their identifiers.
@@ -81,6 +84,10 @@ namespace ICE.Ui
         private static int selectedJobIndex = 0;
         // ID of the currently selected crafting job.
         private static uint selectedJobId = jobOptions[selectedJobIndex].Id;
+        private static uint currentJobId => Svc.ClientState.LocalPlayer!.ClassJob.RowId;
+        private static bool isCrafter => currentJobId >= 8 && currentJobId <= 15;
+        private static bool isGatherer => currentJobId >= 16 && currentJobId <= 18;
+        private static bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId + 1);
 
         // Index of the currently selected rank in rankOptions.
         private static int selectedRankIndex = 0;
@@ -93,6 +100,7 @@ namespace ICE.Ui
         private static bool craftx2 = C.CraftMultipleMissionItems;
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
+        private static bool onlyGrabMission = C.OnlyGrabMission;
         private static int SortOption = C.TableSortOption;
 
         /// <summary>
@@ -131,11 +139,13 @@ namespace ICE.Ui
             ImGui.Spacing();
 
             // Start button (disabled while already ticking).
-            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle))
+            using (ImRaii.Disabled(SchedulerMain.AreWeTicking || !usingSupportedJob))
             {
                 if (ImGui.Button("Start"))
                 {
                     SchedulerMain.EnablePlugin();
+                    C.StopNextLoop = false;
+                    C.Save();
                 }
             }
 
@@ -150,9 +160,23 @@ namespace ICE.Ui
                 }
             }
 
+            // Stop Next Loop
+            using (ImRaii.Disabled(currentJobId >= 16 || !SchedulerMain.AreWeTicking || (SchedulerMain.AreWeTicking && C.StopNextLoop)))
+            {
+                if (ImGui.Button("Stop After This"))
+                {
+                    C.StopNextLoop = true;
+                    C.Save();
+                }
+            }
+
+            ImGuiEx.HelpMarker("Only Works With DoH for now");
+
+            ImGui.Spacing();
+
             // Crafting Job selection combo.
             ImGui.SetNextItemWidth(150);
-            if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedJobIndex].Name))
+            if (ImGui.BeginCombo("Job", jobOptions[selectedJobIndex].Name))
             {
                 for (int i = 0; i < jobOptions.Count; i++)
                 {
@@ -169,6 +193,17 @@ namespace ICE.Ui
                 }
                 ImGui.EndCombo();
             }
+
+            using (ImRaii.Disabled(!usingSupportedJob))
+            {
+                if (ImGui.Button("Pick Current Job"))
+                {
+                    selectedJobIndex = jobOptions.IndexOf(job => job.Id == currentJobId + 1);
+                    selectedJobId = currentJobId + 1;
+                }
+            }
+
+            ImGui.Spacing();
 
             // Checkbox: Hide unsupported missions.
             if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
@@ -438,6 +473,16 @@ namespace ICE.Ui
 
                 C.TurninASAP = turninASAP;
                 C.Save();
+            }
+
+            onlyGrabMission = isGatherer ? true : C.OnlyGrabMission;
+            using (ImRaii.Disabled(isGatherer))
+            {
+                if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
+                {
+                    C.OnlyGrabMission = onlyGrabMission;
+                    C.Save();
+                }
             }
 
             ImGui.EndTabItem();

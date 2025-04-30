@@ -22,9 +22,12 @@ namespace ICE.Scheduler.Tasks
             SchedulerMain.State = IceState.GrabbingMission;
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
+            P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
+            P.TaskManager.EnqueueDelay(200);
+            P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
             P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
             P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
+            P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission available");
             P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
             P.TaskManager.EnqueueDelay(200);
             P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
@@ -75,6 +78,16 @@ namespace ICE.Scheduler.Tasks
             return true;
         }
 
+        internal unsafe static bool? CriticalButton()
+        {
+            if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
+            {
+                x.CriticalMissions();
+                return true;
+            }
+            return false;
+        }
+
         internal unsafe static bool? WeatherButton()
         {
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
@@ -118,8 +131,50 @@ namespace ICE.Scheduler.Tasks
             return false;
         }
 
-        internal unsafe static void FindWeatherMission()
+        internal unsafe static bool? FindCriticalMission()
         {
+            if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
+            {
+                x.CriticalMissions();
+                var currentClassJob = GetClassJobId();
+                foreach (var m in x.StellerMissions)
+                {
+                    PluginDebug($"Mission Id: {m.MissionId}");
+                    var criticalMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
+
+                    if (criticalMissionEntry == default)
+                    {
+                        PluginDebug($"critical mission entry is default. Which means id: {criticalMissionEntry}");
+                        continue;
+                    }
+
+                    if (EzThrottler.Throttle("Selecting Critical Mission"))
+                    {
+                        PluginLog.Debug($"Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending");
+                        m.Select();
+                        SchedulerMain.MissionName = m.Name;
+                        MissionId = criticalMissionEntry.Id;
+                        return true;
+                    }
+                }
+            }
+
+            if (MissionId == 0)
+            {
+                PluginLog.Debug("No mission was found under critical, continuing on");
+                return true;
+            }
+
+            return false;
+        }
+
+        internal unsafe static bool? FindWeatherMission()
+        {
+            if (MissionId != 0)
+            {
+                PluginLog.Debug("You already have a mission found, skipping finding weather mission");
+                return true;
+            }
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
                 x.ProvisionalMissions();
