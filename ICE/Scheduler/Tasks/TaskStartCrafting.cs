@@ -215,7 +215,7 @@ namespace ICE.Scheduler.Tasks
                                 needPreCraft = false;
                                 break;
                             }
-                            else if (EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft") < 3000)
+                            else if (EzThrottler.GetRemainingTime("[Main Item(s)] Starting Main Craft") < 3950) // temporarily off of 3800
                             {
                                 PluginWarning($"[Main-craft failsafe] It seems like artisan failed to start crafting the item. Starting failsafe mode");
                                 if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
