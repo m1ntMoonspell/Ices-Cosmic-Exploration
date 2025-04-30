@@ -39,6 +39,7 @@ namespace ICE.Scheduler.Tasks
                     P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
                     P.TaskManager.EnqueueDelay(250);
                     SchedulerMain.Abandon = false;
+                    SchedulerMain.State = IceState.GrabMission;
                 }
             }, "Checking if you are abandoning mission");
             P.TaskManager.Enqueue(async () =>
