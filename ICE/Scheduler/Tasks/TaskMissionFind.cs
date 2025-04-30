@@ -1,7 +1,9 @@
 ﻿using ECommons.Automation;
 using ECommons.Logging;
 using ECommons.Throttlers;
+using ICE.Ui;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +15,37 @@ namespace ICE.Scheduler.Tasks
     internal static class TaskMissionFind
     {
         private static uint MissionId = 0;
+        private static uint currentClassJob => GetClassJobId();
+        private static bool hasCritical => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.CriticalMissions.Select(critical => critical.Id))
+                                            .Any();
+        private static bool hasWeather => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.WeatherMissions.Select(weather => weather.Id))
+                                            .Any();
+        private static bool hasTimed => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.TimedMissions.Select(timed => timed.Id))
+                                            .Any();
+        private static bool hasSequence => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.SequenceMissions.Select(sequence => sequence.Id))
+                                            .Any();
+        private static bool hasStandard => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.StandardMissions.Select(standard => standard.Id))
+                                            .Any();
 
         public static void Enqueue()
         {
@@ -20,11 +53,16 @@ namespace ICE.Scheduler.Tasks
                 return;
 
             SchedulerMain.State = IceState.GrabbingMission;
+
+            PluginLog.Debug($"Critical: {hasCritical}, Weather: {hasWeather}, Timed: {hasTimed}, Sequence: {hasSequence}, Standard: {hasStandard}");
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
+            //if (hasWeather || hasTimed || hasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
+            //{
             P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
             P.TaskManager.EnqueueDelay(200);
             P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
+            //}
             P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
             P.TaskManager.EnqueueDelay(200);
             P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");

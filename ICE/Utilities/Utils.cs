@@ -495,6 +495,10 @@ public static unsafe class Utils
                                 .Where(m => !m.Value.IsCriticalMission)
                                 .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
                                 .ToList();
+        C.SequenceMissions = MissionInfoDict
+                                .Where(m => SequentialMissions.Contains((int) m.Key))
+                                .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
+                                .ToList();
         C.StandardMissions = MissionInfoDict
                                 .Where(m => Ranks.Contains(m.Value.Rank) || ARankIds.Contains(m.Value.Rank))
                                 .Where(m => !m.Value.IsCriticalMission)
