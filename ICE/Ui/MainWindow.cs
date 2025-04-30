@@ -253,13 +253,6 @@ namespace ICE.Ui
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
             DrawMissionsDropDown($"Critical Missions", criticalMissions);
 
-            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
-                    MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
-                        .Where(m => m.Value.Time != 0);
-            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
-
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
@@ -268,14 +261,29 @@ namespace ICE.Ui
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
             DrawMissionsDropDown($"Weather-restricted Missions", weatherRestrictedMissions);
 
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.Time != 0);
+            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
+            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
+
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => SequentialMissions.Contains((int)m.Key));
+            sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
+            DrawMissionsDropDown($"Sequential Missions", sequentialMissions);
+
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                         .Where(m => !m.Value.IsCriticalMission)
                         .Where(m => m.Value.Time == 0)
+                        .Where(m => !SequentialMissions.Contains((int)m.Key))
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
