@@ -124,7 +124,13 @@ namespace ICE.Scheduler.Tasks
             {
                 x.ProvisionalMissions();
                 var currentClassJob = GetClassJobId();
-                foreach (var m in x.StellerMissions)
+
+                var sortedMissions = x.StellerMissions
+                    .Where(m => C.WeatherMissions.Any(w => w.Id == m.MissionId))
+                    .Concat(x.StellerMissions.Where(m => !C.WeatherMissions.Any(w => w.Id == m.MissionId))) 
+                    .ToArray();
+
+                foreach (var m in sortedMissions)
                 {
                     var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
 

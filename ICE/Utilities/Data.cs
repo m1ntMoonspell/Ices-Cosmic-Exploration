@@ -24,6 +24,7 @@ public static unsafe class Data
     public static HashSet<string> ALCMissions = new HashSet<string>();
     public static HashSet<string> CULMissions = new HashSet<string>();
 
+    public static HashSet<uint> Ranks = new HashSet<uint>() { 1, 2, 3, 4 };
     public static HashSet<uint> ARankIds = new HashSet<uint>() { 4, 5, 6 };
     public static HashSet<uint> CriticalMissionIds = new HashSet<uint>();
 
