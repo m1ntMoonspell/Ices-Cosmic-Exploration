@@ -161,10 +161,12 @@ namespace ICE.Ui
                 }
             }
 
+            ImGui.SameLine();
+
             // Stop Next Loop
             using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle || C.StopNextLoop))
             {
-                if (ImGui.Button("Stop After This"))
+                if (ImGui.Button("Finish Current Cycle"))
                 {
                     C.StopNextLoop = true;
                     C.Save();
