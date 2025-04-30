@@ -6,19 +6,20 @@ namespace ICE.Scheduler
     {
         internal static bool EnablePlugin()
         {
-            State = IceState.GrabMission;
+            State = IceState.ResumeChecker;
             return true;
         }
         internal static bool DisablePlugin()
         {
-            State = IceState.Idle;
             P.TaskManager.Abort();
+            State = IceState.Idle;
             return true;
         }
 
         internal static string MissionName = string.Empty;
         internal static bool inMission = false;
         internal static bool Abandon = false;
+        internal static bool StopBeforeGrab = false;
 
 
         internal static IceState State = IceState.Idle;
@@ -43,6 +44,9 @@ namespace ICE.Scheduler
                     case IceState.CheckScoreAndTurnIn:
                         TaskScoreCheck.TryCheckScore();
                         break;
+                    case IceState.ResumeChecker:
+                        TaskMissionFind.EnqueueResumeCheck();
+                        break;
                     default:
                         throw new Exception("Invalid state");
                 }
@@ -58,6 +62,7 @@ namespace ICE.Scheduler
         StartCraft,
         CraftInProcess,
         CheckScoreAndTurnIn,
-        WaitForCrafts
+        WaitForCrafts,
+        ResumeChecker
     }
 }
