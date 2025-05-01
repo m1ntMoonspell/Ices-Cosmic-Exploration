@@ -28,7 +28,7 @@ namespace ICE.Ui
 
             if (ImGuiEx.IconButton("\uf013##Config", "Open ICE"))
             {
-                ICE.P.mainWindow.IsOpen = true;
+                P.mainWindow.IsOpen = true;
             }
             ImGui.SameLine();
 
