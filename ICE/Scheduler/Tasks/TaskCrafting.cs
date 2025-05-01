@@ -93,9 +93,10 @@ namespace ICE.Scheduler.Tasks
 
                 var mainCrafts = MoonRecipies[CurrentLunarMission].MainCraftsDict;
 
-                int craftsDone = mainCrafts.Sum(main => GetItemCount((int)RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId));
-                int craftsNeeded = mainCrafts.Sum(main => main.Value);
-                int CraftMultipleMissionItems = (craftsDone / craftsNeeded) + 1;
+                // Calculate if we need to do more than base amount of crafts
+                int craftsDone = mainCrafts.Sum(main => GetItemCount((int)RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId)); // How many mains we made
+                int craftsNeeded = mainCrafts.Sum(main => main.Value); // How many we need for mission
+                int CraftMultipleMissionItems = (craftsDone / craftsNeeded) + 1; // How many whole sets (+1) of crafts we did
                 PluginDebug($"[Loop] Number: {CraftMultipleMissionItems} | Items Done: {craftsDone} | Items Needed: {craftsNeeded}");
 
                 foreach (var main in MoonRecipies[CurrentLunarMission].MainCraftsDict)
@@ -113,6 +114,8 @@ namespace ICE.Scheduler.Tasks
 
                     PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
                     PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
+                    
+                    // Increase how many crafts we want to have made if needed so we can reach Score Checker goals.
                     // if (C.CraftMultipleMissionItems)
                     // {
                         subItemNeed = subItemNeed * CraftMultipleMissionItems;
@@ -266,12 +269,12 @@ namespace ICE.Scheduler.Tasks
         {
             var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
 
-            if (C.TurninOnSilver && currentScore >= silverScore)
+            if (C.TurninOnSilver && currentScore >= silverScore && HaveEnoughMain())
             {
                 P.Artisan.SetEnduranceStatus(false);
                 return true;
             }
-            else if (currentScore >= goldScore)
+            else if (currentScore >= goldScore && HaveEnoughMain())
             {
                 P.Artisan.SetEnduranceStatus(false);
                 return true;
