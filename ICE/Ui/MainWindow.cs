@@ -405,6 +405,11 @@ namespace ICE.Ui
 
                             ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
                         }
+                        else if (entry.Value.PreviousMissionID != 0)
+                        {
+                            var (Id, Name) = MissionInfoDict.Where(m => m.Key == entry.Value.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
+                            ImGui.Text($"[{Id}] {Name}");
+                        }
                     }
 
                     ImGui.EndTable();
