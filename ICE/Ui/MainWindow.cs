@@ -261,7 +261,7 @@ namespace ICE.Ui
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
-                        .Where(m => SequentialMissions.Contains((int)m.Key));
+                        .Where(m => m.Value.PreviousMissionID != 0);
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
             DrawMissionsDropDown($"Sequential Missions", sequentialMissions);
 
@@ -273,7 +273,7 @@ namespace ICE.Ui
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                         .Where(m => !m.Value.IsCriticalMission)
                         .Where(m => m.Value.Time == 0)
-                        .Where(m => !SequentialMissions.Contains((int)m.Key))
+                        .Where(m => m.Value.PreviousMissionID == 0)
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
