@@ -113,11 +113,11 @@ namespace ICE.Scheduler.Tasks
 
                     PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
                     PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
-                    if (C.CraftMultipleMissionItems)
-                    {
+                    // if (C.CraftMultipleMissionItems)
+                    // {
                         subItemNeed = subItemNeed * CraftMultipleMissionItems;
                         mainNeed = mainNeed * CraftMultipleMissionItems;
-                    }
+                    // }
 
                     if (currentAmount < mainNeed)
                     {
