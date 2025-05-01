@@ -145,8 +145,6 @@ namespace ICE.Ui
                 if (ImGui.Button("Start"))
                 {
                     SchedulerMain.EnablePlugin();
-                    C.StopNextLoop = false;
-                    C.Save();
                 }
             }
 
@@ -165,17 +163,6 @@ namespace ICE.Ui
             }
 
             ImGui.SameLine();
-
-            // Stop Next Loop
-            using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle || C.StopNextLoop))
-            {
-                if (ImGui.Button("Finish Current Cycle"))
-                {
-                    C.StopNextLoop = true;
-                    C.Save();
-                }
-            }
-
             ImGui.Spacing();
 
             if (C.AutoPickCurrentJob && usingSupportedJob)

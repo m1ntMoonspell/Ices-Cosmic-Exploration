@@ -96,12 +96,6 @@ namespace ICE.Scheduler.Tasks
             if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 z.Report();
-                if (C.StopNextLoop)
-                {
-                    SchedulerMain.DisablePlugin();
-                    C.StopNextLoop = false;
-                    C.Save();
-                } 
                 return false;
             }
 
