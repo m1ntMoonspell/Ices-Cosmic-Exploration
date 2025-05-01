@@ -98,7 +98,6 @@ namespace ICE.Ui
         // Configuration booleans bound to checkboxes.
         private static bool delayGrab = C.DelayGrab;
         private static bool silverTurnin = C.TurninOnSilver;
-        private static bool craftx2 = C.CraftMultipleMissionItems;
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
@@ -497,12 +496,6 @@ namespace ICE.Ui
                     C.TurninASAP = false;
                 }
 
-                if (C.CraftMultipleMissionItems)
-                {
-                    C.CraftMultipleMissionItems = false;
-                    craftx2 = false;
-                }
-
                 if (silverTurnin != C.TurninOnSilver)
                 {
                     C.TurninOnSilver = silverTurnin;
@@ -510,20 +503,6 @@ namespace ICE.Ui
                 }
 
 
-            }
-
-            // Checkbox: If Silver is enabled, allow for x2 crafting
-            if (silverTurnin)
-            {
-                ImGui.SameLine();
-                if (ImGui.Checkbox("Craft item twice", ref craftx2))
-                {
-                    if (craftx2 != C.CraftMultipleMissionItems)
-                    {
-                        C.CraftMultipleMissionItems = craftx2;
-                        C.Save();
-                    }
-                }
             }
 
             // Checkbox: Turn in ASAP.

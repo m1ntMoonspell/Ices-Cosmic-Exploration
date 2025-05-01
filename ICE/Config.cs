@@ -26,7 +26,6 @@ namespace ICE
         // Turnin options
         public bool TurninOnSilver { get; set; } = false;
         public bool TurninASAP { get; set; } = false;
-        public bool CraftMultipleMissionItems { get; set; } = false;
 
         // Table settings
         public bool HideUnsupportedMissions { get; set; } = false;
