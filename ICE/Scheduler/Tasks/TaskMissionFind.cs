@@ -63,18 +63,6 @@ namespace ICE.Scheduler.Tasks
             }
         }
 
-        public static void EnqueueResumeCheck()
-        {
-            if (CurrentLunarMission != 0)
-            {
-                SchedulerMain.State = IceState.CheckScoreAndTurnIn;
-            }
-            else
-            {
-                SchedulerMain.State = IceState.GrabMission;
-            }
-        }
-
         public static void Enqueue()
         {
             if (SchedulerMain.StopBeforeGrab)
@@ -89,7 +77,6 @@ namespace ICE.Scheduler.Tasks
             
             SchedulerMain.State = IceState.GrabbingMission;
 
-            PluginLog.Debug($"Critical: {hasCritical}, Weather: {hasWeather}, Timed: {hasTimed}, Sequence: {hasSequence}, Standard: {hasStandard}");
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
             // if (hasCritical) {
