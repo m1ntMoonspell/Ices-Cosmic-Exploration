@@ -63,6 +63,18 @@ namespace ICE.Scheduler.Tasks
             }
         }
 
+        public static void EnqueueResumeCheck()
+        {
+            if (CurrentLunarMission != 0)
+            {
+                SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+            }
+            else
+            {
+                SchedulerMain.State = IceState.GrabMission;
+            }
+        }
+
         public static void Enqueue()
         {
             if (SchedulerMain.StopBeforeGrab)
