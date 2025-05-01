@@ -56,12 +56,14 @@ public sealed class ICE : IDalamudPlugin
         overlayWindow = new();
         debugWindow = new();
 
-        EzCmd.Add("/IceCosmic", OnCommand, """
+        EzCmd.Add("/icecosmic", OnCommand, """
             Open plugin interface
-            " " start - starts the loops
-            " " stop - stops the loops
+            - start -> starts the loops
+            - stop -> stops the loops
+            - clear -> clears all
             """);
         EzCmd.Add("/ice", OnCommand);
+        EzCmd.Add("/IceCosmic", OnCommand);
         Svc.Framework.Update += Tick;
 
         TaskManager = new(new(showDebug: true));

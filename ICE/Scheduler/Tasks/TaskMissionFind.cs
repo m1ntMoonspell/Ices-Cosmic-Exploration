@@ -1,6 +1,7 @@
 ﻿using ECommons.Automation;
 using ECommons.Logging;
 using ECommons.Throttlers;
+using ECommons.UIHelpers.AddonMasterImplementations;
 using ICE.Ui;
 using System;
 using System.Collections;
@@ -65,6 +66,22 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
+
+            if (SchedulerMain.StopOnceHitCredits)
+            {
+                if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                {
+                    if (hud.LunarCredit >= 10000)
+                    {
+                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} credits");
+                        SchedulerMain.StopBeforeGrab = false;
+                        SchedulerMain.StopOnceHitCredits = false;
+                        SchedulerMain.State = IceState.Idle;
+                        return;
+                    }
+                }
+            }
+
             if (SchedulerMain.StopBeforeGrab)
             {
                 SchedulerMain.StopBeforeGrab = false;
