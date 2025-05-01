@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ICE.Enums;
 using Dalamud.Interface.Colors;
 using System.Drawing;
+using System.Reflection;
 
 namespace ICE.Ui
 {
@@ -160,6 +161,8 @@ namespace ICE.Ui
 
                 ImGui.SameLine();
                 ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+                ImGui.SameLine();
+                ImGui.Checkbox("Stop once hit lunar credits cap", ref SchedulerMain.StopOnceHitCredits);
             }
 
             ImGui.SameLine();
@@ -241,7 +244,7 @@ namespace ICE.Ui
             .Where(m => m.Value.JobId == selectedJobId - 1)
             .Where(m => m.Value.IsCriticalMission);
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
-            DrawMissionsDropDown($"Critical Missions", criticalMissions);
+            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", criticalMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
@@ -249,21 +252,21 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
-            DrawMissionsDropDown($"Weather-restricted Missions", weatherRestrictedMissions);
+            DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", weatherRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.Time != 0);
             timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
+            DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", timeRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => SequentialMissions.Contains((int)m.Key));
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
-            DrawMissionsDropDown($"Sequential Missions", sequentialMissions);
+            DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", sequentialMissions);
 
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
@@ -277,7 +280,7 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
-                DrawMissionsDropDown($"Class {rank.RankName} Missions", missions);
+                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", missions);
             }
 
             ImGui.EndTabItem();
@@ -285,11 +288,12 @@ namespace ICE.Ui
 
         public void DrawMissionsDropDown(string tabName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions)
         {
-            if (ImGui.CollapsingHeader(tabName))
+            var tabId = tabName.Split('-')[0];
+            if (ImGui.CollapsingHeader(string.Format("{0}###{1}", tabName, tabId)))
             {
                 ImGui.Spacing();
                 // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-                if (ImGui.BeginTable($"MissionList###{tabName}", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+                if (ImGui.BeginTable($"MissionList###{tabId}", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
                 {
                     var sortSpecs = ImGui.TableGetSortSpecs();
                     float col1Width = 0;
