@@ -30,6 +30,7 @@ namespace ICE
         public bool OnlyGrabMission { get; set; } = false;
         public bool AutoPickCurrentJob { get; set; } = false;
         public int TableSortOption = 0;
+        public bool ShowExpColums = true;
 
         public void Save()
         {

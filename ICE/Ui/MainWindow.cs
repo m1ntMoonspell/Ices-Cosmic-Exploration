@@ -104,6 +104,7 @@ namespace ICE.Ui
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
+        private static bool showExp = C.ShowExpColums;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -293,35 +294,78 @@ namespace ICE.Ui
             {
                 ImGui.Spacing();
                 // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-                if (ImGui.BeginTable($"MissionList###{tabId}", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+
+                int columnAmount = 6;
+                if (showExp)
+                    columnAmount += 4;
+
+                if (ImGui.BeginTable($"MissionList###{tabId}", columnAmount, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
                 {
                     var sortSpecs = ImGui.TableGetSortSpecs();
                     float col1Width = 0;
                     float col2Width = 0;
-                    float col3Width = 0;
+                    float col3Width = 15;
                     float col4Width = 0;
+
+                    // used to keep track of where the column index is at, mainly for centering text
+                    int columnIndex = 0;
 
                     // First column: checkbox (empty header)
                     ImGui.TableSetupColumn("Enable##Enable");
+                    columnIndex++;
+
                     // Second column: ID
                     ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed, col1Width);
+                    columnIndex++;
+
                     // Third column: dynamic header showing selected rank missions
                     ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, col2Width);
+                    columnIndex++;
+
                     // Fourth column: Rewards
                     ImGui.TableSetupColumn("Cosmocredits");
-                    ImGui.TableSetupColumn("Lunar Credits");
+                    columnIndex++;
 
+                    ImGui.TableSetupColumn("Lunar Credits");
+                    columnIndex++;
+
+                    // Dynamic EXP columns
                     IOrderedEnumerable<KeyValuePair<int, string>> orderedExp = ExpDictionary.ToList().OrderBy(exp => exp.Key);
-                    foreach (var exp in orderedExp)
+                    if (C.ShowExpColums) // Option to not show the EXP Columns if they'd like
                     {
-                        ImGui.TableSetupColumn(exp.Value);
+                        foreach (var exp in orderedExp)
+                        {
+                            ImGui.TableSetupColumn($"###{exp.Value}", ImGuiTableColumnFlags.WidthFixed, col3Width);
+                            col3Width = Math.Max(col3Width, ImGui.CalcTextSize(exp.Value).X + 5);
+                            columnIndex++;
+                        }
                     }
 
+                    // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
 
-                    // Render the header row
+                    // Render the header row (static headers get drawn here)
                     ImGui.TableHeadersRow();
-                    
+
+                    // Manually center the EXP headers (more personal OCD here)
+                    int dynamicStartCol = columnIndex - orderedExp.Count();
+                    int dynamicCol = 0;
+
+                    if (C.ShowExpColums)
+                    {
+                        foreach (var exp in orderedExp)
+                        {
+                            ImGui.TableSetColumnIndex(dynamicStartCol + dynamicCol++);
+                            float colWidth = ImGui.GetColumnWidth();
+                            Vector2 textSize = ImGui.CalcTextSize(exp.Value);
+                            float offset = (colWidth - textSize.X) / 2;
+
+                            if (offset > 0)
+                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+                            ImGui.TextUnformatted(exp.Value);
+                        }
+                    }
 
                     foreach (var entry in missions)
                     {
@@ -387,15 +431,20 @@ namespace ICE.Ui
                         CenterTextInTableCell(entry.Value.CosmoCredit.ToString());
                         ImGui.TableNextColumn();
                         CenterTextInTableCell(entry.Value.LunarCredit.ToString());
-                        foreach (var expType in orderedExp)
+
+                        if (showExp) // If show EXP Values are enabled, will show the exp values. 
                         {
-                            ImGui.TableNextColumn();
-                            var relicXp = entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString();
-                            if (relicXp == "0")
+                            foreach (var expType in orderedExp)
                             {
-                                relicXp = "-";
+                                ImGui.TableNextColumn();
+                                var relicXp = entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString();
+                                if (relicXp == "0")
+                                {
+                                    relicXp = "-";
+                                }
+                                col3Width = Math.Max(ImGui.CalcTextSize(relicXp).X + 10, col3Width);
+                                CenterTextInTableCell(relicXp);
                             }
-                            CenterTextInTableCell(relicXp);
                         }
                         
                         // debug
@@ -488,6 +537,13 @@ namespace ICE.Ui
             if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
             {
                 C.OnlyGrabMission = onlyGrabMission;
+                C.Save();
+            }
+
+            ImGui.Spacing();
+            if (ImGui.Checkbox($"Show EXP on Columns", ref showExp))
+            {
+                C.ShowExpColums = showExp;
                 C.Save();
             }
 
