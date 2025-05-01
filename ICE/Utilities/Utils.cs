@@ -73,6 +73,7 @@ public static unsafe class Utils
     #region Player Information
 
     public static uint GetClassJobId() => Svc.ClientState.LocalPlayer!.ClassJob.RowId;
+    public static bool UsingSupportedJob() => GetClassJobId() >= 8 && GetClassJobId() <= 18;
     public static unsafe int GetLevel(int expArrayIndex = -1)
     {
         if (expArrayIndex == -1) expArrayIndex = Svc.ClientState.LocalPlayer?.ClassJob.Value.ExpArrayIndex ?? 0;
@@ -293,6 +294,7 @@ public static unsafe class Utils
 
             uint silver = item.Unknown5;
             uint gold = item.Unknown6;
+            uint previousMissionId = item.Unknown10;
 
             uint timeAndWeather = item.Unknown18;
             uint time = 0;
@@ -497,7 +499,8 @@ public static unsafe class Utils
                     GoldRequirement = gold,
                     CosmoCredit = Cosmo,
                     LunarCredit = Lunar,
-                    ExperienceRewards = Exp
+                    ExperienceRewards = Exp,
+                    PreviousMissionID = previousMissionId
                 };
             }
         }
@@ -515,7 +518,7 @@ public static unsafe class Utils
                                 .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
                                 .ToList();
         C.SequenceMissions = MissionInfoDict
-                                .Where(m => SequentialMissions.Contains((int) m.Key))
+                                .Where(m => m.Value.PreviousMissionID != 0)
                                 .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
                                 .ToList();
         C.StandardMissions = MissionInfoDict

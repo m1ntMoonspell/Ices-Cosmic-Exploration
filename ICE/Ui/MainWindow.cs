@@ -102,6 +102,7 @@ namespace ICE.Ui
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
+        private static bool showOverlay = C.ShowOverlay;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
@@ -265,7 +266,7 @@ namespace ICE.Ui
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
-                        .Where(m => SequentialMissions.Contains((int)m.Key));
+                        .Where(m => m.Value.PreviousMissionID != 0);
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
             DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", sequentialMissions);
 
@@ -277,7 +278,7 @@ namespace ICE.Ui
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                         .Where(m => !m.Value.IsCriticalMission)
                         .Where(m => m.Value.Time == 0)
-                        .Where(m => !SequentialMissions.Contains((int)m.Key))
+                        .Where(m => m.Value.PreviousMissionID == 0)
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
@@ -458,6 +459,11 @@ namespace ICE.Ui
 
                             ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
                         }
+                        else if (entry.Value.PreviousMissionID != 0)
+                        {
+                            var (Id, Name) = MissionInfoDict.Where(m => m.Key == entry.Value.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
+                            ImGui.Text($"[{Id}] {Name}");
+                        }
                     }
 
                     ImGui.EndTable();
@@ -540,6 +546,12 @@ namespace ICE.Ui
                 C.Save();
             }
 
+            if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+            {
+                C.ShowOverlay = showOverlay;
+                C.Save();
+            }             
+            
             ImGui.Spacing();
             if (ImGui.Checkbox($"Show EXP on Columns", ref showExp))
             {

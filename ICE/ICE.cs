@@ -22,6 +22,7 @@ public sealed class ICE : IDalamudPlugin
     internal WindowSystem windowSystem;
     internal MainWindow mainWindow;
     internal SettingsWindow settingWindow;
+    internal OverlayWindow overlayWindow;
     internal DebugWindow debugWindow;
 
     // Taskmanager from Ecommons
@@ -52,6 +53,7 @@ public sealed class ICE : IDalamudPlugin
         windowSystem = new();
         mainWindow = new();
         settingWindow = new();
+        overlayWindow = new();
         debugWindow = new();
 
         EzCmd.Add("/icecosmic", OnCommand, """
@@ -84,6 +86,7 @@ public sealed class ICE : IDalamudPlugin
             SchedulerMain.Tick();
         }
         GenericManager.Tick();
+        PlayerHandlers.Tick();
         TextAdvancedManager.Tick();
         YesAlreadyManager.Tick();
     }
