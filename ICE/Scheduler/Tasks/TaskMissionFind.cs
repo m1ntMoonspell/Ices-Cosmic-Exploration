@@ -52,7 +52,10 @@ namespace ICE.Scheduler.Tasks
         {
             if (CurrentLunarMission != 0)
             {
-                SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                if (!ModeChangeCheck(isGatherer))
+                {
+                    SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                }
             }
             else
             {
@@ -71,42 +74,7 @@ namespace ICE.Scheduler.Tasks
 
             if (SchedulerMain.State != IceState.GrabMission)
                 return;
-            if (CurrentLunarMission != 0)
-            {
-                if (C.EnabledMission.Any(m => m.Id == CurrentLunarMission))
-                {
-                    if (!IsAddonActive("WKSMissionInfomation"))
-                    {
-                        if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
-                        {
-                            if (EzThrottler.Throttle("Opening Mission Hud", 1000))
-                            {
-                                hud.Mission();
-                            }
-                        }
-                    }
-
-                    StartMission(isGatherer);
-
-                    return;
-                }
-                else
-                {
-                    SchedulerMain.Abandon = true;
-                    P.TaskManager.Enqueue(() => AbandonMission(), "Force abandon mission, wrong mission");
-                    P.TaskManager.Enqueue(() =>
-                    {
-                        if (SchedulerMain.Abandon)
-                        {
-                            P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
-                            P.TaskManager.EnqueueDelay(250);
-                            SchedulerMain.Abandon = false;
-                            SchedulerMain.State = IceState.GrabMission;
-                        }
-                    }, "Back to grab new mission");
-                }
-            }
-
+            
             SchedulerMain.State = IceState.GrabbingMission;
 
             PluginLog.Debug($"Critical: {hasCritical}, Weather: {hasWeather}, Timed: {hasTimed}, Sequence: {hasSequence}, Standard: {hasStandard}");
@@ -157,7 +125,9 @@ namespace ICE.Scheduler.Tasks
                                 PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
                                 await Task.Delay(500);
                             }
-                            StartMission(gatherer);
+                            if (!ModeChangeCheck(gatherer)) {
+                                SchedulerMain.State = IceState.StartCraft;
+                            }
                         }
                     }
                 }
@@ -464,23 +434,22 @@ namespace ICE.Scheduler.Tasks
             return false;
         }
 
-        private static void StartMission(bool gatherer)
+        private static bool ModeChangeCheck(bool gatherer)
         {
             if (C.OnlyGrabMission || MissionInfoDict[CurrentLunarMission].JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
             {
                 SchedulerMain.State = IceState.ManualMode;
+                return true;
             }
             else if (gatherer)
             {
                 //Change to GathererMode Later
                 SchedulerMain.State = IceState.ManualMode;
+
+                return true;
             }
-            else
-            {
-                MissionId = CurrentLunarMission;
-                SchedulerMain.MissionName = MissionInfoDict[MissionId].Name;
-                SchedulerMain.State = IceState.StartCraft;
-            }
+
+            return false;
         }
     }
 }
