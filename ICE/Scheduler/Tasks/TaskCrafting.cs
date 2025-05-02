@@ -167,7 +167,6 @@ namespace ICE.Scheduler.Tasks
                     foreach (var pre in preItemsToCraft)
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(pre.Key).ItemResult.RowId);
-                        P.TaskManager.EnqueueDelay(1000); // Delay between pre item tasks
                         PluginDebug($"[Craft] Adding precraft {pre}");
                         P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
@@ -175,6 +174,7 @@ namespace ICE.Scheduler.Tasks
                         {
                            TimeLimitMS = 240000, // 4 minute limit per craft
                         });
+                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -185,7 +185,6 @@ namespace ICE.Scheduler.Tasks
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(main.Key).ItemResult.RowId);
                         PluginDebug($"[Main Item(s)] Queueing up for {item.Name}");
-                        P.TaskManager.EnqueueDelay(1000); // Delay between main item tasks
                         PluginDebug($"[Craft] Adding craft {main}");
                         P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
@@ -193,6 +192,7 @@ namespace ICE.Scheduler.Tasks
                         {
                            TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
+                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
