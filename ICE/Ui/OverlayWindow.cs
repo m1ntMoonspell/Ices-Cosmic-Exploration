@@ -50,10 +50,9 @@ namespace ICE.Ui
                 {
                     SchedulerMain.DisablePlugin();
                 }
-
-                ImGui.SameLine();
-                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
             }
+            ImGui.SameLine();
+            ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
         }
     }
 }

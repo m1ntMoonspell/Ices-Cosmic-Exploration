@@ -105,6 +105,7 @@ namespace ICE.Ui
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
+        private static bool showCredits = C.ShowCreditsColumn;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -159,15 +160,10 @@ namespace ICE.Ui
                 {
                     SchedulerMain.DisablePlugin();
                 }
-
-                ImGui.SameLine();
-                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
-                ImGui.SameLine();
-                ImGui.Checkbox("Stop once hit lunar credits cap", ref SchedulerMain.StopOnceHitCredits);
             }
 
             ImGui.SameLine();
-            ImGui.Spacing();
+            ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
 
             if (C.AutoPickCurrentJob && usingSupportedJob)
             {    
@@ -179,7 +175,7 @@ namespace ICE.Ui
             else
             {
                 // Crafting Job selection combo.
-                ImGui.SetNextItemWidth(150);
+                ImGui.SetNextItemWidth(75);
                 if (ImGui.BeginCombo("Job", jobOptions[selectedJobIndex].Name))
                 {
                     for (int i = 0; i < jobOptions.Count; i++)
@@ -199,23 +195,9 @@ namespace ICE.Ui
                 }
             }
 
-            if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
-            {
-                C.AutoPickCurrentJob = autoPickCurrentJob;
-                C.Save();
-            }
-
             ImGui.Spacing();
 
-            // Checkbox: Hide unsupported missions.
-            if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
-            {
-                C.HideUnsupportedMissions = hideUnsupported;
-                C.Save();
-            }
-
-            ImGui.Spacing();
-
+            ImGui.SetNextItemWidth(150);
             if (ImGui.BeginCombo("Sort By", sortOptions[SortOption].SortOptionName))
             {
                 for (int i = 0; i < sortOptions.Count; i++)
@@ -295,7 +277,9 @@ namespace ICE.Ui
                 ImGui.Spacing();
                 // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
 
-                int columnAmount = 6;
+                int columnAmount = 4;
+                if (showCredits)
+                    columnAmount += 2;
                 if (showExp)
                     columnAmount += 4;
 
@@ -322,12 +306,15 @@ namespace ICE.Ui
                     ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, col2Width);
                     columnIndex++;
 
-                    // Fourth column: Rewards
-                    ImGui.TableSetupColumn("Cosmocredits");
-                    columnIndex++;
+                    if (showCredits)
+                    {
+                        // Fourth column: Rewards
+                        ImGui.TableSetupColumn("Cosmocredits");
+                        columnIndex++;
 
-                    ImGui.TableSetupColumn("Lunar Credits");
-                    columnIndex++;
+                        ImGui.TableSetupColumn("Lunar Credits");
+                        columnIndex++;
+                    }
 
                     // Dynamic EXP columns
                     IOrderedEnumerable<KeyValuePair<int, string>> orderedExp = ExpDictionary.ToList().OrderBy(exp => exp.Key);
@@ -427,10 +414,13 @@ namespace ICE.Ui
                         col2Width = Math.Max(ImGui.CalcTextSize(MissionName).X + 10, col2Width);
 
                         // Column 3: Rewards
-                        ImGui.TableNextColumn();
-                        CenterTextInTableCell(entry.Value.CosmoCredit.ToString());
-                        ImGui.TableNextColumn();
-                        CenterTextInTableCell(entry.Value.LunarCredit.ToString());
+                        if (showCredits)
+                        {
+                            ImGui.TableNextColumn();
+                            CenterTextInTableCell(entry.Value.CosmoCredit.ToString());
+                            ImGui.TableNextColumn();
+                            CenterTextInTableCell(entry.Value.LunarCredit.ToString());
+                        }
 
                         if (showExp) // If show EXP Values are enabled, will show the exp values. 
                         {
@@ -501,8 +491,6 @@ namespace ICE.Ui
                     C.TurninOnSilver = silverTurnin;
                     C.Save();
                 }
-
-
             }
 
             // Checkbox: Turn in ASAP.
@@ -519,6 +507,12 @@ namespace ICE.Ui
                 C.Save();
             }
 
+            if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
+            {
+                C.AutoPickCurrentJob = autoPickCurrentJob;
+                C.Save();
+            }
+
             if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
             {
                 C.OnlyGrabMission = onlyGrabMission;
@@ -529,12 +523,26 @@ namespace ICE.Ui
             {
                 C.ShowOverlay = showOverlay;
                 C.Save();
-            }             
-            
+            }
+            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitCredits);
+
             ImGui.Spacing();
+            ImGui.Text($"Table Settings");
+
+            // Checkbox: Hide unsupported missions.
+            if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
+            {
+                C.HideUnsupportedMissions = hideUnsupported;
+                C.Save();
+            }
             if (ImGui.Checkbox($"Show EXP on Columns", ref showExp))
             {
                 C.ShowExpColums = showExp;
+                C.Save();
+            }
+            if (ImGui.Checkbox($"Show Cosmocredits", ref showCredits))
+            {
+                C.ShowCreditsColumn = showCredits;
                 C.Save();
             }
 
