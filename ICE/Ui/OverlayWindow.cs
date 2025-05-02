@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ICE.Scheduler;
