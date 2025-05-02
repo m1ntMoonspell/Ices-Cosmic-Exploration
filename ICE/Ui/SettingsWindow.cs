@@ -1,15 +1,4 @@
-﻿using ICE.Scheduler;
-using Dalamud.Interface.Colors;
-using Dalamud.Interface.Utility.Raii;
-using ECommons.Throttlers;
-using Lumina.Excel.Sheets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ICE.Ui;
+﻿namespace ICE.Ui;
 
 // This isn't currently wired up to anything. Can actually use this to place all the general settings for all the windows...
 internal class SettingsWindow : Window

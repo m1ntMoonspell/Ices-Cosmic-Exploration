@@ -1,18 +1,10 @@
-﻿using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Interface.Colors;
-using Dalamud.Interface.Utility.Raii;
-using ECommons.GameHelpers;
-using ECommons.Logging;
+﻿using ECommons.GameHelpers;
 using ECommons.Throttlers;
-using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
-using ICE.Scheduler;
 using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Ui;
@@ -40,6 +32,19 @@ internal class DebugWindow : Window
     public override unsafe void Draw()
     {
         var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
+
+        if (ImGui.TreeNode("Player Info"))
+        {
+            if (ImGui.Button("Copy current POS"))
+            {
+                ImGui.SetClipboardText($"{Player.Position.X}f, {Player.Position.Y}f, {Player.Position.Z}f,");
+            }
+            ImGui.SameLine();
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text($"{Player.Position}");
+
+            ImGui.TreePop();
+        }
 
         if (ImGui.TreeNode("Main Hud"))
         {
