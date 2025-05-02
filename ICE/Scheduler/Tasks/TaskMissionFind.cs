@@ -62,6 +62,8 @@ namespace ICE.Scheduler.Tasks
                         SchedulerMain.StopOnceHitLunarCredits = false;
                         SchedulerMain.State = IceState.Idle;
                         return;
+                    }
+                }
             }
 
             if (SchedulerMain.StopBeforeGrab)
