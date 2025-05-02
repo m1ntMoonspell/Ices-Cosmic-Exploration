@@ -69,7 +69,12 @@ namespace ICE.Scheduler.Tasks
                         return;
                     }
                 }
-
+                if (SchedulerMain.State == IceState.AbortInProgress)
+                {
+                    PluginWarning("Aborting mission");
+                    TurnIn(z, true);
+                    return;
+                }
                 PluginDebug($"[Score Checker] Player is in state: {string.Join(',', Svc.Condition.AsReadOnlySet().Select(x => x.ToString()))}");
                 PluginDebug($"[Score Checker] Artisan is busy?: {P.Artisan.IsBusy()}");
                 if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
@@ -85,7 +90,7 @@ namespace ICE.Scheduler.Tasks
             }
         }
 
-        private unsafe static void TurnIn(WKSMissionInfomation z)
+        private unsafe static void TurnIn(WKSMissionInfomation z, bool abortIfNoReport = false)
         {
             if (EzThrottler.Throttle("Turning in item", 100))
             {
@@ -98,7 +103,25 @@ namespace ICE.Scheduler.Tasks
                 }
                 P.TaskManager.EnqueueDelay(1500);
 
-                P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission");
+                var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
+
+                P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission", config);
+
+                if (abortIfNoReport)
+                {
+                    if (C.StopOnAbort)
+                    {
+                        SchedulerMain.StopBeforeGrab = true;
+                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        {
+                            Message = "[ICE] Unexpected error. Insufficient materials. Stopping.",
+                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                        });
+                    }
+                    SchedulerMain.Abandon = true;
+                    SchedulerMain.State = IceState.GrabMission;
+                    P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 1000 });
+                }
             }
         }
 

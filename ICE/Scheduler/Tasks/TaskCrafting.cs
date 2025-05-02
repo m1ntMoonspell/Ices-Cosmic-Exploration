@@ -82,6 +82,7 @@ namespace ICE.Scheduler.Tasks
                 var preItemsToCraft = new Dictionary<ushort, Tuple<int, int>>();
 
                 var mainCrafts = MoonRecipies[CurrentLunarMission].MainCraftsDict;
+                var preCrafts = MoonRecipies[CurrentLunarMission].PreCraftDict;
 
                 // Calculate if we need to do more than base amount of crafts
                 int craftsDone = mainCrafts.Sum(main => GetItemCount((int)RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId)); // How many mains we made
@@ -89,7 +90,10 @@ namespace ICE.Scheduler.Tasks
                 int CraftMultipleMissionItems = (craftsDone / craftsNeeded) + 1; // How many whole sets (+1) of crafts we did
                 PluginDebug($"[Loop] Number: {CraftMultipleMissionItems} | Items Done: {craftsDone} | Items Needed: {craftsNeeded}");
 
-                foreach (var main in MoonRecipies[CurrentLunarMission].MainCraftsDict)
+                bool OOMMain = false;
+                bool OOMSub = false;
+                
+                foreach (var main in mainCrafts)
                 {
                     var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
                     var subItem = RecipeSheet.GetRow(main.Key).Ingredient[0].Value.RowId; // need to directly reference this in the future
@@ -102,15 +106,18 @@ namespace ICE.Scheduler.Tasks
                     PluginDebug($"RecipeID: {main.Key}");
                     PluginDebug($"ItemID: {itemId}");
 
+                    if ((currentSubItemAmount / subItemNeed) == 0) // This should OOM only if not enough to craft a single Main
+                    {
+                        PluginDebug($"[OOM] Not enough to craft main item");
+                        OOMMain = true; // All current 3x Main items share Sub items
+                    }
+
                     PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
                     PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
                     
                     // Increase how many crafts we want to have made if needed so we can reach Score Checker goals.
-                    // if (C.CraftMultipleMissionItems)
-                    // {
-                        subItemNeed = subItemNeed * CraftMultipleMissionItems;
-                        mainNeed = mainNeed * CraftMultipleMissionItems;
-                    // }
+                    subItemNeed = subItemNeed * CraftMultipleMissionItems;
+                    mainNeed = mainNeed * CraftMultipleMissionItems;
 
                     if (currentAmount < mainNeed)
                     {
@@ -134,23 +141,38 @@ namespace ICE.Scheduler.Tasks
 
                 if (needPreCraft)
                 {
-                    PluginDebug($"[Pre-craft Items] You need pre-craft items. Starting the process of finding pre-crafts");
-                    foreach (var pre in MoonRecipies[CurrentLunarMission].PreCraftDict)
+                    if (GetItemCount(48233) == 0) // Subs only have Cosmo Containers as requirement.
                     {
-                        var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
-                        var currentAmount = GetItemCount((int)itemId);
-                        var PreCraftItemName = ItemSheet.GetRow(itemId).Name.ToString();
-                        PluginDebug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
-                        PluginDebug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
-                        var goalAmount = pre.Value;
-
-                        if (currentAmount < goalAmount)
+                        PluginDebug($"[OOM] Not enough to craft sub item");
+                        OOMSub = true;
+                    }
+                    else
+                    {
+                        PluginDebug($"[Pre-craft Items] You need pre-craft items. Starting the process of finding pre-crafts");
+                        foreach (var pre in preCrafts)
                         {
-                            PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
-                            int craftAmount = goalAmount - currentAmount;
-                            preItemsToCraft.Add(pre.Key, new(craftAmount, goalAmount));
+                            var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
+                            var currentAmount = GetItemCount((int)itemId);
+                            
+                            var PreCraftItemName = ItemSheet.GetRow(itemId).Name.ToString();
+                            PluginDebug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
+                            PluginDebug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
+                            var goalAmount = pre.Value;
+
+                            if (currentAmount < goalAmount)
+                            {
+                                PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
+                                int craftAmount = goalAmount - currentAmount;
+                                preItemsToCraft.Add(pre.Key, new(craftAmount, goalAmount));
+                            }
                         }
                     }
+                }
+
+                if (OOMMain && (OOMSub || !needPreCraft) && CurrentLunarMission < 359) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
+                {
+                    SchedulerMain.State = IceState.AbortInProgress;
+                    return;
                 }
 
                 P.TaskManager.BeginStack(); // Enable stack mode
@@ -164,7 +186,6 @@ namespace ICE.Scheduler.Tasks
                     foreach (var pre in preItemsToCraft)
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(pre.Key).ItemResult.RowId);
-                        P.TaskManager.EnqueueDelay(1000); // Delay between pre item tasks
                         PluginDebug($"[Craft] Adding precraft {pre}");
                         P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
@@ -172,6 +193,7 @@ namespace ICE.Scheduler.Tasks
                         {
                            TimeLimitMS = 240000, // 4 minute limit per craft
                         });
+                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -182,7 +204,6 @@ namespace ICE.Scheduler.Tasks
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(main.Key).ItemResult.RowId);
                         PluginDebug($"[Main Item(s)] Queueing up for {item.Name}");
-                        P.TaskManager.EnqueueDelay(1000); // Delay between main item tasks
                         PluginDebug($"[Craft] Adding craft {main}");
                         P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
@@ -190,6 +211,7 @@ namespace ICE.Scheduler.Tasks
                         {
                            TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
+                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 

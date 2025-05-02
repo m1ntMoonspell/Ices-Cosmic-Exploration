@@ -21,7 +21,8 @@ namespace ICE.Scheduler
         internal static bool inMission = false;
         internal static bool Abandon = false;
         internal static bool StopBeforeGrab = false;
-        internal static bool StopOnceHitCredits = false;
+        internal static bool StopOnceHitCosmoCredits = false;
+        internal static bool StopOnceHitLunarCredits = false;
 
 
         internal static IceState State = IceState.Idle;
@@ -43,6 +44,7 @@ namespace ICE.Scheduler
                     case IceState.StartCraft:
                         TaskCrafting.TryEnqueueCrafts();
                         break;
+                    case IceState.AbortInProgress:
                     case IceState.CheckScoreAndTurnIn:
                         TaskScoreCheck.TryCheckScore();
                         break;
@@ -66,6 +68,7 @@ namespace ICE.Scheduler
         GrabbingMission,
         StartCraft,
         CraftInProcess,
+        AbortInProgress,
         CheckScoreAndTurnIn,
         WaitForCrafts,
         ManualMode,

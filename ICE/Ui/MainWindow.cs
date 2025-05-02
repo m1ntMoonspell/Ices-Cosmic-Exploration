@@ -4,6 +4,9 @@ using Dalamud.Interface.Utility.Raii;
 using System.Collections.Generic;
 using ICE.Enums;
 using Dalamud.Interface.Colors;
+using System.Drawing;
+using System.Reflection;
+using ICE.Scheduler.Handlers;
 
 namespace ICE.Ui
 {
@@ -95,9 +98,11 @@ namespace ICE.Ui
 
         // Configuration booleans bound to checkboxes.
         private static bool delayGrab = C.DelayGrab;
+        private static bool stopOnAbort = C.StopOnAbort;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
+        private static bool ShowSeconds = C.ShowSeconds;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
@@ -500,6 +505,17 @@ namespace ICE.Ui
                 C.Save();
             }
 
+            if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
+            {
+                C.StopOnAbort = stopOnAbort;
+                C.Save();
+            }
+            ImGuiEx.HelpMarker(
+                "Warning! This is a safety feature to avoid wasting time on broken crafts!\n" +
+                "If you abort, you need to fix your ICE/Artisan settings or gear!\n" +
+                "You have been warned. Disable at your own risk."
+            );
+
             if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
             {
                 C.AutoPickCurrentJob = autoPickCurrentJob;
@@ -517,7 +533,16 @@ namespace ICE.Ui
                 C.ShowOverlay = showOverlay;
                 C.Save();
             }
-            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitCredits);
+            
+            ImGui.Checkbox("Stop if Cosmocredits are capped", ref SchedulerMain.StopOnceHitCosmoCredits);
+            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitLunarCredits);
+
+            ImGui.Checkbox("Accurate Time", ref WeatherForecastHandler.AccurateTime);
+            if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
+            {
+                C.ShowSeconds = ShowSeconds;
+                C.Save();
+            }
 
             ImGui.Spacing();
             ImGui.Text($"Table Settings");
@@ -590,6 +615,3 @@ namespace ICE.Ui
 
     }
 }
-
-    
-
