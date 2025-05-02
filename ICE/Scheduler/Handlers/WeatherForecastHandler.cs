@@ -35,15 +35,15 @@ namespace ICE.Scheduler.Handlers
             GetForecast();
         }
 
-        internal static (string, string, string) GetNextWeather()
-        {            
+        internal static unsafe (string, string, string) GetNextWeather()
+        {
+            WeatherManager* wm = WeatherManager.Instance();
+            byte currWeatherId = wm->GetCurrentWeather();
+            Weather currWeather = WeatherSheet.GetRow(currWeatherId);
+
             var currentWeather = weathers
                 .Select((item, index) => new { item, index })
-                .Last(w =>
-                {
-                    var timeDifference = w.item.Time - DateTime.UtcNow;
-                    return timeDifference.TotalMinutes < 0;
-                });
+                .First(w => w.item.Name == currWeather.Name);
             var nextWeather = weathers
                 .Skip(currentWeather.index + 1)
                 .Select((item, index) => new { item, index })
