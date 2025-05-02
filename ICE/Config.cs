@@ -19,6 +19,7 @@ namespace ICE
 
         // Overlay settings
         public bool ShowOverlay { get; set; } = false;
+        public bool ShowSeconds { get; set; } = false;
 
         // Delay grabbing mission
         public bool DelayGrab { get; set; } = false;
