@@ -116,11 +116,8 @@ namespace ICE.Scheduler.Tasks
                     PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
                     
                     // Increase how many crafts we want to have made if needed so we can reach Score Checker goals.
-                    // if (C.CraftMultipleMissionItems)
-                    // {
-                        subItemNeed = subItemNeed * CraftMultipleMissionItems;
-                        mainNeed = mainNeed * CraftMultipleMissionItems;
-                    // }
+                    subItemNeed = subItemNeed * CraftMultipleMissionItems;
+                    mainNeed = mainNeed * CraftMultipleMissionItems;
 
                     if (currentAmount < mainNeed)
                     {
@@ -149,6 +146,12 @@ namespace ICE.Scheduler.Tasks
                     {
                         var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
                         var currentAmount = GetItemCount((int)itemId);
+                        if (GetItemCount(48233) == 0 && currentAmount == 0) // Check if we can craft anything at all
+                        {
+                            PluginLog.Error("Out of Cosmic Containers and pre-crafts! Panic!");
+                            SchedulerMain.State = IceState.AbortInProgress;
+                            return;
+                        }
                         var PreCraftItemName = ItemSheet.GetRow(itemId).Name.ToString();
                         PluginDebug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
                         PluginDebug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
