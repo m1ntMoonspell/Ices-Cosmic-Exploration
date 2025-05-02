@@ -517,7 +517,9 @@ namespace ICE.Ui
                 C.ShowOverlay = showOverlay;
                 C.Save();
             }
-            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitCredits);
+            
+            ImGui.Checkbox("Stop if Cosmocredits are capped", ref SchedulerMain.StopOnceHitCosmoCredits);
+            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitLunarCredits);
 
             ImGui.Spacing();
             ImGui.Text($"Table Settings");

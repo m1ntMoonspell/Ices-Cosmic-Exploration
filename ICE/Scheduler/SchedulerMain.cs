@@ -21,7 +21,8 @@ namespace ICE.Scheduler
         internal static bool inMission = false;
         internal static bool Abandon = false;
         internal static bool StopBeforeGrab = false;
-        internal static bool StopOnceHitCredits = false;
+        internal static bool StopOnceHitCosmoCredits = false;
+        internal static bool StopOnceHitLunarCredits = false;
 
 
         internal static IceState State = IceState.Idle;
