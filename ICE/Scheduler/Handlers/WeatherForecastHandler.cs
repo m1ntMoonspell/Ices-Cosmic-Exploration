@@ -102,29 +102,16 @@ namespace ICE.Scheduler.Handlers
             TimeSpan timeDifference = forecastTime - DateTime.UtcNow;
             if (!AccurateTime)
             {
-                if (C.ShowSeconds)
-                {
-                    return timeDifference.ToString(@"hh\:mm\:ss");
-                }
-                else
-                {
-                    return timeDifference.ToString(@"hh\:mm");
-                }
+                string format = C.ShowSeconds ? @"hh\:mm\:ss" : @"hh\:mm";
+                return timeDifference < TimeSpan.Zero ? "-" + timeDifference.Duration().ToString(format) : timeDifference.ToString(format);
             }
             else
             {
-                int totalSeconds = (int)timeDifference.TotalSeconds;
+                int totalSeconds = Math.Abs((int)timeDifference.TotalSeconds);
                 int hours = totalSeconds / 10000;
                 int minutes = (totalSeconds % 10000) / 100;
-                if (C.ShowSeconds)
-                {
-                    int seconds = totalSeconds % 100;
-                    return $"{hours:D2}:{minutes:D2}:{seconds:D2}";
-                }
-                else
-                {
-                    return $"{hours:D2}:{minutes:D2}";
-                }
+                string format = C.ShowSeconds ? $"{hours:D2}:{minutes:D2}:{totalSeconds % 100:D2}" : $"{hours:D2}:{minutes:D2}";
+                return timeDifference < TimeSpan.Zero ? "-" + format : format;
             }
         }
     }
