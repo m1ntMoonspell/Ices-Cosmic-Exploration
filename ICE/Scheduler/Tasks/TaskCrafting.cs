@@ -263,12 +263,20 @@ namespace ICE.Scheduler.Tasks
             var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
             var currentMission = C.Missions.Single(x => x.Id == CurrentLunarMission);
 
-            if (currentMission.TurnInSilver && currentScore >= silverScore && HaveEnoughMain())
+            var enoughMain = HaveEnoughMain();
+            if (enoughMain == null)
+            {
+                PluginLog.Error("Current mission is 0, aborting");
+                SchedulerMain.State = IceState.GrabMission;
+                return false;
+            }
+
+            if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
             {
                 P.Artisan.SetEnduranceStatus(false);
                 return true;
             }
-            else if (currentScore >= goldScore && HaveEnoughMain())
+            else if (currentScore >= goldScore && enoughMain.Value)
             {
                 P.Artisan.SetEnduranceStatus(false);
                 return true;

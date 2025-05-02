@@ -1,4 +1,5 @@
-﻿using ECommons.Throttlers;
+﻿using ECommons.GameHelpers;
+using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
@@ -31,6 +32,19 @@ internal class DebugWindow : Window
     public override unsafe void Draw()
     {
         var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
+
+        if (ImGui.TreeNode("Player Info"))
+        {
+            if (ImGui.Button("Copy current POS"))
+            {
+                ImGui.SetClipboardText($"{Player.Position.X}f, {Player.Position.Y}f, {Player.Position.Z}f,");
+            }
+            ImGui.SameLine();
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text($"{Player.Position}");
+
+            ImGui.TreePop();
+        }
 
         if (ImGui.TreeNode("Main Hud"))
         {
