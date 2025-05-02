@@ -32,11 +32,11 @@ namespace ICE.Ui
             (var currentTimedBonus, var nextTimedBonus) = PlayerHandlers.GetTimedJob();
             if (currentTimedBonus.Value == null)
             {
-                ImGui.Text($"ET Bonus: None -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
+                ImGui.Text($"Timed Mission(s): None -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
             }
             else
             {
-                ImGui.Text($"ET Bonus: {string.Join(", ", currentTimedBonus.Value)} -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
+                ImGui.Text($"Timed Mission(s): {string.Join(", ", currentTimedBonus.Value)} -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
             }
 
             ImGuiHelpers.ScaledDummy(2);
