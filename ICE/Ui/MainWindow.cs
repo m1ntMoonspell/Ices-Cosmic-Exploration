@@ -6,6 +6,7 @@ using ICE.Enums;
 using Dalamud.Interface.Colors;
 using System.Drawing;
 using System.Reflection;
+using ICE.Scheduler.Handlers;
 
 namespace ICE.Ui
 {
@@ -102,6 +103,7 @@ namespace ICE.Ui
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
+        private static bool ShowSeconds = C.ShowSeconds;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
@@ -526,6 +528,13 @@ namespace ICE.Ui
             }
             ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitCredits);
 
+            ImGui.Checkbox("Accurate Time", ref WeatherForecastHandler.AccurateTime);
+            if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
+            {
+                C.ShowSeconds = ShowSeconds;
+                C.Save();
+            }
+
             ImGui.Spacing();
             ImGui.Text($"Table Settings");
 
@@ -610,6 +619,3 @@ namespace ICE.Ui
 
     }
 }
-
-    
-
