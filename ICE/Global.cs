@@ -6,7 +6,6 @@
  */
 
 global using Dalamud.Interface.Windowing;
-global using Dalamud.Interface;
 global using Dalamud.Plugin;
 global using ECommons.DalamudServices;
 global using ECommons.ImGuiMethods;

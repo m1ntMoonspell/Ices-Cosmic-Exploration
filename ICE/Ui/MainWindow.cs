@@ -98,8 +98,6 @@ namespace ICE.Ui
 
         // Configuration booleans bound to checkboxes.
         private static bool delayGrab = C.DelayGrab;
-        private static bool silverTurnin = C.TurninOnSilver;
-        private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
@@ -229,7 +227,7 @@ namespace ICE.Ui
             .Where(m => m.Value.JobId == selectedJobId - 1)
             .Where(m => m.Value.IsCriticalMission);
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
-            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", criticalMissions);
+            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", criticalMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
@@ -237,21 +235,21 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
-            DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", weatherRestrictedMissions);
+            DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.Time != 0);
             timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", timeRestrictedMissions);
+            DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.PreviousMissionID != 0);
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
-            DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", sequentialMissions);
+            DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
 
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
@@ -265,7 +263,7 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
-                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", missions);
+                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", missions);
             }
 
             ImGui.EndTabItem();
@@ -279,7 +277,7 @@ namespace ICE.Ui
                 ImGui.Spacing();
                 // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
 
-                int columnAmount = 4;
+                int columnAmount = 5;
                 if (showCredits)
                     columnAmount += 2;
                 if (showExp)
@@ -297,7 +295,7 @@ namespace ICE.Ui
                     int columnIndex = 0;
 
                     // First column: checkbox (empty header)
-                    ImGui.TableSetupColumn("Enable##Enable");
+                    ImGui.TableSetupColumn("Enable##Enable", ImGuiTableColumnFlags.WidthFixed, 50);
                     columnIndex++;
 
                     // Second column: ID
@@ -329,6 +327,9 @@ namespace ICE.Ui
                             columnIndex++;
                         }
                     }
+
+                    // Settings column
+                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 150);
 
                     // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
@@ -363,12 +364,14 @@ namespace ICE.Ui
                         if (unsupported && hideUnsupported)
                             continue;
 
+                        var mission = C.Missions.Single(x => x.Id == entry.Key);
+                        var isEnabled = mission.Enabled;
+
                         // Start a new row
                         ImGui.TableNextRow();
 
                         // Column 0: Enable checkbox
                         ImGui.TableSetColumnIndex(0);
-                        bool enabled = C.EnabledMission.Any(x => x.Id == entry.Key);
                         using (ImRaii.Disabled(unsupported))
                         {
                             // Estimate the width of the checkbox (label is invisible, so the box is all that matters)
@@ -380,13 +383,9 @@ namespace ICE.Ui
                                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
 
                             // Use an invisible label for the checkbox to avoid text spacing
-                            if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref enabled))
+                            if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref isEnabled))
                             {
-                                if (enabled)
-                                    C.EnabledMission.Add((entry.Key, entry.Value.Name));
-                                else
-                                    C.EnabledMission.Remove((entry.Key, entry.Value.Name));
-
+                                mission.Enabled = isEnabled;
                                 C.Save();
                             }
 
@@ -438,7 +437,34 @@ namespace ICE.Ui
                                 CenterTextInTableCell(relicXp);
                             }
                         }
-                        
+
+                        ImGui.TableNextColumn();
+                        var silver = mission.TurnInSilver;
+                        if (ImGui.Checkbox($"Silver###{entry.Value.Name}_{entry.Key}_silver", ref silver))
+                        {
+                            mission.TurnInSilver = silver;
+
+                            if(mission.TurnInASAP && silver)
+                            {
+                                mission.TurnInASAP = false;
+                            }
+
+                            C.Save();
+                        }
+                        ImGui.SameLine();
+                        var asap = mission.TurnInASAP;
+                        if (ImGui.Checkbox($"ASAP###{entry.Value.Name}_{entry.Key}_asap", ref asap))
+                        {
+                            mission.TurnInASAP = asap;
+
+                            if (mission.TurnInSilver && asap)
+                            {
+                                mission.TurnInSilver = false;
+                            }
+
+                            C.Save();
+                        }
+
                         // debug
                         ImGui.TableNextColumn();
                         if (entry.Value.Weather != CosmicWeather.FairSkies)
@@ -478,37 +504,6 @@ namespace ICE.Ui
                 C.Save();
             }
 
-            // Checkbox: Turn in on silver.
-            if (ImGui.Checkbox("Turnin on Silver", ref silverTurnin))
-            {
-                // Ensure mutual exclusivity with Turnin ASAP.
-                if (turninASAP)
-                {
-                    turninASAP = false;
-                    C.TurninASAP = false;
-                }
-
-                if (silverTurnin != C.TurninOnSilver)
-                {
-                    C.TurninOnSilver = silverTurnin;
-                    C.Save();
-                }
-            }
-
-            // Checkbox: Turn in ASAP.
-            if (ImGui.Checkbox("Turnin ASAP", ref turninASAP))
-            {
-                // Ensure mutual exclusivity with Turnin on Silver.
-                if (silverTurnin)
-                {
-                    silverTurnin = false;
-                    C.TurninOnSilver = false;
-                }
-
-                C.TurninASAP = turninASAP;
-                C.Save();
-            }
-
             if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
             {
                 C.AutoPickCurrentJob = autoPickCurrentJob;
@@ -526,7 +521,9 @@ namespace ICE.Ui
                 C.ShowOverlay = showOverlay;
                 C.Save();
             }
-            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitCredits);
+            
+            ImGui.Checkbox("Stop if Cosmocredits are capped", ref SchedulerMain.StopOnceHitCosmoCredits);
+            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitLunarCredits);
 
             ImGui.Checkbox("Accurate Time", ref WeatherForecastHandler.AccurateTime);
             if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
@@ -556,19 +553,6 @@ namespace ICE.Ui
             }
 
             ImGui.EndTabItem();
-        }
-
-        public void DrawDebugTab()
-        {
-            var tab = ImRaii.TabItem("Debug");
-
-            if (!tab)
-                return;
-
-            if(ImGui.Button("ExitCraft"))
-            {
-                ExecuteCommand(711);
-            }
         }
 
         public static void DrawLink(string label, string link, string url)

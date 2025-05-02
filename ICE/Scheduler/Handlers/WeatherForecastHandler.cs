@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dalamud.Plugin.Services;
+﻿using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using FFXIVClientStructs.FFXIV.Common.Component.Excel;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
-using Serilog.Core;
 
 namespace ICE.Scheduler.Handlers
 {

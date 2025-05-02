@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ICE.Scheduler;
 using ICE.Scheduler.Handlers;
@@ -25,14 +20,28 @@ namespace ICE.Ui
         public override void Draw()
         {
             ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
-            ImGui.Spacing();
+
+            ImGuiHelpers.ScaledDummy(2);
+            ImGui.Separator();
+            ImGuiHelpers.ScaledDummy(2);
 
             (string currentWeather, string nextWeather, string nextWeatherTime) = WeatherForecastHandler.GetNextWeather();
 
-            ImGui.Text($"Current Weather: {currentWeather}");
-            ImGui.Spacing();
-            ImGui.Text($"Next Weather: {nextWeather} in [{nextWeatherTime}]");
-            ImGui.Spacing();
+            ImGui.Text($"Weather: {currentWeather} -> {nextWeather} in [{nextWeatherTime}]");
+
+            (var currentTimedBonus, var nextTimedBonus) = PlayerHandlers.GetTimedJob();
+            if (currentTimedBonus.Value == null)
+            {
+                ImGui.Text($"Timed Mission(s): None -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
+            }
+            else
+            {
+                ImGui.Text($"Timed Mission(s): {string.Join(", ", currentTimedBonus.Value)} -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
+            }
+
+            ImGuiHelpers.ScaledDummy(2);
+            ImGui.Separator();
+            ImGuiHelpers.ScaledDummy(2);
 
             if (ImGuiEx.IconButton("\uf013##Config", "Open ICE"))
             {

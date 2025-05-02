@@ -1,7 +1,5 @@
-﻿using System.Linq;
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using ECommons.Throttlers;
-using ICE.Utilities;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
@@ -10,7 +8,17 @@ namespace ICE.Scheduler.Tasks
     {
         public static void TryCheckScore()
         {
+            if(CurrentLunarMission == 0)
+            {
+                // this in theory shouldn't happen but going to add it just in case
+                PluginDebug("[Score Checker] Current mission is 0, aborting");
+                SchedulerMain.State = IceState.GrabMission;
+                return;
+            }
+
+
             PluginDebug($"Current Scoring Mission Id: {CurrentLunarMission}");
+            var currentMission = C.Missions.Single(x => x.Id == CurrentLunarMission);
 
             if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
@@ -24,19 +32,28 @@ namespace ICE.Scheduler.Tasks
 
                         PluginDebug($"[Score Checker] Current Score: {currentScore} | Silver Goal : {silverScore} | Gold Goal: {goldScore}");
 
-                        PluginDebug($"[Score Checker] Is Turnin Asap Enabled?: {C.TurninASAP}");
+                        PluginDebug($"[Score Checker] Is Turnin Asap Enabled?: {currentMission.TurnInASAP}");
                     }
 
-                    if (C.TurninASAP)
+                    if (currentMission.TurnInASAP)
                     {
                         PluginDebug("$[Score Checker] Turnin Asap was enabled, and true. Firing off");
                         TurnIn(z);
                         return;
                     }
 
+                    var enoughMain = TaskCrafting.HaveEnoughMain();
+                    if(enoughMain == null)
+                    {
+                        PluginDebug("[Score Checker] Current mission is 0, aborting");
+                        SchedulerMain.State = IceState.GrabMission;
+                        return;
+                    }
+
                     if (LogThrottle)
-                        PluginDebug($"[Score Checker] Checking current score:  {currentScore} is >= Silver Score: {silverScore} && {TaskCrafting.HaveEnoughMain()} && if TurninSilver is true: {C.TurninOnSilver}");
-                    if (currentScore >= silverScore && TaskCrafting.HaveEnoughMain() && C.TurninOnSilver)
+                        PluginDebug($"[Score Checker] Checking current score:  {currentScore} is >= Silver Score: {silverScore} && {enoughMain.Value} && if TurninSilver is true: {currentMission.TurnInSilver}");
+
+                    if (currentScore >= silverScore && enoughMain.Value && currentMission.TurnInSilver)
                     {
                         PluginDebug($"Silver was enabled, and you also meet silver threshold. ");
                         TurnIn(z);
