@@ -169,7 +169,7 @@ namespace ICE.Scheduler.Tasks
                     }
                 }
 
-                if (OOMMain && (OOMSub || !needPreCraft)) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
+                if (OOMMain && (OOMSub || !needPreCraft) && CurrentLunarMission < 359) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
                 {
                     SchedulerMain.State = IceState.AbortInProgress;
                     return;
@@ -352,7 +352,7 @@ namespace ICE.Scheduler.Tasks
                 var currentAmount = GetItemCount((int)itemId);
                 var mainItemName = ItemSheet.GetRow(itemId).Name.ToString();
 
-                PluginLog.Debug($"[Item(s) Check] Curr: {currentAmount} - Need: {mainNeed}");
+                //PluginLog.Debug($"[Item(s) Check] Curr: {currentAmount} - Need: {mainNeed}");
                 if (currentAmount < mainNeed)
                 {
                     if (LogThrottle)
