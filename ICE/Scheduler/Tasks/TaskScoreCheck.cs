@@ -1,5 +1,6 @@
-﻿using System.Linq;
+using System.Linq;
 using Dalamud.Game.ClientState.Conditions;
+using ECommons.Logging;
 using ECommons.Throttlers;
 using ICE.Utilities;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
@@ -52,7 +53,12 @@ namespace ICE.Scheduler.Tasks
                         return;
                     }
                 }
-
+                if (SchedulerMain.State == IceState.AbortInProgress)
+                {
+                    PluginLog.Error("Aborting mission");
+                    TurnIn(z, true);
+                    return;
+                }
                 PluginDebug($"[Score Checker] Player is in state: {string.Join(',', Svc.Condition.AsReadOnlySet().Select(x => x.ToString()))}");
                 PluginDebug($"[Score Checker] Artisan is busy?: {P.Artisan.IsBusy()}");
                 if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
@@ -68,7 +74,7 @@ namespace ICE.Scheduler.Tasks
             }
         }
 
-        private unsafe static void TurnIn(WKSMissionInfomation z)
+        private unsafe static void TurnIn(WKSMissionInfomation z, bool abortIfNoReport = false)
         {
             if (EzThrottler.Throttle("Turning in item", 100))
             {
@@ -81,7 +87,15 @@ namespace ICE.Scheduler.Tasks
                 }
                 P.TaskManager.EnqueueDelay(1500);
 
-                P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission");
+                var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
+
+                P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission", config);
+
+                if (abortIfNoReport)
+                {
+                    SchedulerMain.StopBeforeGrab = true;
+                    P.TaskManager.Enqueue(AbortInternals, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
+                }
             }
         }
 
@@ -96,6 +110,26 @@ namespace ICE.Scheduler.Tasks
             if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 z.Report();
+                return false;
+            }
+
+            return false;
+        }
+
+        private static bool? AbortInternals()
+        {
+            if (SchedulerMain.State != IceState.AbortInProgress)
+                return true;
+
+            if (CurrentLunarMission == 0)
+            {
+                SchedulerMain.State = IceState.GrabMission;
+                return true;
+            }
+
+            if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
+            {
+                z.Abandon();
                 return false;
             }
 
