@@ -1,12 +1,9 @@
 using ECommons.Automation.NeoTaskManager;
 using ECommons.Configuration;
-using ECommons.EzIpcManager;
 using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;
 using ICE.Scheduler.Handlers;
-using Lumina;
-using ECommons.Schedulers;
 
 namespace ICE;
 
@@ -84,6 +81,7 @@ public sealed class ICE : IDalamudPlugin
         if (Svc.ClientState.LocalPlayer != null)
         {
             SchedulerMain.Tick();
+            WeatherForecastHandler.Tick();
         }
         GenericManager.Tick();
         PlayerHandlers.Tick();
@@ -124,7 +122,7 @@ public sealed class ICE : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "clear")
         {
-            C.EnabledMission.Clear();
+            C.Missions.ForEach(x => x.Enabled = false);
         }
         else if (firstArg.ToLower() == "stop")
         {

@@ -10,22 +10,13 @@ namespace ICE
         public const int CurrentConfigVersion = 1;
 
         // Missions the user has enabled
-        public List<(uint Id, string Name)> EnabledMission { get; set; } = new List<(uint, string)>();
-        public List<(uint Id, string Name)> CriticalMissions { get; set; } = new List<(uint, string)>();
-        public List<(uint Id, string Name)> TimedMissions { get; set; } = new List<(uint, string)>();
-        public List<(uint Id, string Name)> WeatherMissions { get; set; } = new List<(uint, string)>();
-        public List<(uint Id, string Name)> SequenceMissions { get; set; } = new List<(uint, string)>();
-        public List<(uint Id, string Name)> StandardMissions { get; set; } = new List<(uint, string)>();
+        public List<CosmicMission> Missions { get; set; } = [];
 
         // Overlay settings
         public bool ShowOverlay { get; set; } = false;
 
         // Delay grabbing mission
         public bool DelayGrab { get; set; } = false;
-
-        // Turnin options
-        public bool TurninOnSilver { get; set; } = false;
-        public bool TurninASAP { get; set; } = false;
 
         // Table settings
         public bool HideUnsupportedMissions { get; set; } = false;
@@ -39,5 +30,26 @@ namespace ICE
         {
             EzConfig.Save();
         }
+    }
+
+    public class CosmicMission
+    {
+        public uint Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public MissionType Type { get; set; } = MissionType.Standard;
+        public bool Enabled { get; set; } = false;
+        public uint PreviousMissionId { get; set; } = 0;
+        public uint JobId { get; set; }
+        public bool TurnInSilver { get; set; } = false;
+        public bool TurnInASAP { get; set; } = false;
+    }
+
+    public enum MissionType
+    {
+        Standard = 0,
+        Sequential = 1,
+        Weather = 2,
+        Timed = 3,
+        Critical = 4
     }
 }
