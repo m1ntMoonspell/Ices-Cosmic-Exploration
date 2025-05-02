@@ -312,6 +312,9 @@ namespace ICE.Scheduler.Tasks
                 PluginLog.Debug($"[Item(s) Check] Checking.");
             }
 
+            if (CurrentLunarMission == 0)
+                return true;
+
             foreach (var main in MoonRecipies[CurrentLunarMission].MainCraftsDict)
             {
                 var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
