@@ -98,6 +98,7 @@ namespace ICE.Ui
 
         // Configuration booleans bound to checkboxes.
         private static bool delayGrab = C.DelayGrab;
+        private static bool stopOnAbort = C.StopOnAbort;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
@@ -503,6 +504,17 @@ namespace ICE.Ui
                 C.DelayGrab = delayGrab;
                 C.Save();
             }
+
+            if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
+            {
+                C.StopOnAbort = stopOnAbort;
+                C.Save();
+            }
+            ImGuiEx.HelpMarker(
+                "Warning! This is a safety feature to avoid wasting time on broken crafts!\n" +
+                "If you abort, you need to fix your ICE/Artisan settings or gear!\n" +
+                "You have been warned. Disable at your own risk."
+            );
 
             if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
             {
