@@ -10,6 +10,7 @@ namespace ICE.Scheduler.Handlers
         private const double Seconds = 1;
         private const double Minutes = 60 * Seconds;
         private const double WeatherPeriod = 23 * Minutes + 20 * Seconds;
+        internal static bool AccurateTime = false;
 
         private static ExcelSheet<Weather>? WeatherSheet;
         internal static List<WeatherForecast> weathers;
@@ -91,37 +92,19 @@ namespace ICE.Scheduler.Handlers
         internal static string FormatForecastTime(DateTime forecastTime)
         {
             TimeSpan timeDifference = forecastTime - DateTime.UtcNow;
-            double totalMinutes = timeDifference.TotalMinutes;
-
-            switch (totalMinutes)
+            if (!AccurateTime)
             {
-                case <= 0.01:
-                    return "Now";
-                case < 1:
-                    return $"less than a minute";
-                case < 2:
-                    return $"a minute";
-                case < 60:
-                    return $"{(int)totalMinutes} minutes";
+                string format = C.ShowSeconds ? @"hh\:mm\:ss" : @"hh\:mm";
+                return timeDifference < TimeSpan.Zero ? "-" + timeDifference.Duration().ToString(format) : timeDifference.ToString(format);
             }
-
-            var hours = (int)(totalMinutes / 60);
-            var remainingMinutes = (int)(totalMinutes % 60);
-
-            if (remainingMinutes == 0)
-                return hours == 1
-                    ? "an hour"
-                    : $"{(int)hours} hours";
-
-            string hoursStr = hours == 1
-                ? "an hour"
-                : $"{(int)hours} hours";
-
-            string minutesStr = remainingMinutes == 1
-                ? "a minute"
-                : $"{(int)remainingMinutes} minutes";
-
-            return $"{hoursStr} and {minutesStr}";
+            else
+            {
+                int totalSeconds = Math.Abs((int)timeDifference.TotalSeconds);
+                int hours = totalSeconds / 10000;
+                int minutes = (totalSeconds % 10000) / 100;
+                string format = C.ShowSeconds ? $"{hours:D2}:{minutes:D2}:{totalSeconds % 100:D2}" : $"{hours:D2}:{minutes:D2}";
+                return timeDifference < TimeSpan.Zero ? "-" + format : format;
+            }
         }
     }
 

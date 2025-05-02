@@ -36,20 +36,32 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
+            if (SchedulerMain.StopOnceHitCosmoCredits)
+            {
+                if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                {
+                    if (hud.CosmoCredit >= 30000)
+                    {
+                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
+                        SchedulerMain.StopBeforeGrab = false;
+                        SchedulerMain.StopOnceHitCosmoCredits = false;
+                        SchedulerMain.State = IceState.Idle;
+                        return;
+                    }
+                }
+            }
 
-            if (SchedulerMain.StopOnceHitCredits)
+            if (SchedulerMain.StopOnceHitLunarCredits)
             {
                 if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
                     if (hud.LunarCredit >= 10000)
                     {
-                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} credits");
+                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
                         SchedulerMain.StopBeforeGrab = false;
-                        SchedulerMain.StopOnceHitCredits = false;
+                        SchedulerMain.StopOnceHitLunarCredits = false;
                         SchedulerMain.State = IceState.Idle;
                         return;
-                    }
-                }
             }
 
             if (SchedulerMain.StopBeforeGrab)
