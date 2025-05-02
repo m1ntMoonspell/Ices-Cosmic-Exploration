@@ -42,9 +42,18 @@ namespace ICE.Scheduler.Tasks
                         return;
                     }
 
+                    var enoughMain = TaskCrafting.HaveEnoughMain();
+                    if(enoughMain == null)
+                    {
+                        PluginDebug("[Score Checker] Current mission is 0, aborting");
+                        SchedulerMain.State = IceState.GrabMission;
+                        return;
+                    }
+
                     if (LogThrottle)
-                        PluginDebug($"[Score Checker] Checking current score:  {currentScore} is >= Silver Score: {silverScore} && {TaskCrafting.HaveEnoughMain()} && if TurninSilver is true: {currentMission.TurnInSilver}");
-                    if (currentScore >= silverScore && TaskCrafting.HaveEnoughMain() && currentMission.TurnInSilver)
+                        PluginDebug($"[Score Checker] Checking current score:  {currentScore} is >= Silver Score: {silverScore} && {enoughMain.Value} && if TurninSilver is true: {currentMission.TurnInSilver}");
+
+                    if (currentScore >= silverScore && enoughMain.Value && currentMission.TurnInSilver)
                     {
                         PluginDebug($"Silver was enabled, and you also meet silver threshold. ");
                         TurnIn(z);

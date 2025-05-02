@@ -304,7 +304,7 @@ namespace ICE.Scheduler.Tasks
             return false;
         }
 
-        internal static bool HaveEnoughMain()
+        internal static bool? HaveEnoughMain()
         {
             EnsureInit();
             if (LogThrottle)
@@ -313,7 +313,7 @@ namespace ICE.Scheduler.Tasks
             }
 
             if (CurrentLunarMission == 0)
-                return true;
+                return null;
 
             foreach (var main in MoonRecipies[CurrentLunarMission].MainCraftsDict)
             {
