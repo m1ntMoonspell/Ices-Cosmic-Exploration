@@ -3,11 +3,6 @@ using ECommons.Logging;
 using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using ICE.Ui;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
@@ -18,36 +13,11 @@ namespace ICE.Scheduler.Tasks
         private static uint MissionId = 0;
         private static uint currentClassJob => GetClassJobId();
         private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
-        private static bool hasCritical => C.EnabledMission
-                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
-                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
-                                            .Select(enabled => enabled.Id)
-                                            .Intersect(C.CriticalMissions.Select(critical => critical.Id))
-                                            .Any();
-        private static bool hasWeather => C.EnabledMission
-                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
-                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
-                                            .Select(enabled => enabled.Id)
-                                            .Intersect(C.WeatherMissions.Select(weather => weather.Id))
-                                            .Any();
-        private static bool hasTimed => C.EnabledMission
-                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
-                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
-                                            .Select(enabled => enabled.Id)
-                                            .Intersect(C.TimedMissions.Select(timed => timed.Id))
-                                            .Any();
-        private static bool hasSequence => C.EnabledMission
-                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
-                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
-                                            .Select(enabled => enabled.Id)
-                                            .Intersect(C.SequenceMissions.Select(sequence => sequence.Id))
-                                            .Any();
-        private static bool hasStandard => C.EnabledMission
-                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
-                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
-                                            .Select(enabled => enabled.Id)
-                                            .Intersect(C.StandardMissions.Select(standard => standard.Id))
-                                            .Any();
+        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
+        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
+        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
+        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
+        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
 
         public static void EnqueueResumeCheck()
         {
@@ -91,7 +61,7 @@ namespace ICE.Scheduler.Tasks
 
             if (SchedulerMain.State != IceState.GrabMission)
                 return;
-            
+
             SchedulerMain.State = IceState.GrabbingMission;
 
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
@@ -141,7 +111,8 @@ namespace ICE.Scheduler.Tasks
                                 PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
                                 await Task.Delay(500);
                             }
-                            if (!ModeChangeCheck(gatherer)) {
+                            if (!ModeChangeCheck(gatherer))
+                            {
                                 SchedulerMain.State = IceState.StartCraft;
                             }
                         }
@@ -220,7 +191,7 @@ namespace ICE.Scheduler.Tasks
                 var currentClassJob = GetClassJobId();
                 foreach (var m in x.StellerMissions)
                 {
-                    var criticalMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
+                    var criticalMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId);
 
                     if (criticalMissionEntry == default)
                     {
@@ -254,9 +225,9 @@ namespace ICE.Scheduler.Tasks
                 x.ProvisionalMissions();
                 var currentClassJob = GetClassJobId();
 
-                var weatherIds = C.WeatherMissions.Select(w => w.Id).ToHashSet();
-                var sequenceIds = C.SequenceMissions.Select(s => s.Id).ToHashSet();
-                var timedIds = C.TimedMissions.Select(t => t.Id).ToHashSet();
+                var weatherIds = C.Missions.Where(x => x.Type == MissionType.Weather).Select(w => w.Id).ToHashSet();
+                var sequenceIds = C.Missions.Where(x => x.Type == MissionType.Sequential).Select(s => s.Id).ToHashSet();
+                var timedIds = C.Missions.Where(x => x.Type == MissionType.Timed).Select(t => t.Id).ToHashSet();
 
                 var sortedMissions = x.StellerMissions
                     .Where(m => weatherIds.Contains(m.MissionId))
@@ -272,7 +243,7 @@ namespace ICE.Scheduler.Tasks
 
                 foreach (var m in sortedMissions)
                 {
-                    var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
+                    var weatherMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
 
                     if (weatherMissionEntry == default)
                     {
@@ -315,7 +286,7 @@ namespace ICE.Scheduler.Tasks
             {
                 foreach (var m in x.StellerMissions)
                 {
-                    var basicMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId);
+                    var basicMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId);
 
                     if (basicMissionEntry == default)
                         continue;
@@ -347,8 +318,7 @@ namespace ICE.Scheduler.Tasks
             {
                 PluginLog.Debug("found mission was false");
                 var currentClassJob = GetClassJobId();
-                var ranks = C.EnabledMission
-                    .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                var ranks = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob)
                     .Select(e => MissionInfoDict[e.Id].Rank)
                     .ToList();
                 if (ranks.Count == 0)

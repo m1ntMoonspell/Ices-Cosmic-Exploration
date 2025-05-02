@@ -1,19 +1,9 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
-using ECommons;
-using ECommons.GameHelpers;
 using ECommons.Logging;
-using ECommons.Reflection;
 using ECommons.Throttlers;
-using FFXIVClientStructs.FFXIV.Common.Component.Excel;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using static Dalamud.Interface.Utility.Raii.ImRaii;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
@@ -268,8 +258,9 @@ namespace ICE.Scheduler.Tasks
         internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
         {
             var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
+            var currentMission = C.Missions.Single(x => x.Id == CurrentLunarMission);
 
-            if (C.TurninOnSilver && currentScore >= silverScore && HaveEnoughMain())
+            if (currentMission.TurnInSilver && currentScore >= silverScore && HaveEnoughMain())
             {
                 P.Artisan.SetEnduranceStatus(false);
                 return true;

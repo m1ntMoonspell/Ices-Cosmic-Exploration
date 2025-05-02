@@ -1,11 +1,9 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Interface.Textures;
 using ECommons;
 using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices.Legacy;
 using ECommons.ExcelServices;
-using ECommons.EzHookManager;
 using ECommons.GameHelpers;
 using ECommons.Logging;
 using ECommons.Reflection;
@@ -18,22 +16,14 @@ using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ICE.Enums;
-using Lumina;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
-using static Dalamud.Game.Text.SeStringHandling.Payloads.ItemPayload;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Utilities;
 
 public static unsafe class Utils
 {
-    public const string ExecuteCommandSignature = "E8 ?? ?? ?? ?? 8D 46 0A";
-    internal delegate nint ExecuteCommandDelegate(int command, int a1 = 0, int a2 = 0, int a3 = 0, int a4 = 0);
-    internal static ExecuteCommandDelegate? ExecuteCommand = EzDelegate.Get<ExecuteCommandDelegate>(ExecuteCommandSignature);
-    [EzHook(ExecuteCommandSignature, false)]
-    internal static readonly EzHook<ExecuteCommandDelegate> ExecuteCommandHook = null!;
-
     #region Plugin/Ecoms stuff
 
     public static bool HasPlugin(string name) => DalamudReflector.TryGetDalamudPlugin(name, out _, false, true);
@@ -274,9 +264,9 @@ public static unsafe class Utils
 
         foreach (var item in MoonMissionSheet)
         {
-            List<(int Type, int Amount)> Exp = new List<(int Type, int Amount)>();
-            Dictionary<ushort, int> MainItems = new Dictionary<ushort, int>();
-            Dictionary<ushort, int> PreCrafts = new Dictionary<ushort, int>();
+            List<(int Type, int Amount)> Exp = [];
+            Dictionary<ushort, int> MainItems = [];
+            Dictionary<ushort, int> PreCrafts = [];
             uint keyId = item.RowId;
             string LeveName = item.Unknown0.ToString();
             LeveName = LeveName.Replace("<nbsp>", " ");
@@ -325,10 +315,10 @@ public static unsafe class Utils
                     var item1Id = MoonItemInfo.GetRow(toDoRow.Unknown3).Unknown0;
                     var item1Name = ItemSheet.GetRow(item1Id).Name.ToString();
                     var item1RecipeRow = RecipeSheet.Where(e => e.ItemResult.RowId == item1Id)
-                                                    .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 || 
-                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 || 
-                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 || 
-                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 || 
+                                                    .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown0 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown1 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown2 ||
+                                                                e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown3 ||
                                                                 e.RowId == MoonRecipeSheet.GetRow(RecipeId).Unknown4)
                                                     .First();
                     var craftingType = item1RecipeRow.CraftType.Value.RowId;
@@ -510,6 +500,39 @@ public static unsafe class Utils
                 };
             }
         }
+
+        if (C.Missions.Count == 0)
+        {
+            // fresh install?
+            C.Missions = [.. MissionInfoDict.Select(x => new CosmicMission()
+            {
+                Id = x.Key,
+                Name = x.Value.Name,
+                Type = GetMissionType(x.Value),
+                PreviousMissionId = x.Value.PreviousMissionID,
+                JobId = x.Value.JobId,
+            })];
+            C.Save();
+        }
+        else
+        {
+            var newMissions = MissionInfoDict.Where(x => !C.Missions.Any(y => y.Id == x.Key)).Select(x => new CosmicMission()
+            {
+                Id = x.Key,
+                Name = x.Value.Name,
+                Type = GetMissionType(x.Value),
+                PreviousMissionId = x.Value.PreviousMissionID,
+                JobId = x.Value.JobId,
+            });
+
+            if (newMissions.Any())
+            {
+                C.Missions.AddRange(newMissions);
+                C.Save();
+            }
+        }
+
+        /*
         C.CriticalMissions = MissionInfoDict
                                 .Where(m => m.Value.IsCriticalMission)
                                 .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
@@ -534,7 +557,29 @@ public static unsafe class Utils
                                 .Where(m => m.Value.Weather == CosmicWeather.FairSkies)
                                 .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
                                 .ToList();
-        C.Save();
+        */
+    }
+
+    public static MissionType GetMissionType(MissionListInfo mission)
+    {
+        if (mission.IsCriticalMission)
+        {
+            return MissionType.Critical;
+        }
+        else if (mission.Time != 0)
+        {
+            return MissionType.Timed;
+        }
+        else if (mission.Weather != CosmicWeather.FairSkies)
+        {
+            return MissionType.Weather;
+        }
+        else if (mission.PreviousMissionID != 0)
+        {
+            return MissionType.Sequential;
+        }
+
+        return MissionType.Standard;
     }
 
     #endregion

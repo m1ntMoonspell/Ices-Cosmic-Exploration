@@ -1,38 +1,19 @@
-﻿using Dalamud.Game.ClientState.Statuses;
-using Dalamud.Interface.Textures;
-using Dalamud.Interface.Textures.TextureWraps;
-using ECommons;
-using ECommons.ExcelServices;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using ICE.Enums;
-using System;
+﻿using ICE.Enums;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ICE.Utilities;
 
 public static unsafe class Data
 {
-    public static HashSet<string> CRPMissions = new HashSet<string>();
-    public static HashSet<string> BSMMissions = new HashSet<string>();
-    public static HashSet<string> ARMMissions = new HashSet<string>();
-    public static HashSet<string> GSMMissions = new HashSet<string>();
-    public static HashSet<string> LTWMissions = new HashSet<string>();
-    public static HashSet<string> WVRMissions = new HashSet<string>();
-    public static HashSet<string> ALCMissions = new HashSet<string>();
-    public static HashSet<string> CULMissions = new HashSet<string>();
 
-    public static HashSet<uint> Ranks = new HashSet<uint>() { 1, 2, 3, 4 };
-    public static HashSet<uint> ARankIds = new HashSet<uint>() { 4, 5, 6 };
-    public static HashSet<uint> CriticalMissionIds = new HashSet<uint>();
+    public static readonly HashSet<uint> Ranks = [1, 2, 3, 4];
+    public static readonly HashSet<uint> ARankIds = [4, 5, 6];
 
-    public static HashSet<int> CrafterJobList = new() { 8, 9, 10, 11, 12, 13, 14, 15 };
+    public static readonly HashSet<int> CrafterJobList = [8, 9, 10, 11, 12, 13, 14, 15];
 
-    public static HashSet<int> WeatherMissionList = new() { 30, 31, 32, };
-    public static HashSet<int> TimedMissionList = new() { 40, 43, };
-    public static HashSet<int> CriticalMissions = new() { 512, 513, 514,  };
+    public static readonly HashSet<int> WeatherMissionList = [30, 31, 32,];
+    public static readonly HashSet<int> TimedMissionList = [40, 43,];
+    public static readonly HashSet<int> CriticalMissions = [512, 513, 514,];
 
     #region Dictionaries
 
@@ -68,13 +49,13 @@ public static unsafe class Data
         public List<(int Type, int Amount)> ExperienceRewards { get; set; }
     }
 
-    public static Dictionary<uint, MissionListInfo> MissionInfoDict = new Dictionary<uint, MissionListInfo>();
+    public static Dictionary<uint, MissionListInfo> MissionInfoDict = [];
 
     public class MoonRecipieInfo
     {
-        public Dictionary<ushort, int> MainCraftsDict = new Dictionary<ushort, int>();
+        public Dictionary<ushort, int> MainCraftsDict = [];
         public bool PreCrafts { get; set; } = false;
-        public Dictionary<ushort, int> PreCraftDict = new Dictionary<ushort, int>();
+        public Dictionary<ushort, int> PreCraftDict = [];
     }
 
     public static Dictionary<uint, MoonRecipieInfo> MoonRecipies = new();
