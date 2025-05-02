@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FFXIVClientStructs.FFXIV.Client.Game.WKS;
-using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
+﻿using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 
 namespace ICE.Scheduler.Tasks
 {
