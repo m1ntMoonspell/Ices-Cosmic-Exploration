@@ -560,7 +560,7 @@ public static unsafe class Utils
         */
     }
 
-    public static MissionType GetMissionType(MissionListInfo mission)
+    private static MissionType GetMissionType(MissionListInfo mission)
     {
         if (mission.IsCriticalMission)
         {
