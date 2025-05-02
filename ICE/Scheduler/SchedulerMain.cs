@@ -43,6 +43,7 @@ namespace ICE.Scheduler
                     case IceState.StartCraft:
                         TaskCrafting.TryEnqueueCrafts();
                         break;
+                    case IceState.AbortInProgress:
                     case IceState.CheckScoreAndTurnIn:
                         TaskScoreCheck.TryCheckScore();
                         break;
@@ -66,6 +67,7 @@ namespace ICE.Scheduler
         GrabbingMission,
         StartCraft,
         CraftInProcess,
+        AbortInProgress,
         CheckScoreAndTurnIn,
         WaitForCrafts,
         ManualMode,
