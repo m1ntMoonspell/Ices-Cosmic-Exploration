@@ -109,8 +109,18 @@ namespace ICE.Scheduler.Tasks
 
                 if (abortIfNoReport)
                 {
-                    SchedulerMain.StopBeforeGrab = true;
-                    P.TaskManager.Enqueue(AbortInternals, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
+                    if (C.StopOnAbort)
+                    {
+                        SchedulerMain.StopBeforeGrab = true;
+                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        {
+                            Message = "[ICE] Unexpected error. Insufficient materials. Stopping.",
+                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                        });
+                    }
+                    SchedulerMain.Abandon = true;
+                    SchedulerMain.State = IceState.GrabMission;
+                    P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 1000 });
                 }
             }
         }
@@ -126,26 +136,6 @@ namespace ICE.Scheduler.Tasks
             if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 z.Report();
-                return false;
-            }
-
-            return false;
-        }
-
-        private static bool? AbortInternals()
-        {
-            if (SchedulerMain.State != IceState.AbortInProgress)
-                return true;
-
-            if (CurrentLunarMission == 0)
-            {
-                SchedulerMain.State = IceState.GrabMission;
-                return true;
-            }
-
-            if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
-            {
-                z.Abandon();
                 return false;
             }
 
