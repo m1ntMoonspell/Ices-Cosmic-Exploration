@@ -27,7 +27,10 @@ namespace ICE.Ui
 
             (string currentWeather, string nextWeather, string nextWeatherTime) = WeatherForecastHandler.GetNextWeather();
 
-            ImGui.Text($"Weather: {currentWeather} -> {nextWeather} in [{nextWeatherTime}]");
+            if (currentWeather != null)
+            {
+                ImGui.Text($"Weather: {currentWeather} -> {nextWeather} in [{nextWeatherTime}]");
+            }
 
             (var currentTimedBonus, var nextTimedBonus) = PlayerHandlers.GetTimedJob();
             if (currentTimedBonus.Value == null)
