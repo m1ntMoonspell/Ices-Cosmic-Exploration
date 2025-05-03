@@ -97,7 +97,6 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         // Configuration booleans bound to checkboxes.
-        private static bool delayGrab = C.DelayGrab;
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
@@ -502,95 +501,105 @@ namespace ICE.Ui
 
             DrawLink("Say no to global warming, support Ice today: ", "https://ko-fi.com/ice643269", "https://ko-fi.com/ice643269");
 
-            // Checkbox: Add delay to grabbing mission.
-            if (ImGui.Checkbox("Add delay to grabbing mission", ref delayGrab))
+            if (ImGui.CollapsingHeader("Safety Settings"))
             {
-                C.DelayGrab = delayGrab;
-                C.Save();
+                if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
+                {
+                    C.StopOnAbort = stopOnAbort;
+                    C.Save();
+                }
+                ImGuiEx.HelpMarker(
+                    "Warning! This is a safety feature to avoid wasting time on broken crafts!\n" +
+                    "If you abort, you need to fix your ICE/Artisan settings or gear!\n" +
+                    "You have been warned. Disable at your own risk."
+                );
+
+                if (ImGui.Checkbox("Ignore non-Cosmic prompts", ref rejectUnknownYesNo))
+                {
+                    C.RejectUnknownYesno = rejectUnknownYesNo;
+                    C.Save();
+                }
+                ImGuiEx.HelpMarker(
+                    "Warning! This is a safety feature to avoid joining random parties!\n" +
+                    "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
+                    "You have been warned. Disable at your own risk."
+                );
             }
 
-            if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
+            if (ImGui.CollapsingHeader("Mission Settings"))
             {
-                C.StopOnAbort = stopOnAbort;
-                C.Save();
-            }
-            ImGuiEx.HelpMarker(
-                "Warning! This is a safety feature to avoid wasting time on broken crafts!\n" +
-                "If you abort, you need to fix your ICE/Artisan settings or gear!\n" +
-                "You have been warned. Disable at your own risk."
-            );
-
-            if (ImGui.Checkbox("Ignore non-Cosmic prompts", ref rejectUnknownYesNo))
-            {
-                C.RejectUnknownYesno = rejectUnknownYesNo;
-                C.Save();
-            }
-            ImGuiEx.HelpMarker(
-                "Warning! This is a safety feature to avoid joining random parties!\n" +
-                "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
-                "You have been warned. Disable at your own risk."
-            );
-
-            if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
-            {
-                C.AutoPickCurrentJob = autoPickCurrentJob;
-                C.Save();
+                if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
+                {
+                    C.OnlyGrabMission = onlyGrabMission;
+                    C.Save();
+                }
+                ImGui.Checkbox("Stop if Cosmocredits are capped", ref stopOnceHitCosmoCredits);
+                {
+                    C.StopOnceHitCosmoCredits = stopOnceHitCosmoCredits;
+                    C.Save();
+                }
+                ImGui.Checkbox("Stop if Lunar Credits are capped", ref stopOnceHitLunarCredits);
+                {
+                    C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
+                    C.Save();
+                }
             }
 
-            if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
+            if (ImGui.CollapsingHeader("Overlay Settings"))
             {
-                C.OnlyGrabMission = onlyGrabMission;
-                C.Save();
+                if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+                {
+                    C.ShowOverlay = showOverlay;
+                    C.Save();
+                }
+
+                if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
+                {
+                    C.ShowSeconds = ShowSeconds;
+                    C.Save();
+                }
             }
 
-            if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+            if (ImGui.CollapsingHeader("Table Settings"))
             {
-                C.ShowOverlay = showOverlay;
-                C.Save();
-            }
-            
-            ImGui.Checkbox("Stop if Cosmocredits are capped", ref stopOnceHitCosmoCredits);
-            {
-                C.StopOnceHitCosmoCredits = stopOnceHitCosmoCredits;
-                C.Save();
-            }
-            ImGui.Checkbox("Stop if Lunar Credits are capped", ref stopOnceHitLunarCredits);
-            {
-                C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
-                C.Save();
-            }
-
-            if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
-            {
-                C.ShowSeconds = ShowSeconds;
-                C.Save();
-            }
-
-            if (ImGui.Checkbox("Enable Auto Sprint", ref EnableAutoSprint))
-            {
-                C.EnableAutoSprint = EnableAutoSprint;
-                C.Save();
+                // Checkbox: Hide unsupported missions.
+                if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
+                {
+                    C.HideUnsupportedMissions = hideUnsupported;
+                    C.Save();
+                }
+                if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
+                {
+                    C.AutoPickCurrentJob = autoPickCurrentJob;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Show EXP on Columns", ref showExp))
+                {
+                    C.ShowExpColums = showExp;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Show Cosmocredits", ref showCredits))
+                {
+                    C.ShowCreditsColumn = showCredits;
+                    C.Save();
+                }
             }
 
-            ImGui.Spacing();
-            ImGui.Text($"Table Settings");
+            if (ImGui.CollapsingHeader("Misc Settings"))
+            {
+                if (ImGui.Checkbox("Enable Auto Sprint", ref EnableAutoSprint))
+                {
+                    C.EnableAutoSprint = EnableAutoSprint;
+                    C.Save();
+                }
+            }
 
-            // Checkbox: Hide unsupported missions.
-            if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
+            #if DEBUG
+            if (ImGui.CollapsingHeader("Debug Settings"))
             {
-                C.HideUnsupportedMissions = hideUnsupported;
-                C.Save();
+
             }
-            if (ImGui.Checkbox($"Show EXP on Columns", ref showExp))
-            {
-                C.ShowExpColums = showExp;
-                C.Save();
-            }
-            if (ImGui.Checkbox($"Show Cosmocredits", ref showCredits))
-            {
-                C.ShowCreditsColumn = showCredits;
-                C.Save();
-            }
+            #endif
 
             ImGui.EndTabItem();
         }

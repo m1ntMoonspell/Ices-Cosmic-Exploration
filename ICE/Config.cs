@@ -12,18 +12,21 @@ namespace ICE
         // Missions the user has enabled
         public List<CosmicMission> Missions { get; set; } = [];
 
+        // Safety settings
+        public bool StopOnAbort { get; set; } = true;
+        public bool RejectUnknownYesno { get; set; } = true;
+
+        // Mission settings
+        public bool OnlyGrabMission { get; set; } = false;
+        public bool StopOnceHitCosmoCredits { get; set; } = false;
+        public bool StopOnceHitLunarCredits { get; set; } = false;
+
         // Overlay settings
         public bool ShowOverlay { get; set; } = false;
         public bool ShowSeconds { get; set; } = false;
 
-        // Safety settings
-        public bool DelayGrab { get; set; } = false;
-        public bool StopOnAbort { get; set; } = true;
-        public bool RejectUnknownYesno { get; set; } = true;
-
         // Table settings
         public bool HideUnsupportedMissions { get; set; } = false;
-        public bool OnlyGrabMission { get; set; } = false;
         public bool AutoPickCurrentJob { get; set; } = false;
         public int TableSortOption = 0;
         public bool ShowExpColums { get; set; } = true;
@@ -31,8 +34,6 @@ namespace ICE
 
         // Misc settings
         public bool EnableAutoSprint { get; set; } = true;
-        public bool StopOnceHitCosmoCredits { get; set; } = false;
-        public bool StopOnceHitLunarCredits { get; set; } = false;
 
         public void Save()
         {
