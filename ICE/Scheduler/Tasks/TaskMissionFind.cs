@@ -2,7 +2,6 @@
 using ECommons.Logging;
 using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
-using Dalamud.Game.ClientState.Conditions;
 using ICE.Ui;
 using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
@@ -378,12 +377,11 @@ namespace ICE.Scheduler.Tasks
             PluginLog.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
             if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
             {
-                PluginInfo(select.Text);
                 string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？","Commence selected mission?","Ausgewählte Mission wird gestartet.Fortfahren?","Commencer la mission sélectionnée ?"];
 
                 if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                 {
-                    PluginInfo("[SelectYesNo] Looks like a Commence window");
+                    PluginDebug("[SelectYesNo] Looks like a Commence window");
                     if (EzThrottler.Throttle("Selecting Yes", 250))
                     {
                         select.Yes();
@@ -391,7 +389,7 @@ namespace ICE.Scheduler.Tasks
                 }
                 else
                 {
-                    PluginInfo("[SelectYesNo] Looks like a Fake window");
+                    PluginDebug("[SelectYesNo] Looks like a Fake window");
                     select.No();
                     if (EzThrottler.Throttle("Selecting No", 250))
                     {
@@ -431,12 +429,11 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
-                    PluginInfo(select.Text);
                     string[] abandonStrings = ["受注中のミッションを破棄します。よろしいですか？","Abandon mission?","Aktuelle Mission abbrechen?","Êtes-vous sûr de vouloir abandonner la mission en cours ?"];
 
                     if (abandonStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
-                        PluginInfo("[SelectYesNo] Looks like a Abandon window");
+                        PluginDebug("[SelectYesNo] Looks like a Abandon window");
                         if (EzThrottler.Throttle("Confirming Abandon"))
                         {
                             select.Yes();
@@ -445,7 +442,7 @@ namespace ICE.Scheduler.Tasks
                     }
                     else
                     {
-                        PluginInfo("[SelectYesNo] Looks like a Fake window");
+                        PluginDebug("[SelectYesNo] Looks like a Fake window");
                         if (EzThrottler.Throttle("Selecting No", 250))
                         {
                             select.No();
