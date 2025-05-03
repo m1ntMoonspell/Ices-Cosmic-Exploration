@@ -19,6 +19,7 @@ namespace ICE
         // Safety settings
         public bool DelayGrab { get; set; } = false;
         public bool StopOnAbort { get; set; } = true;
+        public bool RejectUnknownYesno { get; set; } = true;
 
         // Table settings
         public bool HideUnsupportedMissions { get; set; } = false;

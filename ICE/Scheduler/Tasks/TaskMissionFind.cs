@@ -2,6 +2,7 @@
 using ECommons.Logging;
 using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
+using Dalamud.Game.ClientState.Conditions;
 using ICE.Ui;
 using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
@@ -380,7 +381,7 @@ namespace ICE.Scheduler.Tasks
                 PluginInfo(select.Text);
                 string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？","Commence selected mission?","Ausgewählte Mission wird gestartet.Fortfahren?","Commencer la mission sélectionnée ?"];
 
-                if (commenceStrings.Any(select.Text.Contains))
+                if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                 {
                     PluginInfo("[SelectYesNo] Looks like a Commence window");
                     if (EzThrottler.Throttle("Selecting Yes", 250))
@@ -390,7 +391,13 @@ namespace ICE.Scheduler.Tasks
                 }
                 else
                 {
-                    PluginInfo("Looks like a Fake window");
+                    PluginInfo("[SelectYesNo] Looks like a Fake window");
+                    select.No();
+                    if (EzThrottler.Throttle("Selecting No", 250))
+                    {
+                        select.No();
+                    }
+                    return false;
                 }
             }
             else if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
@@ -427,7 +434,7 @@ namespace ICE.Scheduler.Tasks
                     PluginInfo(select.Text);
                     string[] abandonStrings = ["受注中のミッションを破棄します。よろしいですか？","Abandon mission?","Aktuelle Mission abbrechen?","Êtes-vous sûr de vouloir abandonner la mission en cours ?"];
 
-                    if (abandonStrings.Any(select.Text.Contains))
+                    if (abandonStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
                         PluginInfo("[SelectYesNo] Looks like a Abandon window");
                         if (EzThrottler.Throttle("Confirming Abandon"))
@@ -438,7 +445,12 @@ namespace ICE.Scheduler.Tasks
                     }
                     else
                     {
-                        PluginInfo("Looks like a Fake window");
+                        PluginInfo("[SelectYesNo] Looks like a Fake window");
+                        if (EzThrottler.Throttle("Selecting No", 250))
+                        {
+                            select.No();
+                        }
+                        return false;
                     }
                 }
                 if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var addon) && addon.IsAddonReady)
