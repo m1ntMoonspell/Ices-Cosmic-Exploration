@@ -287,9 +287,6 @@ internal class DebugWindow : Window
         if (ImGui.TreeNode("Crafting Table"))
         {
             var sheetRow = sheet.GetRow(27);
-            ImGui.Text($"Unknown 0: {sheetRow.Unknown0} | Unknown 1: {sheetRow.Unknown1}");
-            ImGui.Text($"Unknown 2: {sheetRow.Unknown2} | Unknown 3: {sheetRow.Unknown3}");
-            ImGui.Text($"Unknown 4: {sheetRow.Unknown4}");
 
             Table();
 
