@@ -377,9 +377,20 @@ namespace ICE.Scheduler.Tasks
             PluginLog.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
             if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
             {
-                if (EzThrottler.Throttle("Selecting Yes", 250))
+                PluginInfo(select.Text);
+                string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？","Commence selected mission?","Ausgewählte Mission wird gestartet.Fortfahren?","Commencer la mission sélectionnée ?"];
+
+                if (commenceStrings.Any(select.Text.Contains))
                 {
-                    select.Yes();
+                    PluginInfo("[SelectYesNo] Looks like a Commence window");
+                    if (EzThrottler.Throttle("Selecting Yes", 250))
+                    {
+                        select.Yes();
+                    }
+                }
+                else
+                {
+                    PluginInfo("Looks like a Fake window");
                 }
             }
             else if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
@@ -413,10 +424,21 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
-                    if (EzThrottler.Throttle("Confirming Abandon"))
+                    PluginInfo(select.Text);
+                    string[] abandonStrings = ["受注中のミッションを破棄します。よろしいですか？","Abandon mission?","Aktuelle Mission abbrechen?","Êtes-vous sûr de vouloir abandonner la mission en cours ?"];
+
+                    if (abandonStrings.Any(select.Text.Contains))
                     {
-                        select.Yes();
-                        return true;
+                        PluginInfo("[SelectYesNo] Looks like a Abandon window");
+                        if (EzThrottler.Throttle("Confirming Abandon"))
+                        {
+                            select.Yes();
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        PluginInfo("Looks like a Fake window");
                     }
                 }
                 if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var addon) && addon.IsAddonReady)
