@@ -36,10 +36,7 @@ internal static unsafe class PlayerHandlers
         if (IsInZone(1237) && UsingSupportedJob() && C.ShowOverlay) ICE.P.overlayWindow.IsOpen = true;
         else ICE.P.overlayWindow.IsOpen = false;
 
-        if (C.EnableAutoSprint && IsInZone(1237) && !HasStatusId(stellarSprintID) && Svc.Condition[ConditionFlag.NormalConditions] && IsMoving())
-        {
-            UseSprint();
-        } 
+        if (C.EnableAutoSprint && IsInZone(1237) && !HasStatusId(stellarSprintID) && Svc.Condition[ConditionFlag.NormalConditions] && IsMoving()) UseSprint(); 
     }
 
     private static void UseSprint()
