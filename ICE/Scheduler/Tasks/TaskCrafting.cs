@@ -352,10 +352,7 @@ namespace ICE.Scheduler.Tasks
                 var currentAmount = GetItemCount((int)itemId);
                 var mainItemName = ItemSheet.GetRow(itemId).Name.ToString();
 
-                if (LogThrottle)
-                {
-                    PluginLog.Debug($"[Item(s) Check] Curr: {currentAmount} - Need: {mainNeed}");
-                }
+                //PluginLog.Debug($"[Item(s) Check] Curr: {currentAmount} - Need: {mainNeed}");
                 if (currentAmount < mainNeed)
                 {
                     if (LogThrottle)
