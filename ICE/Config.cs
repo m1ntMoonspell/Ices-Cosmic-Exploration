@@ -30,7 +30,9 @@ namespace ICE
         public bool ShowCreditsColumn { get; set; } = true;
 
         // Misc settings
-        public bool EnableAutoSprint {  get; set; } = true;
+        public bool EnableAutoSprint { get; set; } = true;
+        public bool StopOnceHitCosmoCredits { get; set; } = false;
+        public bool StopOnceHitLunarCredits { get; set; } = false;
 
         public void Save()
         {

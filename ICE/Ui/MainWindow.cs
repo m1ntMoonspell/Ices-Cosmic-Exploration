@@ -103,6 +103,8 @@ namespace ICE.Ui
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
+        private static bool stopOnceHitCosmoCredits = C.StopOnceHitCosmoCredits;
+        private static bool stopOnceHitLunarCredits = C.StopOnceHitLunarCredits;
         private static bool ShowSeconds = C.ShowSeconds;
         private static bool EnableAutoSprint = C.EnableAutoSprint;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
@@ -547,8 +549,16 @@ namespace ICE.Ui
                 C.Save();
             }
             
-            ImGui.Checkbox("Stop if Cosmocredits are capped", ref SchedulerMain.StopOnceHitCosmoCredits);
-            ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitLunarCredits);
+            ImGui.Checkbox("Stop if Cosmocredits are capped", ref stopOnceHitCosmoCredits);
+            {
+                C.StopOnceHitCosmoCredits = stopOnceHitCosmoCredits;
+                C.Save();
+            }
+            ImGui.Checkbox("Stop if Lunar Credits are capped", ref stopOnceHitLunarCredits);
+            {
+                C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
+                C.Save();
+            }
 
             if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
             {
