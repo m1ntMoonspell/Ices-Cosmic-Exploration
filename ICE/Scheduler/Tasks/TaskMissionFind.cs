@@ -347,6 +347,21 @@ namespace ICE.Scheduler.Tasks
                     return false;
                 }
 
+                if (!x.StellerMissions.Any(x => MissionInfoDict[x.MissionId].JobId == currentClassJob)) //Tryin to reroll but on wrong job list
+                {
+                    if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                    {
+                        if (EzThrottler.Throttle("Opening Mission Hud"))
+                        {
+                            hud.Mission();
+                            Task.Delay(200);
+                            hud.Mission();
+                        }
+                    }
+                    PluginLog.Debug("Wrong class mission list, Restarting");
+                    return false;
+                }
+
                 int A2 = x.StellerMissions.Where(x => MissionInfoDict[x.MissionId].Rank == 5).Count();
                 int A1 = x.StellerMissions.Where(x => MissionInfoDict[x.MissionId].Rank == 4).Count();
                 var missionRanks = new List<(bool hasMission, uint rank)>
@@ -361,17 +376,22 @@ namespace ICE.Scheduler.Tasks
                         .Select(x => x.rank)
                         .ToArray();
 
+                if (missionRanks.Length == 0)
+                {
+                    PluginLog.Debug("No Standard Mission is Selected, nothing to reroll");
+                    return true;
+                }
+
                 var rankToReset = missionRanks.Max();
 
                 foreach (var m in x.StellerMissions)
                 {
                     var missionEntry = MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
-                    if (missionEntry.Value == null || missionEntry.Value.JobId != currentClassJob)
-                        continue;
+                    if (missionEntry.Value == null) continue;
 
                     PluginLog.Debug($"Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}");
-                    if (missionEntry.Value.Rank == rankToReset || (missionEntry.Value.Rank >= 4 && rankToReset >= 4))
+                    if (missionEntry.Value.Rank == rankToReset)
                     {
                         if (EzThrottler.Throttle("Selecting Abandon Mission"))
                         {
@@ -423,12 +443,22 @@ namespace ICE.Scheduler.Tasks
                 if (!MissionInfoDict.ContainsKey(MissionId))
                 {
                     PluginLog.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
-                    P.TaskManager.Abort();
+                    SchedulerMain.DisablePlugin();
+                    if (!hasStandard)
+                    {
+                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        {
+                            Message = "[ICE] There is nothing to reroll (No Standard Mission). Stopping.",
+                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                        });
+                    }
                 }
-
-                if (EzThrottler.Throttle("Firing off to initiate quest"))
+                else
                 {
-                    Callback.Fire(x.Base, true, 13, MissionId);
+                    if (EzThrottler.Throttle("Firing off to initiate quest"))
+                    {
+                        Callback.Fire(x.Base, true, 13, MissionId);
+                    }
                 }
             }
             else if (!IsAddonActive("WKSMission"))
