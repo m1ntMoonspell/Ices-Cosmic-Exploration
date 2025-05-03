@@ -3,6 +3,7 @@ using ECommons.Logging;
 using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using ICE.Ui;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
@@ -18,6 +19,11 @@ namespace ICE.Scheduler.Tasks
         private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
         private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
         private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
+        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
+        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
+        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
+        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
+        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
 
         public static void EnqueueResumeCheck()
         {
@@ -341,7 +347,21 @@ namespace ICE.Scheduler.Tasks
                     return false;
                 }
 
-                var rankToReset = ranks.Max();
+                int A2 = x.StellerMissions.Where(x => MissionInfoDict[x.MissionId].Rank == 5).Count();
+                int A1 = x.StellerMissions.Where(x => MissionInfoDict[x.MissionId].Rank == 4).Count();
+                var missionRanks = new List<(bool hasMission, uint rank)>
+                    {
+                        (A2 !=0 && HasA2, 5),
+                        (A2 == 0 && HasA2 || HasA1, 4),
+                        (HasB, 3),
+                        (HasC, 2),
+                        (HasD, 1),
+                    }
+                        .Where(x => x.hasMission)
+                        .Select(x => x.rank)
+                        .ToArray();
+
+                var rankToReset = missionRanks.Max();
 
                 foreach (var m in x.StellerMissions)
                 {
