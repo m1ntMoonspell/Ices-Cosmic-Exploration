@@ -550,7 +550,6 @@ namespace ICE.Ui
             ImGui.Checkbox("Stop if Cosmocredits are capped", ref SchedulerMain.StopOnceHitCosmoCredits);
             ImGui.Checkbox("Stop if Lunar Credits are capped", ref SchedulerMain.StopOnceHitLunarCredits);
 
-            ImGui.Checkbox("Accurate Time", ref WeatherForecastHandler.AccurateTime);
             if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
             {
                 C.ShowSeconds = ShowSeconds;
