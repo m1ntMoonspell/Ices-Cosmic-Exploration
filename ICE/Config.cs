@@ -28,6 +28,9 @@ namespace ICE
         public bool ShowExpColums { get; set; } = true;
         public bool ShowCreditsColumn { get; set; } = true;
 
+        // Misc settings
+        public bool EnableAutoSprint {  get; set; } = true;
+
         public void Save()
         {
             EzConfig.Save();

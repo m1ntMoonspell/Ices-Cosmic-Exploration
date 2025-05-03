@@ -103,6 +103,7 @@ namespace ICE.Ui
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
         private static bool ShowSeconds = C.ShowSeconds;
+        private static bool EnableAutoSprint = C.EnableAutoSprint;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
@@ -541,6 +542,12 @@ namespace ICE.Ui
             if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
             {
                 C.ShowSeconds = ShowSeconds;
+                C.Save();
+            }
+
+            if (ImGui.Checkbox("Enable Auto Sprint", ref EnableAutoSprint))
+            {
+                C.EnableAutoSprint = EnableAutoSprint;
                 C.Save();
             }
 
