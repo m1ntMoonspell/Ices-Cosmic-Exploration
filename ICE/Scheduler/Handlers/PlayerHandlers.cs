@@ -1,11 +1,13 @@
-using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using ECommons.Throttlers;
+using System.Threading.Tasks;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using System.Collections.Generic;
+using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Handlers;
 
-internal static unsafe class PlayerHandlers
+internal static class PlayerHandlers
 {
+    private static uint previousJobId = GetClassJobId();
     public static readonly Dictionary<(int start, int end), string[]> timeMap = new Dictionary<(int start, int end), string[]>
         {
             { (0, 1), new[] { "CRP", "ALC" } },
@@ -32,6 +34,29 @@ internal static unsafe class PlayerHandlers
     {
         if (IsInZone(1237) && UsingSupportedJob() && C.ShowOverlay) ICE.P.overlayWindow.IsOpen = true;
         else ICE.P.overlayWindow.IsOpen = false;
+
+        if (GetClassJobId() != previousJobId && UsingSupportedJob())
+        {
+            previousJobId = GetClassJobId();
+
+            ReopenMissionHud();
+        }
+    }
+
+    internal static async Task ReopenMissionHud()
+    {
+        if (IsAddonActive("WKSMission"))
+        {
+            if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+            {
+                if (EzThrottler.Throttle("Opening Mission Hud"))
+                {
+                    hud.Mission();
+                    await Task.Delay(200);
+                    hud.Mission();
+                }
+            }
+        }
     }
 
     private static (long, long) GetEorzeaTime()
