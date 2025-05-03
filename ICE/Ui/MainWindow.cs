@@ -99,6 +99,7 @@ namespace ICE.Ui
         // Configuration booleans bound to checkboxes.
         private static bool delayGrab = C.DelayGrab;
         private static bool stopOnAbort = C.StopOnAbort;
+        private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
@@ -514,6 +515,17 @@ namespace ICE.Ui
             ImGuiEx.HelpMarker(
                 "Warning! This is a safety feature to avoid wasting time on broken crafts!\n" +
                 "If you abort, you need to fix your ICE/Artisan settings or gear!\n" +
+                "You have been warned. Disable at your own risk."
+            );
+
+            if (ImGui.Checkbox("Ignore non-Cosmic prompts", ref rejectUnknownYesNo))
+            {
+                C.RejectUnknownYesno = rejectUnknownYesNo;
+                C.Save();
+            }
+            ImGuiEx.HelpMarker(
+                "Warning! This is a safety feature to avoid joining random parties!\n" +
+                "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
                 "You have been warned. Disable at your own risk."
             );
 
