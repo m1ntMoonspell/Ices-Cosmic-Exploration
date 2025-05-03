@@ -187,6 +187,7 @@ namespace ICE.Scheduler.Tasks
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(pre.Key).ItemResult.RowId);
                         PluginDebug($"[Craft] Adding precraft {pre}");
+                        P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
                         P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
@@ -205,6 +206,7 @@ namespace ICE.Scheduler.Tasks
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(main.Key).ItemResult.RowId);
                         PluginDebug($"[Main Item(s)] Queueing up for {item.Name}");
                         PluginDebug($"[Craft] Adding craft {main}");
+                        P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
                         P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
