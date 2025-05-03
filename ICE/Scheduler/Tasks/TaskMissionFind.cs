@@ -11,7 +11,7 @@ namespace ICE.Scheduler.Tasks
     internal static class TaskMissionFind
     {
         private static uint MissionId = 0;
-        private static uint currentClassJob => GetClassJobId();
+        private static uint? currentClassJob => GetClassJobId();
         private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
         private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
         private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);

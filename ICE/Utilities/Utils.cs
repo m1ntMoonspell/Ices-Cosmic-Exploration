@@ -62,7 +62,7 @@ public static unsafe class Utils
 
     #region Player Information
 
-    public static uint GetClassJobId() => Svc.ClientState.LocalPlayer!.ClassJob.RowId;
+    public static uint? GetClassJobId() => Svc.ClientState.LocalPlayer?.ClassJob.RowId;
     public static bool UsingSupportedJob() => GetClassJobId() >= 8 && GetClassJobId() <= 18;
     public static unsafe int GetLevel(int expArrayIndex = -1)
     {

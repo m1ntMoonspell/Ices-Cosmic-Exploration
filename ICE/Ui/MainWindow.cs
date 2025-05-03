@@ -86,7 +86,7 @@ namespace ICE.Ui
         private static int selectedJobIndex = 0;
         // ID of the currently selected crafting job.
         private static uint selectedJobId = jobOptions[selectedJobIndex].Id;
-        private static uint currentJobId => GetClassJobId();
+        private static uint? currentJobId => GetClassJobId();
         private static bool isCrafter => currentJobId >= 8 && currentJobId <= 15;
         private static bool isGatherer => currentJobId >= 16 && currentJobId <= 18;
         private static bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId + 1);
