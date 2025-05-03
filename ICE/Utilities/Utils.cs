@@ -75,6 +75,8 @@ public static unsafe class Utils
         return playerState->ClassJobLevels[Svc.Data.GetExcelSheet<ClassJob>().GetRowOrDefault((uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0)))?.ExpArrayIndex ?? 0];
     }
 
+    public static bool IsInCosmicZone() => IsInZone(1237);
+    public static bool IsInSinusArdorum() => IsInZone(1237);
     public static bool IsInZone(uint zoneID) => Svc.ClientState.TerritoryType == zoneID;
     public static uint CurrentTerritory() => GameMain.Instance()->CurrentTerritoryTypeId;
 

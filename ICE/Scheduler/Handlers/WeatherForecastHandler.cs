@@ -13,26 +13,49 @@ namespace ICE.Scheduler.Handlers
         internal static bool AccurateTime = false;
 
         private static ExcelSheet<Weather>? WeatherSheet;
-        internal static List<WeatherForecast> weathers;
+        internal static List<WeatherForecast> weathers = [];
 
         private static DateTime _lastProcessed = DateTime.MinValue;
         private static TimeSpan _delay = TimeSpan.FromSeconds(300);
+        private static uint previousZoneForecast = 0;
 
         internal static unsafe void Tick()
         {
-            if (DateTime.Now - _lastProcessed < _delay) return;
+            WeatherSheet ??= Svc.Data.GetExcelSheet<Weather>();
+            if (!IsInCosmicZone()) return;
+
+            Weather currWeather = GetCurrentWeather();
+            var CurrentWeatherInForecast = weathers
+                .Select((item, index) => new { item, index })
+                .FirstOrDefault(w => w.item.Name == currWeather.Name);
+
+            //Only allow refresh if territory changed
+            //Or weather is not in forecast (ex: Red Alert)
+            //Or already past 5 minutes since the last refresh
+            if (Svc.ClientState.TerritoryType == previousZoneForecast && CurrentWeatherInForecast != null && DateTime.Now - _lastProcessed < _delay) return;
+            RefreshForecast();
+        }
+
+        internal static void RefreshForecast()
+        {
+            if (!IsInCosmicZone()) return;
+            
             _lastProcessed = DateTime.Now;
-
-            if (WeatherSheet == null) WeatherSheet = Svc.Data.GetExcelSheet<Weather>();
-
             GetForecast();
+        }
+
+        private static unsafe Weather GetCurrentWeather()
+        {
+            WeatherManager* wm = WeatherManager.Instance();
+            byte currWeatherId = wm->GetCurrentWeather();
+            return WeatherSheet.GetRow(currWeatherId);
         }
 
         internal static unsafe (string, string, string) GetNextWeather()
         {
-            WeatherManager* wm = WeatherManager.Instance();
-            byte currWeatherId = wm->GetCurrentWeather();
-            Weather currWeather = WeatherSheet.GetRow(currWeatherId);
+            if (!IsInCosmicZone()) return default;
+
+            Weather currWeather = GetCurrentWeather();
 
             var currentWeather = weathers
                 .Select((item, index) => new { item, index })
@@ -47,11 +70,10 @@ namespace ICE.Scheduler.Handlers
 
         internal static unsafe void GetForecast()
         {
-            WeatherManager* wm = WeatherManager.Instance();
-            if (wm == null) return;
-            byte currentWeatherId = wm->GetCurrentWeather();
+            previousZoneForecast = Svc.ClientState.TerritoryType;
 
-            Weather currentWeather = WeatherSheet.GetRow(currentWeatherId);
+            WeatherManager* wm = WeatherManager.Instance();
+            Weather currentWeather = GetCurrentWeather();
             Weather lastWeather = currentWeather;
 
             weathers = [BuildResultObject(currentWeather, GetRootTime(0))];
