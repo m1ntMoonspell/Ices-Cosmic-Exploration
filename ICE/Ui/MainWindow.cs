@@ -389,6 +389,27 @@ namespace ICE.Ui
                             if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref isEnabled))
                             {
                                 mission.Enabled = isEnabled;
+                                CosmicMission chain;
+
+                                if (isEnabled)
+                                {
+                                    var prevChainList = GetOnlyPreviousMissionsRecursive(mission.Id);
+                                    foreach (var missionId in prevChainList)
+                                    {
+                                        chain = C.Missions.Single(x => x.Id == missionId);
+                                        chain.Enabled = isEnabled;
+                                    }
+                                }
+                                else
+                                {
+                                    var nextChainList = GetOnlyNextMissionsRecursive(mission.Id);
+                                    foreach (var missionId in nextChainList)
+                                    {
+                                        chain = C.Missions.Single(x => x.Id == missionId);
+                                        chain.Enabled = isEnabled;
+                                    }
+                                }
+
                                 C.Save();
                             }
 
@@ -483,6 +504,10 @@ namespace ICE.Ui
                         {
                             var (Id, Name) = MissionInfoDict.Where(m => m.Key == entry.Value.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
                             ImGui.Text($"[{Id}] {Name}");
+                        }
+                        else if (entry.Value.JobId2 != 0)
+                        {
+                            ImGui.Text($"{jobOptions.Find(job => job.Id == entry.Value.JobId + 1).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2 + 1).Name}");
                         }
                     }
 
@@ -630,6 +655,29 @@ namespace ICE.Ui
 
             }
         }
+        private static List<uint> GetOnlyPreviousMissionsRecursive(uint missionId)
+        {
+            if (!MissionInfoDict.TryGetValue(missionId, out var missionInfo) || missionInfo.PreviousMissionID == 0)
+                return [];
 
+            var chain = GetOnlyPreviousMissionsRecursive(missionInfo.PreviousMissionID);
+            chain.Add(missionInfo.PreviousMissionID);
+            return chain;
+        }
+
+        private static List<uint> GetOnlyNextMissionsRecursive(uint missionId)
+        {
+            uint? nextMissionId = MissionInfoDict
+                .Where(m => m.Value.PreviousMissionID == missionId)
+                .Select(m => (uint?)m.Key)
+                .FirstOrDefault();
+
+            if (!nextMissionId.HasValue)
+                return [];
+
+            var chain = new List<uint> { nextMissionId.Value };
+            chain.AddRange(GetOnlyNextMissionsRecursive(nextMissionId.Value));
+            return chain;
+        }
     }
 }
