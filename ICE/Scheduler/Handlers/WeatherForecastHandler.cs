@@ -25,14 +25,12 @@ namespace ICE.Scheduler.Handlers
             if (!IsInCosmicZone()) return;
 
             Weather currWeather = GetCurrentWeather();
-            var CurrentWeatherInForecast = weathers
-                .Select((item, index) => new { item, index })
-                .FirstOrDefault(w => w.item.Name == currWeather.Name);
+            var CurrentWeatherInFirstSpot = weathers.FirstOrDefault()?.Name == currWeather.Name;
 
             //Only allow refresh if territory changed
-            //Or weather is not in forecast (ex: Red Alert)
+            //Or weather is not in first spot (ex: Red Alert)
             //Or already past 5 minutes since the last refresh
-            if (Svc.ClientState.TerritoryType == previousZoneForecast && CurrentWeatherInForecast != null && DateTime.Now - _lastProcessed < _delay) return;
+            if (Svc.ClientState.TerritoryType == previousZoneForecast && CurrentWeatherInFirstSpot && DateTime.Now - _lastProcessed < _delay) return;
             RefreshForecast();
         }
 
@@ -65,15 +63,21 @@ namespace ICE.Scheduler.Handlers
 
             Weather currWeather = GetCurrentWeather();
 
-            var currentWeather = weathers
-                .Select((item, index) => new { item, index })
-                .First(w => w.item.Name == currWeather.Name);
-            var nextWeather = weathers
-                .Skip(currentWeather.index + 1)
-                .Select((item, index) => new { item, index })
-                .First();
-
-            return (currentWeather.item.Name, nextWeather.item.Name, FormatForecastTime(nextWeather.item.Time));
+            try
+            {
+                var currentWeather = weathers
+                                .Select((item, index) => new { item, index })
+                                .First(w => w.item.Name == currWeather.Name);
+                var nextWeather = weathers
+                    .Skip(currentWeather.index + 1)
+                    .Select((item, index) => new { item, index })
+                    .First();
+                return (currentWeather.item.Name, nextWeather.item.Name, FormatForecastTime(nextWeather.item.Time));
+            }
+            catch (Exception ex)
+            {
+                return default;
+            }
         }
 
         internal static unsafe void GetForecast()
@@ -98,7 +102,7 @@ namespace ICE.Scheduler.Handlers
                     weathers.Add(BuildResultObject(weather, time));
                 }
             }
-            weathers = weathers.Take(3).ToList();
+            weathers = [.. weathers.Take(3)];
         }
 
         private static WeatherForecast BuildResultObject(Weather weather, DateTime time)
