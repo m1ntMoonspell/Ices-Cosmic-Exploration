@@ -55,15 +55,21 @@ namespace ICE.Scheduler.Handlers
 
             Weather currWeather = GetCurrentWeather();
 
-            var currentWeather = weathers
-                .Select((item, index) => new { item, index })
-                .First(w => w.item.Name == currWeather.Name);
-            var nextWeather = weathers
-                .Skip(currentWeather.index + 1)
-                .Select((item, index) => new { item, index })
-                .First();
-
-            return (currentWeather.item.Name, nextWeather.item.Name, FormatForecastTime(nextWeather.item.Time));
+            try
+            {
+                var currentWeather = weathers
+                                .Select((item, index) => new { item, index })
+                                .First(w => w.item.Name == currWeather.Name);
+                var nextWeather = weathers
+                    .Skip(currentWeather.index + 1)
+                    .Select((item, index) => new { item, index })
+                    .First();
+                return (currentWeather.item.Name, nextWeather.item.Name, FormatForecastTime(nextWeather.item.Time));
+            }
+            catch (Exception ex)
+            {
+                return default;
+            }
         }
 
         internal static unsafe void GetForecast()
