@@ -1,3 +1,4 @@
+using System.Globalization;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ICE.Scheduler;
@@ -42,6 +43,36 @@ namespace ICE.Ui
                 ImGui.Text($"Timed Mission(s): {string.Join(", ", currentTimedBonus.Value)} -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
             }
 
+            (string type, var locations) = AnnouncementHandlers.CheckForRedAlert();
+            if (type != null && locations != null)
+            {
+                ImGui.Text($"[Red Alert] {CultureInfo.CurrentCulture.TextInfo.ToTitleCase(type)}");
+                ImGui.Spacing();
+                for (int i = 0; i < locations.Length; i++)
+                {
+                    if (locations.Length > 0)
+                    {
+                        ImGui.Text($"Variant [{i + 1}]");
+                        ImGui.SameLine();
+                    }
+
+                    (string job, uint territoryId, float x, float y) = locations[i].first;
+                    if (ImGui.Button($"{job}"))
+                    {
+                        SetFlagForNPC(territoryId, x, y);
+                    }
+
+                    ImGui.SameLine();
+
+                    (job, territoryId, x, y) = locations[i].second;
+                    if (ImGui.Button($"{job}"))
+                    {
+                        SetFlagForNPC(territoryId, x, y);
+                    }
+                    ImGui.Spacing();
+                }
+            }
+
             ImGuiHelpers.ScaledDummy(2);
             ImGui.Separator();
             ImGuiHelpers.ScaledDummy(2);
@@ -73,6 +104,9 @@ namespace ICE.Ui
             }
             ImGui.SameLine();
             ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+            //    //    Type = Dalamud.Game.Text.XivChatType.Debug,
+            //    //});
+            //}
         }
     }
 }
