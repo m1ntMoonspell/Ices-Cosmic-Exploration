@@ -287,7 +287,7 @@ namespace ICE.Scheduler.Tasks
             var enoughMain = HaveEnoughMain();
             if (enoughMain == null || currentMission == null)
             {
-                PluginLog.Error("Current mission is 0, aborting");
+                PluginLog.Error($"Current mission is {CurrentLunarMission}, aborting");
                 SchedulerMain.State = IceState.GrabMission;
                 return false;
             }
