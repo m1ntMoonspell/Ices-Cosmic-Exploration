@@ -282,10 +282,10 @@ namespace ICE.Scheduler.Tasks
         internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
         {
             var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
-            var currentMission = C.Missions.Single(x => x.Id == CurrentLunarMission);
+            var currentMission = C.Missions.SingleOrDefault(x => x.Id == CurrentLunarMission);
 
             var enoughMain = HaveEnoughMain();
-            if (enoughMain == null)
+            if (enoughMain == null || currentMission == null)
             {
                 PluginLog.Error("Current mission is 0, aborting");
                 SchedulerMain.State = IceState.GrabMission;
