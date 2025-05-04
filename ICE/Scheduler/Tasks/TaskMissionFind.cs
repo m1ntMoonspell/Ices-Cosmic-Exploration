@@ -14,16 +14,16 @@ namespace ICE.Scheduler.Tasks
         private static uint MissionId = 0;
         private static uint? currentClassJob => GetClassJobId();
         private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
-        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
-        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
-        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
-        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
-        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
-        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
-        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
-        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
-        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
-        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
+        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
+        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
+        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
+        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
+        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
+        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
+        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
+        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
+        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
+        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
 
         public static void EnqueueResumeCheck()
         {
@@ -263,7 +263,7 @@ namespace ICE.Scheduler.Tasks
 
                 foreach (var m in sortedMissions)
                 {
-                    var weatherMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
+                    var weatherMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
 
                     if (weatherMissionEntry == default)
                     {
@@ -306,7 +306,7 @@ namespace ICE.Scheduler.Tasks
             {
                 foreach (var m in x.StellerMissions)
                 {
-                    var basicMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId);
+                    var basicMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId);
 
                     if (basicMissionEntry == default)
                         continue;
