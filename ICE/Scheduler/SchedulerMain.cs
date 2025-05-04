@@ -38,6 +38,9 @@ namespace ICE.Scheduler
                     case IceState.CraftInProcess:
                     case IceState.GrabbingMission:
                         break;
+                    case IceState.WaitForNonStandard:
+                        TaskMissionFind.WaitForNonStandard();
+                        break;
                     case IceState.GrabMission:
                         TaskMissionFind.Enqueue();
                         break;
@@ -72,6 +75,7 @@ namespace ICE.Scheduler
         CheckScoreAndTurnIn,
         WaitForCrafts,
         ManualMode,
-        ResumeChecker
+        ResumeChecker,
+        WaitForNonStandard
     }
 }

@@ -2,10 +2,13 @@
 using ECommons.Logging;
 using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
+using ICE.Scheduler.Handlers;
+using ICE.Enums;
 using ICE.Ui;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
+using Dalamud.Game.ClientState.Conditions;
 
 namespace ICE.Scheduler.Tasks
 {
@@ -14,16 +17,16 @@ namespace ICE.Scheduler.Tasks
         private static uint MissionId = 0;
         private static uint? currentClassJob => GetClassJobId();
         private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
-        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
-        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
-        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
-        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
-        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
-        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
-        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
-        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
-        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
-        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
+        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
+        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
+        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
+        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
+        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
+        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
+        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
+        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
+        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
+        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
 
         public static void EnqueueResumeCheck()
         {
@@ -94,21 +97,25 @@ namespace ICE.Scheduler.Tasks
 
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
-            // if (hasCritical) {
-            P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
-            P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
-            // }
-            //if (hasWeather || hasTimed || hasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
-            //{
-            P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
-            P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
-            //}
-            P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
-            P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
-            P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
+             if (hasCritical)
+            {
+                P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
+                P.TaskManager.EnqueueDelay(200);
+                P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
+            }
+            if (hasWeather || hasTimed || hasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
+            {
+                P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
+                P.TaskManager.EnqueueDelay(200);
+                P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
+            }
+            if (hasStandard)
+            {
+                P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
+                P.TaskManager.EnqueueDelay(200);
+                P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
+                P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
+            }
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
             P.TaskManager.EnqueueDelay(250);
             P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
@@ -271,7 +278,7 @@ namespace ICE.Scheduler.Tasks
 
                 foreach (var m in sortedMissions)
                 {
-                    var weatherMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
+                    var weatherMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
 
                     if (weatherMissionEntry == default)
                     {
@@ -314,7 +321,7 @@ namespace ICE.Scheduler.Tasks
             {
                 foreach (var m in x.StellerMissions)
                 {
-                    var basicMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId);
+                    var basicMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId);
 
                     if (basicMissionEntry == default)
                         continue;
@@ -346,12 +353,20 @@ namespace ICE.Scheduler.Tasks
             {
                 PluginLog.Debug("found mission was false");
                 var currentClassJob = GetClassJobId();
-                var ranks = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob)
-                    .Select(e => MissionInfoDict[e.Id].Rank)
-                    .ToList();
-                if (ranks.Count == 0)
+
+
+                if (!x.StellerMissions.Any(x => MissionInfoDict[x.MissionId].JobId == currentClassJob)) //Tryin to reroll but on wrong job list
                 {
-                    PluginLog.Debug("No missions selected in UI, would abandon every mission");
+                    if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                    {
+                        if (EzThrottler.Throttle("Opening Mission Hud"))
+                        {
+                            hud.Mission();
+                            Task.Delay(200);
+                            hud.Mission();
+                        }
+                    }
+                    PluginLog.Debug("Wrong class mission list, Restarting");
                     return false;
                 }
 
@@ -369,17 +384,22 @@ namespace ICE.Scheduler.Tasks
                         .Select(x => x.rank)
                         .ToArray();
 
+                if (missionRanks.Length == 0)
+                {
+                    PluginLog.Debug("No Standard Mission is Selected, nothing to reroll");
+                    return true;
+                }
+
                 var rankToReset = missionRanks.Max();
 
                 foreach (var m in x.StellerMissions)
                 {
                     var missionEntry = MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
-                    if (missionEntry.Value == null || missionEntry.Value.JobId != currentClassJob)
-                        continue;
+                    if (missionEntry.Value == null) continue;
 
                     PluginLog.Debug($"Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}");
-                    if (missionEntry.Value.Rank == rankToReset || (missionEntry.Value.Rank >= 4 && rankToReset >= 4))
+                    if (missionEntry.Value.Rank == rankToReset)
                     {
                         if (EzThrottler.Throttle("Selecting Abandon Mission"))
                         {
@@ -431,12 +451,18 @@ namespace ICE.Scheduler.Tasks
                 if (!MissionInfoDict.ContainsKey(MissionId))
                 {
                     PluginLog.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
-                    P.TaskManager.Abort();
+                    SchedulerMain.DisablePlugin();
+                    if (!hasStandard && (hasWeather || hasTimed))
+                    {
+                        SchedulerMain.State = IceState.WaitForNonStandard;
+                    }
                 }
-
-                if (EzThrottler.Throttle("Firing off to initiate quest"))
+                else
                 {
-                    Callback.Fire(x.Base, true, 13, MissionId);
+                    if (EzThrottler.Throttle("Firing off to initiate quest"))
+                    {
+                        Callback.Fire(x.Base, true, 13, MissionId);
+                    }
                 }
             }
             else if (!IsAddonActive("WKSMission"))
@@ -509,6 +535,53 @@ namespace ICE.Scheduler.Tasks
             }
 
             return false;
+        }
+
+        public static void WaitForNonStandard()
+        {
+            if (!IsInCosmicZone()) return;
+
+            if (hasStandard) SchedulerMain.State = IceState.GrabMission;
+
+            uint currentWeatherId = WeatherForecastHandler.GetCurrentWeatherId();
+            bool isUmbralWind = currentWeatherId == 49;
+            bool isMoonDust = currentWeatherId == 148;
+            if ((isUmbralWind || isMoonDust) && hasWeather)
+            {
+                bool hasCorrectWeather = C.Missions
+                    .Where(x => !UnsupportedMissions.Ids.Contains(x.Id))
+                    .Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)
+                    .Where(x => x.Type == MissionType.Weather && x.Enabled)
+                    .Any(x => (MissionInfoDict[x.Id].Weather == CosmicWeather.UmbralWind && isUmbralWind) || (MissionInfoDict[x.Id].Weather == CosmicWeather.MoonDust && isMoonDust));
+                if (hasCorrectWeather)
+                {
+                    SchedulerMain.State = IceState.GrabMission;
+                }
+            }
+
+            //bool isSporingMist = currentWeatherId == 197;
+            //bool isAstromagneticStorms = currentWeatherId == 149 || currentWeatherId == 196;
+            //bool isMeteoricShower = currentWeatherId == 194 || currentWeatherId == 195;
+            //if ((isSporingMist || isAstromagneticStorms || isMeteoricShower) && hasCritical)
+            //{
+            //    //Cannot Check for Umbral Weather For Critical
+            //    SchedulerMain.State = IceState.GrabMission;
+            //}
+
+            (var currentTimedBonus, var nextTimedBonus) = PlayerHandlers.GetTimedJob();
+            if (currentTimedBonus.Value != null && hasTimed)
+            {
+                
+                List<uint> jobIds = [.. currentTimedBonus.Value
+                    .Select(name => MainWindow.jobOptions.FirstOrDefault(job => job.Name == name))
+                    .Where(job => job != default)
+                    .Select(job => job.Id - 1)]; // Because MainWindow.jobOptions Id is slightly off :(
+
+                if (jobIds.Any(job => job == currentClassJob))
+                {
+                    SchedulerMain.State = IceState.GrabMission;
+                }
+            }
         }
     }
 }

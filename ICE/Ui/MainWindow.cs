@@ -45,7 +45,7 @@ namespace ICE.Ui
         }
 
         // Available jobs and their IDs.
-        private static List<(string Name, uint Id)> jobOptions = new()
+        public static List<(string Name, uint Id)> jobOptions = new()
         {
             ("CRP", 9),
             ("BSM", 10),
