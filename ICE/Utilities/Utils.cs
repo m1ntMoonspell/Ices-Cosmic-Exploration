@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.Text;
 using ECommons;
 using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices.Legacy;
@@ -57,6 +58,35 @@ public static unsafe class Utils
                 hud.Mission();
             }
         }
+    }
+
+    public static unsafe void SetFlagForNPC(uint territoryId, float x, float y)
+    {
+        var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
+        var map = terSheet.GetRow(territoryId).Map.Value;
+
+        var agent = AgentMap.Instance();
+
+        Vector2 pos = MapToWorld(new Vector2(x, y), map.SizeFactor, map.OffsetX, map.OffsetY);
+
+        agent->IsFlagMarkerSet = false;
+        agent->SetFlagMapMarker(territoryId, map.RowId, pos.X, pos.Y);
+        agent->OpenMapByMapId(map.RowId, territoryId);
+    }
+
+    public static float MapToWorld(float value, uint scale, int offset) => -offset * (scale / 100.0f) + 50.0f * (value - 1) * (scale / 100.0f);
+
+    public static Vector2 MapToWorld(Vector2 coordinates, ushort sizeFactor, short offsetX, short offsetY)
+    {
+        var scalar = sizeFactor / 100.0f;
+
+        var xWorldCoord = MapToWorld(coordinates.X, sizeFactor, offsetX);
+        var yWorldCoord = MapToWorld(coordinates.Y, sizeFactor, offsetY);
+
+        var objectPosition = new Vector2(xWorldCoord, yWorldCoord);
+        var center = new Vector2(1024.0f, 1024.0f);
+
+        return objectPosition / scalar - center / scalar;
     }
 
     #endregion
@@ -213,6 +243,36 @@ public static unsafe class Utils
 
         var textNode = (AtkTextNode*)node;
         return textNode->NodeText.GetText();
+    }
+
+    public static unsafe AtkTextNode* GetAtkTextNode(string addonName, params int[] nodeNumbers)
+    {
+
+        var ptr = Svc.GameGui.GetAddonByName(addonName, 1);
+
+        var addon = (AtkUnitBase*)ptr;
+        var uld = addon->UldManager;
+
+        AtkResNode* node = null;
+        var debugString = string.Empty;
+        for (var i = 0; i < nodeNumbers.Length; i++)
+        {
+            var nodeNumber = nodeNumbers[i];
+
+            var count = uld.NodeListCount;
+
+            node = uld.NodeList[nodeNumber];
+            debugString += $"[{nodeNumber}]";
+
+            // More nodes to traverse
+            if (i < nodeNumbers.Length - 1)
+            {
+                uld = ((AtkComponentNode*)node)->Component->UldManager;
+            }
+        }
+
+        var textNode = (AtkTextNode*)node;
+        return textNode;
     }
 
     private static unsafe AtkResNode* GetNodeByIDChain(AtkResNode* node, params int[] ids)
