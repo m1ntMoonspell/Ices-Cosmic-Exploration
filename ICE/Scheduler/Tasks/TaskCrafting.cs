@@ -1,6 +1,4 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
-using ECommons.Logging;
-using ECommons.Throttlers;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
@@ -88,7 +86,7 @@ namespace ICE.Scheduler.Tasks
                 int craftsDone = mainCrafts.Sum(main => GetItemCount((int)RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId)); // How many mains we made
                 int craftsNeeded = mainCrafts.Sum(main => main.Value); // How many we need for mission
                 int CraftMultipleMissionItems = (craftsDone / craftsNeeded) + 1; // How many whole sets (+1) of crafts we did
-                PluginDebug($"[Loop] Number: {CraftMultipleMissionItems} | Items Done: {craftsDone} | Items Needed: {craftsNeeded}");
+                PluginLog.Debug($"[Loop] Number: {CraftMultipleMissionItems} | Items Done: {craftsDone} | Items Needed: {craftsNeeded}");
 
                 bool OOMMain = false;
                 bool OOMSub = false;
@@ -103,17 +101,17 @@ namespace ICE.Scheduler.Tasks
                     var currentSubItemAmount = GetItemCount((int)subItem);
                     var mainItemName = ItemSheet.GetRow(itemId).Name.ToString();
 
-                    PluginDebug($"RecipeID: {main.Key}");
-                    PluginDebug($"ItemID: {itemId}");
+                    PluginLog.Debug($"RecipeID: {main.Key}");
+                    PluginLog.Debug($"ItemID: {itemId}");
 
-                    if ((currentSubItemAmount / subItemNeed) == 0) // This should OOM only if not enough to craft a single Main
+                    if ((currentSubItemAmount / (subItemNeed / mainNeed)) == 0) // This should OOM only if not enough to craft a single Main
                     {
-                        PluginDebug($"[OOM] Not enough to craft main item");
+                        PluginLog.Debug($"[OOM] Not enough to craft main item");
                         OOMMain = true; // All current 3x Main items share Sub items
                     }
 
-                    PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
-                    PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
+                    PluginLog.Debug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
+                    PluginLog.Debug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
                     
                     // Increase how many crafts we want to have made if needed so we can reach Score Checker goals.
                     subItemNeed = subItemNeed * CraftMultipleMissionItems;
@@ -123,10 +121,10 @@ namespace ICE.Scheduler.Tasks
                     {
                         subItemNeed = subItemNeed - currentAmount;
 
-                        PluginDebug($"[Main Item(s)] You currently don't have the required amount of item: {ItemSheet.GetRow(itemId).Name}]. Checking to see if you have enough pre-crafts");
+                        PluginLog.Debug($"[Main Item(s)] You currently don't have the required amount of item: {ItemSheet.GetRow(itemId).Name}]. Checking to see if you have enough pre-crafts");
                         if (currentSubItemAmount >= subItemNeed)
                         {
-                            PluginDebug($"[Main Item(s) You have the required amount to make the necessary amount of main items. Continuing on");
+                            PluginLog.Debug($"[Main Item(s) You have the required amount to make the necessary amount of main items. Continuing on");
                             int craftAmount = mainNeed - currentAmount;
                             itemsToCraft.Add(main.Key, new(craftAmount, mainNeed));
                         }
@@ -143,25 +141,25 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (GetItemCount(48233) == 0) // Subs only have Cosmo Containers as requirement.
                     {
-                        PluginDebug($"[OOM] Not enough to craft sub item");
+                        PluginLog.Debug($"[OOM] Not enough to craft sub item");
                         OOMSub = true;
                     }
                     else
                     {
-                        PluginDebug($"[Pre-craft Items] You need pre-craft items. Starting the process of finding pre-crafts");
+                        PluginLog.Debug($"[Pre-craft Items] You need pre-craft items. Starting the process of finding pre-crafts");
                         foreach (var pre in preCrafts)
                         {
                             var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
                             var currentAmount = GetItemCount((int)itemId);
                             
                             var PreCraftItemName = ItemSheet.GetRow(itemId).Name.ToString();
-                            PluginDebug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
-                            PluginDebug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
+                            PluginLog.Debug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
+                            PluginLog.Debug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
                             var goalAmount = pre.Value;
 
                             if (currentAmount < goalAmount)
                             {
-                                PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
+                                PluginLog.Debug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
                                 int craftAmount = goalAmount - currentAmount;
                                 preItemsToCraft.Add(pre.Key, new(craftAmount, goalAmount));
                             }
@@ -169,7 +167,7 @@ namespace ICE.Scheduler.Tasks
                     }
                 }
 
-                if (OOMMain && (OOMSub || !needPreCraft) && CurrentLunarMission < 359) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
+                if (OOMMain && (OOMSub || !needPreCraft) && CurrentLunarMission < 361) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
                 {
                     SchedulerMain.State = IceState.AbortInProgress;
                     return;
@@ -182,11 +180,11 @@ namespace ICE.Scheduler.Tasks
 
                 if (preItemsToCraft.Count > 0)
                 {
-                    PluginDebug("Queuing up pre-craft items");
+                    PluginLog.Debug("Queuing up pre-craft items");
                     foreach (var pre in preItemsToCraft)
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(pre.Key).ItemResult.RowId);
-                        PluginDebug($"[Craft] Adding precraft {pre}");
+                        PluginLog.Debug($"[Craft] Adding precraft {pre}");
                         P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
@@ -200,12 +198,12 @@ namespace ICE.Scheduler.Tasks
 
                 if (itemsToCraft.Count > 0)
                 {
-                    PluginDebug("Queuing up main craft items");
+                    PluginLog.Debug("Queuing up main craft items");
                     foreach (var main in itemsToCraft)
                     {
                         var item = ItemSheet.GetRow(RecipeSheet.GetRow(main.Key).ItemResult.RowId);
-                        PluginDebug($"[Main Item(s)] Queueing up for {item.Name}");
-                        PluginDebug($"[Craft] Adding craft {main}");
+                        PluginLog.Debug($"[Main Item(s)] Queueing up for {item.Name}");
+                        PluginLog.Debug($"[Craft] Adding craft {main}");
                         P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
@@ -264,7 +262,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             if (i.Name.Contains(item.Name.ToString()))
                             {
-                                PluginDebug($"[Craft failsafe] Selecting item: {i.Name}");
+                                PluginLog.Debug($"[Craft failsafe] Selecting item: {i.Name}");
                                 i.Select();
                             }
                             else
@@ -275,7 +273,7 @@ namespace ICE.Scheduler.Tasks
                     }
                 }
             }
-            PluginDebug($"[Main Item(s)] Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}");
+            PluginLog.Debug($"[Main Item(s)] Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}");
             P.Artisan.CraftItem(id, craftAmount);
         }
 
