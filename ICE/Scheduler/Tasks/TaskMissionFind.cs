@@ -2,10 +2,13 @@
 using ECommons.Logging;
 using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
+using ICE.Scheduler.Handlers;
+using ICE.Enums;
 using ICE.Ui;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
+using Dalamud.Game.ClientState.Conditions;
 
 namespace ICE.Scheduler.Tasks
 {
@@ -86,21 +89,25 @@ namespace ICE.Scheduler.Tasks
 
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
-            // if (hasCritical) {
-            P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
-            P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
-            // }
-            //if (hasWeather || hasTimed || hasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
-            //{
-            P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
-            P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
-            //}
-            P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
-            P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
-            P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
+             if (hasCritical)
+            {
+                P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
+                P.TaskManager.EnqueueDelay(200);
+                P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
+            }
+            if (hasWeather || hasTimed || hasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
+            {
+                P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
+                P.TaskManager.EnqueueDelay(200);
+                P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
+            }
+            if (hasStandard)
+            {
+                P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
+                P.TaskManager.EnqueueDelay(200);
+                P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
+                P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
+            }
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
             P.TaskManager.EnqueueDelay(250);
             P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
@@ -338,14 +345,7 @@ namespace ICE.Scheduler.Tasks
             {
                 PluginLog.Debug("found mission was false");
                 var currentClassJob = GetClassJobId();
-                var ranks = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob)
-                    .Select(e => MissionInfoDict[e.Id].Rank)
-                    .ToList();
-                if (ranks.Count == 0)
-                {
-                    PluginLog.Debug("No missions selected in UI, would abandon every mission");
-                    return false;
-                }
+
 
                 if (!x.StellerMissions.Any(x => MissionInfoDict[x.MissionId].JobId == currentClassJob)) //Tryin to reroll but on wrong job list
                 {
@@ -444,13 +444,9 @@ namespace ICE.Scheduler.Tasks
                 {
                     PluginLog.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
                     SchedulerMain.DisablePlugin();
-                    if (!hasStandard)
+                    if (!hasStandard && (hasWeather || hasTimed))
                     {
-                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
-                        {
-                            Message = "[ICE] There is nothing to reroll (No Standard Mission). Stopping.",
-                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                        });
+                        SchedulerMain.State = IceState.WaitForNonStandard;
                     }
                 }
                 else
@@ -531,6 +527,53 @@ namespace ICE.Scheduler.Tasks
             }
 
             return false;
+        }
+
+        public static void WaitForNonStandard()
+        {
+            if (!IsInCosmicZone()) return;
+
+            if (hasStandard) SchedulerMain.State = IceState.GrabMission;
+
+            uint currentWeatherId = WeatherForecastHandler.GetCurrentWeatherId();
+            bool isUmbralWind = currentWeatherId == 49;
+            bool isMoonDust = currentWeatherId == 148;
+            if ((isUmbralWind || isMoonDust) && hasWeather)
+            {
+                bool hasCorrectWeather = C.Missions
+                    .Where(x => !UnsupportedMissions.Ids.Contains(x.Id))
+                    .Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)
+                    .Where(x => x.Type == MissionType.Weather && x.Enabled)
+                    .Any(x => (MissionInfoDict[x.Id].Weather == CosmicWeather.UmbralWind && isUmbralWind) || (MissionInfoDict[x.Id].Weather == CosmicWeather.MoonDust && isMoonDust));
+                if (hasCorrectWeather)
+                {
+                    SchedulerMain.State = IceState.GrabMission;
+                }
+            }
+
+            //bool isSporingMist = currentWeatherId == 197;
+            //bool isAstromagneticStorms = currentWeatherId == 149 || currentWeatherId == 196;
+            //bool isMeteoricShower = currentWeatherId == 194 || currentWeatherId == 195;
+            //if ((isSporingMist || isAstromagneticStorms || isMeteoricShower) && hasCritical)
+            //{
+            //    //Cannot Check for Umbral Weather For Critical
+            //    SchedulerMain.State = IceState.GrabMission;
+            //}
+
+            (var currentTimedBonus, var nextTimedBonus) = PlayerHandlers.GetTimedJob();
+            if (currentTimedBonus.Value != null && hasTimed)
+            {
+                
+                List<uint> jobIds = [.. currentTimedBonus.Value
+                    .Select(name => MainWindow.jobOptions.FirstOrDefault(job => job.Name == name))
+                    .Where(job => job != default)
+                    .Select(job => job.Id - 1)]; // Because MainWindow.jobOptions Id is slightly off :(
+
+                if (jobIds.Any(job => job == currentClassJob))
+                {
+                    SchedulerMain.State = IceState.GrabMission;
+                }
+            }
         }
     }
 }
