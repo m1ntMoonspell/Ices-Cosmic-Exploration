@@ -33,10 +33,16 @@ internal static unsafe class PlayerHandlers
 
     internal static void Tick()
     {
-        if (IsInZone(1237) && UsingSupportedJob() && C.ShowOverlay) ICE.P.overlayWindow.IsOpen = true;
+        if (C.ShowOverlay && IsPlayerReady() && IsInCosmicZone() && UsingSupportedJob()) ICE.P.overlayWindow.IsOpen = true;
         else ICE.P.overlayWindow.IsOpen = false;
 
-        if (C.EnableAutoSprint && IsInZone(1237) && !HasStatusId(stellarSprintID) && Svc.Condition[ConditionFlag.NormalConditions] && IsMoving()) UseSprint(); 
+        if (C.EnableAutoSprint && IsPlayerReady() && IsInCosmicZone() && !HasStatusId(stellarSprintID) && Svc.Condition[ConditionFlag.NormalConditions] && IsMoving()) UseSprint();
+
+        if ((!IsPlayerReady() || !IsInCosmicZone() || !UsingSupportedJob()) && SchedulerMain.State != IceState.Idle)
+        {
+            P.TaskManager.Abort();
+            SchedulerMain.DisablePlugin();
+        }
     }
 
     private static void UseSprint()

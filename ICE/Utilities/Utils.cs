@@ -63,6 +63,7 @@ public static unsafe class Utils
     #region Player Information
 
     public static uint? GetClassJobId() => Svc.ClientState.LocalPlayer?.ClassJob.RowId;
+    public static bool IsPlayerReady() => Svc.ClientState.LocalPlayer != null;
     public static bool UsingSupportedJob() => GetClassJobId() >= 8 && GetClassJobId() <= 18;
     public static unsafe int GetLevel(int expArrayIndex = -1)
     {
@@ -94,7 +95,7 @@ public static unsafe class Utils
 
     public static unsafe bool HasStatusId(params uint[] statusIDs)
     {
-        var statusID = Svc.ClientState.LocalPlayer!.StatusList
+        var statusID = Svc.ClientState.LocalPlayer?.StatusList
             .Select(se => se.StatusId)
             .ToList().Intersect(statusIDs)
             .FirstOrDefault();
