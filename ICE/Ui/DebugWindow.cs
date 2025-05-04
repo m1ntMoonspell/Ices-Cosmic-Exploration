@@ -1,6 +1,7 @@
 ﻿using ECommons.GameHelpers;
 using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
@@ -28,6 +29,10 @@ internal class DebugWindow : Window
     }
 
     // variables that hold the "ref"s for ImGui
+
+    private int Radius = 10;
+    private int XLoc = 0;
+    private int YLoc = 0;
 
     public override unsafe void Draw()
     {
@@ -415,6 +420,20 @@ internal class DebugWindow : Window
             if (ImGui.Button("Artisan, craft this"))
             {
                 P.Artisan.CraftItem(36026, 1);
+            }
+
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Radius", ref Radius);
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("X Location", ref XLoc);
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Y Location", ref YLoc);
+
+            if (ImGui.Button($"Test Radius"))
+            {
+                var agent = AgentMap.Instance();
+
+                SetGatheringRing(agent->CurrentTerritoryId, XLoc, YLoc, Radius);
             }
 
             ImGui.TreePop();

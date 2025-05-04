@@ -14,6 +14,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ICE.Enums;
 using Lumina.Excel.Sheets;
@@ -595,6 +596,22 @@ public static unsafe class Utils
             (float)Math.Round(v.Y, decimals),
             (float)Math.Round(v.Z, decimals)
         );
+    }
+
+    public static unsafe void SetGatheringRing(uint teri, int x, int y, int radius)
+    {
+        var agent = AgentMap.Instance();
+        var debugText = "Current teri/map: {currentTeri} {currentMap}" + ", " + agent->CurrentTerritoryId
+                       + ", " + agent->CurrentMapId;
+        PluginDebug(debugText);
+
+        var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
+        var mapId = terSheet.GetRow(teri).Map.Value.RowId;
+
+        agent->IsFlagMarkerSet = false;
+        agent->SetFlagMapMarker(teri, mapId, x, y);
+        agent->AddGatheringTempMarker(x, y, radius, tooltip: "Node Location");
+        agent->OpenMap(agent->CurrentMapId, teri, "Node Location", FFXIVClientStructs.FFXIV.Client.UI.Agent.MapType.GatheringLog);
     }
 
 
