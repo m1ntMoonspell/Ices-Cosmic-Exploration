@@ -48,7 +48,7 @@ namespace ICE.Scheduler.Handlers
 
         internal static LocationEntry CheckForRedAlert()
         {
-            if (!IsInCosmicZone()) return default;
+            if (!IsInCosmicZone() || !IsPlayerReady()) return default;
             try
             {
                 if (GetAtkTextNode(Announcement, 48)->IsVisible()) // Red Alert Preparation
