@@ -111,8 +111,8 @@ namespace ICE.Scheduler.Tasks
                     Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                     {
                         Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n" +
-                        $"If you expect Mission ID {CosmicHelper.CurrentLunarMission} to not reach " + (C.Missions[(int)CosmicHelper.CurrentLunarMission].TurnInSilver ? "Silver" : "Gold") +
-                        "- please mark it as Silver/ASAP accordingly.\n" +
+                        $"If you expect Mission ID {CosmicHelper.CurrentLunarMission} to not reach " + (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).TurnInSilver ? "Silver" : "Gold") +
+                        " - please mark it as Silver/ASAP accordingly.\n" +
                         "If you were expecting it to reach the target, check your Artisan settings/gear.",
                         Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                     });
