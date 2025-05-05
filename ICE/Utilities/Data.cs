@@ -16,7 +16,7 @@ public static unsafe class Data
     public static readonly HashSet<int> TimedMissionList = [40, 43,];
     public static readonly HashSet<int> CriticalMissions = [512, 513, 514,];
 
-    public static readonly int MinimumLevel = 20;
+    public static readonly int MinimumLevel = 10;
     public static readonly int MaximumLevel = Player.MaxLevel;
 
     #region Dictionaries
