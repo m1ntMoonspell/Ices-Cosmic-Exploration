@@ -1,13 +1,6 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
-using ECommons.Logging;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
@@ -44,15 +37,15 @@ namespace ICE.Scheduler.Tasks
 
             if (currentScore == 0 && silverScore == 0 && goldScore == 0)
             {
-                PluginLog.Error("Failed to get scores on first attempt retrying");
+                IceLogging.Error("Failed to get scores on first attempt retrying");
                 (currentScore, silverScore, goldScore) = GetCurrentScores();
                 if (currentScore == 0 && silverScore == 0 && goldScore == 0)
                 {
-                    PluginLog.Error("Failed to get scores on second attempt retrying");
+                    IceLogging.Error("Failed to get scores on second attempt retrying");
                     (currentScore, silverScore, goldScore) = GetCurrentScores();
                     if (currentScore == 0 && silverScore == 0 && goldScore == 0)
                     {
-                        PluginLog.Error("Failed to get scores on third attempt aborting");
+                        IceLogging.Error("Failed to get scores on third attempt aborting");
                         SchedulerMain.State = IceState.Idle;
                         return;
                     }
@@ -61,7 +54,7 @@ namespace ICE.Scheduler.Tasks
 
             if (currentScore >= goldScore)
             {
-                PluginLog.Error("[TaskCrafting | Current Score] We shouldn't be here, stopping and progressing");
+                IceLogging.Error("[TaskGathering | Current Score] We shouldn't be here, stopping and progressing");
                 SchedulerMain.State = IceState.CheckScoreAndTurnIn;
                 return;
             }
@@ -75,12 +68,12 @@ namespace ICE.Scheduler.Tasks
         internal static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
         {
             EnsureInit();
-            if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
+            if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                var goldScore = MissionInfoDict[CurrentLunarMission].GoldRequirement;
-                var silverScore = MissionInfoDict[CurrentLunarMission].SilverRequirement;
+                var goldScore = CosmicHelper.CurrentMissionInfo.GoldRequirement;
+                var silverScore = CosmicHelper.CurrentMissionInfo.SilverRequirement;
 
-                string currentScoreText = GetNodeText("WKSMissionInfomation", 27);
+                string currentScoreText = AddonHelper.GetNodeText("WKSMissionInfomation", 27);
                 currentScoreText = currentScoreText.Replace(",", ""); // English client comma's
                 currentScoreText = currentScoreText.Replace(" ", ""); // French client spacing
                 currentScoreText = currentScoreText.Replace(".", ""); // French client spacing
