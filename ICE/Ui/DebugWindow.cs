@@ -245,6 +245,39 @@ internal class DebugWindow : Window
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNode("Wheel of fortune!"))
+        {
+            if (TryGetAddonMaster<WKSLottery>("WKSLottery", out var lotto) && lotto.IsAddonReady)
+            {
+                ImGui.Text($"Lottery addon is visible!");
+
+                if (ImGui.Button($"Left wheel select"))
+                {
+                    lotto.SelectWheelLeft();
+                }
+                ImGui.SameLine();
+
+                if (ImGui.Button($"Right wheel select DOES NOT WORK"))
+                {
+                    // lotto.SelectWheelRight();
+                }
+
+                ImGui.Text($"Items in left wheel");
+                foreach (var l in lotto.LeftWheelItems)
+                {
+                    ImGui.Text($"Name: {l.itemName} | Id: {l.itemId} | Amount: {l.itemAmount}");
+                }
+
+                ImGui.Spacing();
+                foreach (var m in lotto.RightWheelItems)
+                {
+                    ImGui.Text($"Name: {m.itemName} | Id: {m.itemId} | Amount: {m.itemAmount}");
+                }
+            }
+
+            ImGui.TreePop();
+        }
+
         if (ImGui.TreeNode("Moon Recipe Notebook"))
         {
             if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var x) && x.IsAddonReady)
