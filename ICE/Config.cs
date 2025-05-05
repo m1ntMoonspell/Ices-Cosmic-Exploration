@@ -65,5 +65,5 @@ namespace ICE
         Weather = 2,
         Timed = 3,
         Critical = 4
-    }
+    }//
 }
