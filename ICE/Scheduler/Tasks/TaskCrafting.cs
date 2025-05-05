@@ -63,7 +63,7 @@ namespace ICE.Scheduler.Tasks
 
             if (currentScore >= goldScore)
             {
-                IceLogging.Error("[TaskCrafting | Current Score] We shouldn't be here, stopping and progressing");
+                IceLogging.Debug("[TaskCrafting | Current Score] We shouldn't be here, stopping and progressing", true);
                 SchedulerMain.State = IceState.CheckScoreAndTurnIn;
                 return;
             }
