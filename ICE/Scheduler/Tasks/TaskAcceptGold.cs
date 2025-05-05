@@ -7,7 +7,7 @@ namespace ICE.Scheduler.Tasks
         public static void Enqueue()
         {
             P.TaskManager.Enqueue(() => TurninGold(), "Waiting for valid turnin", Utils.TaskConfig);
-            P.TaskManager.Enqueue(() => PluginLog.Information("Turnin Complete"));
+            P.TaskManager.Enqueue(() => IceLogging.Info("Turnin Complete"));
         }
 
         internal unsafe static bool? TurninGold()

@@ -48,11 +48,11 @@ namespace ICE.Scheduler.Tasks
         {
             if (C.StopOnceHitCosmoCredits)
             {
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
                     if (hud.CosmoCredit >= 30000)
                     {
-                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
+                        IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                         {
                             Message = $"[ICE] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits.",
@@ -67,11 +67,11 @@ namespace ICE.Scheduler.Tasks
 
             if (C.StopOnceHitLunarCredits)
             {
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
                     if (hud.LunarCredit >= 10000)
                     {
-                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
+                        IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                         {
                             Message = $"[ICE] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits",
@@ -138,15 +138,15 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (CosmicHelper.CurrentLunarMission != 0)
                     {
-                        if (GenericHelpers.TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !AddonHelper.IsAddonActive("WKSMissionInfomation"))
+                        if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !AddonHelper.IsAddonActive("WKSMissionInfomation"))
                         {
                             var gatherer = isGatherer;
-                            PluginLog.Debug("Opening Mission Menu");
+                            IceLogging.Debug("Opening Mission Menu", true);
                             hud.Mission();
 
                             while (!AddonHelper.IsAddonActive("WKSMissionInfomation"))
                             {
-                                PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
+                                IceLogging.Debug("Waiting for WKSMissionInfomation to be active");
                                 await Task.Delay(500);
                             }
                             if (!ModeChangeCheck(gatherer))
@@ -234,17 +234,18 @@ namespace ICE.Scheduler.Tasks
 
                         if (criticalMissionEntry == default)
                         {
-                            PluginLog.Debug($"[Critical Mission] Critical mission entry is default. Which means id: {criticalMissionEntry}");
+                            IceLogging.Debug($"[Critical Mission] Critical mission entry is default. Which means id: {criticalMissionEntry}");
                             continue;
                         }
-                        PluginLog.Debug($"[Critical Mission] Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending");
+
+                        IceLogging.Debug($"[Critical Mission] Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending", true);
                         SelectMission(m);
                         break;
                     }
                 }
 
                 if (MissionId == 0)
-                    PluginLog.Debug("[Critical Mission] No mission was found under weather, continuing on");
+                    IceLogging.Debug("[Critical Mission] No mission was found under weather, continuing on", true);
                 return true;
             }
             return false;
@@ -254,7 +255,7 @@ namespace ICE.Scheduler.Tasks
         {
             if (MissionId != 0)
             {
-                PluginLog.Debug("[Weather Mission] You already have a mission found, skipping finding weather mission");
+                IceLogging.Debug("[Weather Mission] You already have a mission found, skipping finding weather mission");
                 return true;
             }
             if (EzThrottler.Throttle("FindWeatherMission"))
@@ -286,17 +287,17 @@ namespace ICE.Scheduler.Tasks
 
                         if (weatherMissionEntry == default)
                         {
-                            PluginLog.Debug($"[Weather Mission] Weather mission entry is default. Which means id: {weatherMissionEntry}");
+                            IceLogging.Debug($"[Weather Mission] Weather mission entry is default. Which means id: {weatherMissionEntry}", true);
                             continue;
                         }
-                        PluginLog.Debug($"[Weather Mission] Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending");
+                        IceLogging.Debug($"[Weather Mission] Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending", true);
                         SelectMission(m);
                         break;
                     }
                 }
 
                 if (MissionId == 0)
-                    PluginLog.Debug("[Weather Mission] No mission was found under weather.");
+                    IceLogging.Debug("[Weather Mission] No mission was found under weather.", true);
                 return true;
             }
             return false;
@@ -313,10 +314,10 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("Selecting Basic Mission"))
             {
-                PluginLog.Debug($"[Basic Mission] Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}");
+                IceLogging.Debug($"[Basic Mission] Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}", true);
                 if (MissionId != 0)
                 {
-                    PluginLog.Debug("[Basic Mission] You already have a mission found, skipping finding a basic mission");
+                    IceLogging.Debug("[Basic Mission] You already have a mission found, skipping finding a basic mission", true);
                     return true;
                 }
 
@@ -331,14 +332,14 @@ namespace ICE.Scheduler.Tasks
 
                         if (EzThrottler.Throttle("[Reset Mission Finder] Selecting Basic Mission"))
                         {
-                            PluginLog.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending");
+                            IceLogging.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending", true);
                             SelectMission(m);
                             break;
                         }
                     }
 
                     if (MissionId == 0)
-                        PluginLog.Debug("[Basic Mission] No mission was found under basic missions.");
+                        IceLogging.Debug("[Basic Mission] No mission was found under basic missions.", true);
                     return true;
                 }
             }
@@ -349,16 +350,16 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("FindResetMission"))
             {
-                PluginLog.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
+                IceLogging.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}", true);
                 if (MissionId != 0)
                 {
-                    PluginLog.Debug("[Reset Mission Finder] You already have a mission found, skipping finding a basic mission.");
+                    IceLogging.Debug("[Reset Mission Finder] You already have a mission found, skipping finding a basic mission.", true);
                     return true;
                 }
 
                 if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
                 {
-                    PluginLog.Debug("[Reset Mission Finder] Found mission was false");
+                    IceLogging.Debug("[Reset Mission Finder] Found mission was false", true);
                     var currentClassJob = PlayerHelper.GetClassJobId();
 
 
@@ -373,7 +374,7 @@ namespace ICE.Scheduler.Tasks
                                 hud.Mission();
                             }
                         }
-                        PluginLog.Debug("[Reset Mission Finder] Wrong class mission list, Restarting");
+                        IceLogging.Debug("[Reset Mission Finder] Wrong class mission list, Restarting", true);
                         return false;
                     }
 
@@ -393,7 +394,7 @@ namespace ICE.Scheduler.Tasks
 
                     if (missionRanks.Length == 0)
                     {
-                        PluginLog.Debug("[Reset Mission Finder] No Standard Mission is Selected, nothing to reroll");
+                        IceLogging.Debug("[Reset Mission Finder] No Standard Mission is Selected, nothing to reroll", true);
                         return true;
                     }
 
@@ -406,16 +407,16 @@ namespace ICE.Scheduler.Tasks
                         if (missionEntry.Value == null)
                             continue;
 
-                        PluginLog.Debug($"[Reset Mission Finder] Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}");
+                        IceLogging.Debug($"[Reset Mission Finder] Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}", true);
                         if (missionEntry.Value.Rank == rankToReset)
                         {
-                            PluginLog.Debug($"[Reset Mission Finder] Setting SchedulerMain.MissionName = {m.Name}");
+                            IceLogging.Debug($"[Reset Mission Finder] Setting SchedulerMain.MissionName = {m.Name}", true);
                             m.Select();
                             SchedulerMain.MissionName = m.Name;
                             MissionId = missionEntry.Key;
                             SchedulerMain.Abandon = true;
 
-                            PluginLog.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName}");
+                            IceLogging.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName}", true);
 
                             return true;
                         }
@@ -429,18 +430,18 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("GrabMission", 250))
             {
-                PluginLog.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
+                IceLogging.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
                 if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
                     string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？", "Commence selected mission?", "Ausgewählte Mission wird gestartet.Fortfahren?", "Commencer la mission sélectionnée ?"];
                     if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
-                        PluginLog.Debug($"[Grabbing Mission] Expected Commence window: {select.Text}");
+                        IceLogging.Debug($"[Grabbing Mission] Expected Commence window: {select.Text}", true);
                         select.Yes();
                     }
                     else
                     {
-                        PluginLog.Error($"[Grabbing Mission] Unexpected Commence window: {select.Text}");
+                        IceLogging.Error($"[Grabbing Mission] Unexpected Commence window: {select.Text}");
                         select.No();
                     }
                     return false;
@@ -449,7 +450,7 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (!CosmicHelper.MissionInfoDict.ContainsKey(MissionId))
                     {
-                        PluginLog.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
+                        IceLogging.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
                         SchedulerMain.DisablePlugin();
                         if (!hasStandard && (hasWeather || hasTimed))
                         {
@@ -478,25 +479,25 @@ namespace ICE.Scheduler.Tasks
                     string[] abandonStrings = ["受注中のミッションを破棄します。よろしいですか？", "Abandon mission?", "Aktuelle Mission abbrechen?", "Êtes-vous sûr de vouloir abandonner la mission en cours ?"];
                     if (abandonStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
-                        PluginLog.Debug($"[Abandoning Mission] Expected Abandon window: {select.Text}");
+                        IceLogging.Debug($"[Abandoning Mission] Expected Abandon window: {select.Text}");
                         select.Yes();
                         return true;
                     }
                     else
                     {
-                        PluginLog.Error($"[Abandoning Mission] Unexpected Abandon window: {select.Text}");
+                        IceLogging.Error($"[Abandoning Mission] Unexpected Abandon window: {select.Text}");
                         select.No();
                         return false;
                     }
                 }
                 if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var addon) && addon.IsAddonReady)
                 {
-                    PluginLog.Debug("[Abandoning Mission] Attempting Abandon.");
+                    IceLogging.Debug("[Abandoning Mission] Attempting Abandon.");
                     addon.Abandon();
                 }
                 else if (TryGetAddonMaster<WKSHud>("WKSHud", out var SpaceHud) && SpaceHud.IsAddonReady)
                 {
-                    PluginLog.Debug("[Abandoning Mission] WKSMissionInformation missing. Attempting opening.");
+                    IceLogging.Debug("[Abandoning Mission] WKSMissionInformation missing. Attempting opening.");
                     SpaceHud.Mission();
                 }
             }

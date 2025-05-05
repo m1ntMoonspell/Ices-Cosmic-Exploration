@@ -23,7 +23,7 @@ public static partial class CosmicHelper
         {
             if (EzThrottler.Throttle("Opening Steller Missions"))
             {
-                PluginLog.Debug("Opening Mission Menu");
+                IceLogging.Debug("Opening Mission Menu");
                 hud.Mission();
             }
         }

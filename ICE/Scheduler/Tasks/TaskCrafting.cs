@@ -32,8 +32,8 @@ namespace ICE.Scheduler.Tasks
             }
             else
             {
-                if (EzThrottler.Throttle("Waiting for Artisan to not be busy"))
-                    PluginLog.Debug("Waiting for Artisan to not be busy");
+                if (Throttles.OneSecondThrottle)
+                    IceLogging.Debug("Waiting for Artisan to not be busy");
             }
 
             return false;
@@ -280,7 +280,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             if (i.Name.Contains(item.Name.ToString()))
                             {
-                                PluginLog.Debug($"[Craft failsafe] Selecting item: {i.Name}");
+                                IceLogging.Debug($"[Craft failsafe] Selecting item: {i.Name}", true);
                                 i.Select();
                             }
                             else
@@ -292,7 +292,7 @@ namespace ICE.Scheduler.Tasks
                 }
             }
 
-            IceLogging.Debug($"[Main Item(s)] Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}");
+            IceLogging.Debug($"[Main Item(s)] Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}", true);
             P.Artisan.CraftItem(id, craftAmount);
         }
 
