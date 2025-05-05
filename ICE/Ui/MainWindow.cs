@@ -108,7 +108,7 @@ namespace ICE.Ui
         private static bool stopOnceHitCosmoCredits = C.StopOnceHitCosmoCredits;
         private static bool stopOnceHitLunarCredits = C.StopOnceHitLunarCredits;
         private static bool stopWhenLevel = C.StopWhenLevel;
-        private static int targetLevel = C.targetLevel;
+        private static int targetLevel = C.TargetLevel;
         private static bool ShowSeconds = C.ShowSeconds;
         private static bool EnableAutoSprint = C.EnableAutoSprint;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
@@ -620,7 +620,7 @@ namespace ICE.Ui
                             targetLevel = MinimumLevel;
                         else if (targetLevel > MaximumLevel)
                             targetLevel = MaximumLevel;
-                        C.targetLevel = targetLevel;
+                        C.TargetLevel = targetLevel;
                         C.Save();
                     }
                 }

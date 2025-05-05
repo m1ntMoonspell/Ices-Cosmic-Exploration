@@ -82,7 +82,7 @@ namespace ICE.Scheduler.Tasks
                 }
             }
 
-            if (Player.Level >= C.targetLevel)
+            if (Player.Level >= C.TargetLevel && C.StopWhenLevel)
             {
                 SchedulerMain.StopBeforeGrab = true;
                 PluginDebug($"StopWhenLevel: Stopped at target level {Player.Level}");

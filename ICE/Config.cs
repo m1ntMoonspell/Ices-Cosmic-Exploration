@@ -23,7 +23,7 @@ namespace ICE
         public bool StopOnceHitCosmoCredits { get; set; } = false;
         public bool StopOnceHitLunarCredits { get; set; } = false;
 
-        public int targetLevel { get; set; } = 10;
+        public int TargetLevel { get; set; } = 10;
         public bool StopWhenLevel { get; set; } = false;
 
         // Overlay settings
