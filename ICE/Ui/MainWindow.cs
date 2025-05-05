@@ -7,6 +7,7 @@ using Dalamud.Interface.Colors;
 using System.Drawing;
 using System.Reflection;
 using ICE.Scheduler.Handlers;
+using ICE.Utilities;
 
 namespace ICE.Ui
 {
@@ -170,6 +171,28 @@ namespace ICE.Ui
 
             ImGui.SameLine();
             ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+
+            ImGui.SameLine();
+            ImGui.NewLine();
+            ImGui.Columns(2, "stoplevelcol", false);
+            ImGui.SetColumnWidth(0, 150f);
+            ImGui.Checkbox("Stop after @ level", ref SchedulerMain.StopWhenLevelToggle);
+            ImGui.NextColumn();
+            if (SchedulerMain.StopWhenLevelToggle)
+            {
+                ImGui.PushItemWidth(100f);
+                ImGui.InputInt("Level", ref SchedulerMain.StopWhenLevelTarget);
+                if (SchedulerMain.StopWhenLevelTarget < Data.MinimumLevel)
+                {
+                    SchedulerMain.StopWhenLevelTarget = Data.MaximumLevel;
+                }
+                else if (SchedulerMain.StopWhenLevelTarget > Data.MaximumLevel)
+                {
+                    SchedulerMain.StopWhenLevelTarget = Data.MinimumLevel;
+                }
+                ImGui.PopItemWidth();
+            }
+            ImGui.Columns();
 
             if (C.AutoPickCurrentJob && usingSupportedJob)
             {    

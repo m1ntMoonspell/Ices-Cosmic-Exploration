@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using Dalamud.Game.ClientState.Conditions;
+using ECommons.GameHelpers;
 
 namespace ICE.Scheduler.Tasks
 {
@@ -81,6 +82,11 @@ namespace ICE.Scheduler.Tasks
                 }
             }
 
+            if (Player.Level >= SchedulerMain.StopWhenLevelTarget)
+            {
+                SchedulerMain.StopBeforeGrab = true;
+                PluginDebug($"StopWhenLevel: Stopped at target level {Player.Level}");
+            }
             if (SchedulerMain.StopBeforeGrab)
             {
                 SchedulerMain.StopBeforeGrab = false;

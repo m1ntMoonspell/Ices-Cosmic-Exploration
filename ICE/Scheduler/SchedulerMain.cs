@@ -23,6 +23,8 @@ namespace ICE.Scheduler
         internal static bool StopBeforeGrab = false;
         internal static bool StopOnceHitCosmoCredits = false;
         internal static bool StopOnceHitLunarCredits = false;
+        internal static int StopWhenLevelTarget = 0;
+        internal static bool StopWhenLevelToggle = false;
 
 
         internal static IceState State = IceState.Idle;
