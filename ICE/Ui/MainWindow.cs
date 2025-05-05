@@ -107,6 +107,8 @@ namespace ICE.Ui
         private static bool showOverlay = C.ShowOverlay;
         private static bool stopOnceHitCosmoCredits = C.StopOnceHitCosmoCredits;
         private static bool stopOnceHitLunarCredits = C.StopOnceHitLunarCredits;
+        private static bool stopWhenLevel = C.StopWhenLevel;
+        private static int targetLevel = C.targetLevel;
         private static bool ShowSeconds = C.ShowSeconds;
         private static bool EnableAutoSprint = C.EnableAutoSprint;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
@@ -174,25 +176,6 @@ namespace ICE.Ui
 
             ImGui.SameLine();
             ImGui.NewLine();
-            ImGui.Columns(2, "stoplevelcol", false);
-            ImGui.SetColumnWidth(0, 150f);
-            ImGui.Checkbox("Stop after @ level", ref SchedulerMain.StopWhenLevelToggle);
-            ImGui.NextColumn();
-            if (SchedulerMain.StopWhenLevelToggle)
-            {
-                ImGui.PushItemWidth(100f);
-                ImGui.InputInt("Level", ref SchedulerMain.StopWhenLevelTarget);
-                if (SchedulerMain.StopWhenLevelTarget < Data.MinimumLevel)
-                {
-                    SchedulerMain.StopWhenLevelTarget = Data.MaximumLevel;
-                }
-                else if (SchedulerMain.StopWhenLevelTarget > Data.MaximumLevel)
-                {
-                    SchedulerMain.StopWhenLevelTarget = Data.MinimumLevel;
-                }
-                ImGui.PopItemWidth();
-            }
-            ImGui.Columns();
 
             if (C.AutoPickCurrentJob && usingSupportedJob)
             {    
@@ -621,6 +604,25 @@ namespace ICE.Ui
                 {
                     C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
                     C.Save();
+                }
+                ImGui.Checkbox("Stop after @ level", ref stopWhenLevel);
+                {
+                    C.StopWhenLevel = stopWhenLevel;
+                    C.Save();
+                }
+                if (stopWhenLevel)
+                {
+                    ImGui.SetNextItemWidth(100f);
+                    ImGui.SameLine();
+                    if (ImGui.InputInt("Level", ref targetLevel))
+                    {
+                        if (targetLevel < MinimumLevel)
+                            targetLevel = MinimumLevel;
+                        else if (targetLevel > MaximumLevel)
+                            targetLevel = MaximumLevel;
+                        C.targetLevel = targetLevel;
+                        C.Save();
+                    }
                 }
             }
 

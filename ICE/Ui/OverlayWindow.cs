@@ -19,6 +19,8 @@ namespace ICE.Ui
             P.windowSystem.RemoveWindow(this);
         }
 
+        
+
         public override void Draw()
         {
             ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
@@ -108,28 +110,6 @@ namespace ICE.Ui
             //    //    Type = Dalamud.Game.Text.XivChatType.Debug,
             //    //});
             //}
-
-            ImGui.SameLine();
-            ImGui.NewLine();
-            ImGui.Columns(2, "stoplevelcol", false);
-            ImGui.SetColumnWidth(0, 150f);
-            ImGui.Checkbox("Stop after @ level", ref SchedulerMain.StopWhenLevelToggle);
-            ImGui.NextColumn();
-            if (SchedulerMain.StopWhenLevelToggle)
-            {
-                ImGui.PushItemWidth(100f);
-                ImGui.InputInt("Level", ref SchedulerMain.StopWhenLevelTarget);
-                if (SchedulerMain.StopWhenLevelTarget < Data.MinimumLevel)
-                {
-                    SchedulerMain.StopWhenLevelTarget = Data.MaximumLevel;
-                }
-                else if (SchedulerMain.StopWhenLevelTarget > Data.MaximumLevel)
-                {
-                    SchedulerMain.StopWhenLevelTarget = Data.MinimumLevel;
-                }
-                ImGui.PopItemWidth();
-            }
-            ImGui.Columns();
         }
     }
 }
