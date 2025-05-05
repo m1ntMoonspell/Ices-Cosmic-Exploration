@@ -10,8 +10,8 @@ namespace ICE.Scheduler.Handlers
 
         private static readonly Dictionary<string, (JobPairs first, JobPairs second)[]> sinusRedAlert = new()
         {
-            { 
-                "meteorite shower", 
+            {
+                "meteorite shower",
                 new(JobPairs first, JobPairs second)[]
                 {
                     (
@@ -48,17 +48,25 @@ namespace ICE.Scheduler.Handlers
 
         internal static LocationEntry CheckForRedAlert()
         {
-            if (GetAtkTextNode(Announcement, 48)->IsVisible()) // Red Alert Preparation
+            if (!IsInCosmicZone()) return default;
+            try
             {
-                var description = GetNodeText(Announcement, 47).ToLower();
-                
-                Dictionary<string, (JobPairs first, JobPairs second)[]>? redAlert = default;
-                if (IsInSinusArdorum()) redAlert = sinusRedAlert; //Reassign based on Territory
+                if (GetAtkTextNode(Announcement, 48)->IsVisible()) // Red Alert Preparation
+                {
+                    var description = GetNodeText(Announcement, 47).ToLower();
 
-                if (redAlert == default) return default;
-                return redAlert.FirstOrDefault(location => description.Contains(location.Key));
+                    Dictionary<string, (JobPairs first, JobPairs second)[]>? redAlert = default;
+                    if (IsInSinusArdorum()) redAlert = sinusRedAlert; //Reassign based on Territory
+
+                    if (redAlert == default) return default;
+                    return redAlert.FirstOrDefault(location => description.Contains(location.Key));
+                }
+                else
+                {
+                    return default;
+                }
             }
-            else
+            catch (Exception ex)
             {
                 return default;
             }
