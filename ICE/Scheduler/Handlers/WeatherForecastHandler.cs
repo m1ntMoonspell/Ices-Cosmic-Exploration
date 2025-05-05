@@ -22,7 +22,7 @@ namespace ICE.Scheduler.Handlers
         internal static unsafe void Tick()
         {
             WeatherSheet ??= Svc.Data.GetExcelSheet<Weather>();
-            if (!IsInCosmicZone()) return;
+            if (!PlayerHelper.IsInCosmicZone()) return;
 
             Weather currWeather = GetCurrentWeather();
             var CurrentWeatherInFirstSpot = weathers.FirstOrDefault()?.Name == currWeather.Name;
@@ -36,7 +36,7 @@ namespace ICE.Scheduler.Handlers
 
         internal static void RefreshForecast()
         {
-            if (!IsInCosmicZone()) return;
+            if (!PlayerHelper.IsInCosmicZone()) return;
             
             _lastProcessed = DateTime.Now;
             GetForecast();
@@ -51,7 +51,7 @@ namespace ICE.Scheduler.Handlers
 
         internal static unsafe uint GetCurrentWeatherId()
         {
-            if (!IsInCosmicZone()) return default;
+            if (!PlayerHelper.IsInCosmicZone()) return default;
 
             Weather currWeather = GetCurrentWeather();
             return currWeather.RowId;
@@ -59,7 +59,7 @@ namespace ICE.Scheduler.Handlers
 
         internal static unsafe (string, string, string) GetNextWeather()
         {
-            if (!IsInCosmicZone()) return default;
+            if (!PlayerHelper.IsInCosmicZone()) return default;
 
             Weather currWeather = GetCurrentWeather();
 
@@ -76,6 +76,7 @@ namespace ICE.Scheduler.Handlers
             }
             catch (Exception ex)
             {
+                IceLogging.Error($"{ex}");
                 return default;
             }
         }

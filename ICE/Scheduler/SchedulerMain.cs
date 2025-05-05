@@ -27,7 +27,7 @@ namespace ICE.Scheduler
 
         internal static void Tick()
         {
-            if (GenericThrottle && P.TaskManager.Tasks.Count == 0)
+            if (Throttles.GenericThrottle && P.TaskManager.Tasks.Count == 0)
             {
                 switch (State)
                 {

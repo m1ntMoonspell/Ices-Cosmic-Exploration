@@ -1,5 +1,4 @@
 ﻿using ECommons.GameHelpers;
-using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ICE.Scheduler.Tasks;
@@ -7,6 +6,7 @@ using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.IO;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
+using static ICE.Utilities.CosmicHelper;
 
 namespace ICE.Ui;
 
@@ -53,7 +53,7 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Main Hud"))
         {
-            if (TryGetAddonMaster<WKSHud>("WKSHud", out var HudAddon))
+            if (GenericHelpers.TryGetAddonMaster<WKSHud>("WKSHud", out var HudAddon))
             {
                 if (ImGui.Button("Mission"))
                 {
@@ -101,7 +101,7 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Missions"))
         {
-            if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
+            if (GenericHelpers.TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
                 ImGui.Text("List of Visible Missions");
                 ImGui.Text($"Selected Mission: {x.SelectedMission}");
@@ -161,16 +161,17 @@ internal class DebugWindow : Window
             uint silverScore = 0;
             uint goldScore = 0;
 
-            if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var x) && x.IsAddonReady)
+            if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var x) && x.IsAddonReady)
             {
                 currentScore = x.CurrentScore;
                 silverScore = x.SilverScore;
                 goldScore = x.GoldScore;
 
-                ImGui.Text($"Addon Ready: {IsAddonActive("WKSMissionInfomation")}");
-                if (IsAddonActive("WKSMissionInfomation"))
+                var isAddonReady = AddonHelper.IsAddonActive("WKSMissionInfomation");
+                ImGui.Text($"Addon Ready: {isAddonReady}");
+                if (isAddonReady)
                 {
-                    ImGui.Text($"Node Text: {GetNodeText("WKSMissionInfomation", 27)}");
+                    ImGui.Text($"Node Text: {AddonHelper.GetNodeText("WKSMissionInfomation", 27)}");
                 }
 
                 if (ImGui.BeginTable("Mission Info", 2))
@@ -247,7 +248,7 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Wheel of fortune!"))
         {
-            if (TryGetAddonMaster<WKSLottery>("WKSLottery", out var lotto) && lotto.IsAddonReady)
+            if (GenericHelpers.TryGetAddonMaster<WKSLottery>("WKSLottery", out var lotto) && lotto.IsAddonReady)
             {
                 ImGui.Text($"Lottery addon is visible!");
 
@@ -280,7 +281,7 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Moon Recipe Notebook"))
         {
-            if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var x) && x.IsAddonReady)
+            if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var x) && x.IsAddonReady)
             {
                 ImGui.Text(x.SelectedCraftingItem);
 
@@ -340,7 +341,7 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Test Buttons"))
         {
-            ImGui.Text($"Current Mission: {CurrentLunarMission}");
+            ImGui.Text($"Current Mission: {CosmicHelper.CurrentLunarMission}");
             ImGui.Text($"Artisan Endurance: {P.Artisan.GetEnduranceStatus()}");
 
             var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
@@ -392,14 +393,14 @@ internal class DebugWindow : Window
                        $"{moonRow.Unknown2} \n" +
                        $"{moonRow.Unknown3} \n" +
                        $"{moonRow.Unknown4} \n" +
-                       $"{moonRow.Unknown5} \n" +
-                       $"{moonRow.Unknown6} \n" +
+                       $"{moonRow.SilverStarRequirement} \n" +
+                       $"{moonRow.GoldStarRequirement} \n" +
                        $"{moonRow.Unknown7} \n" +
                        $"{moonRow.Unknown8} \n" +
                        $"{moonRow.Unknown9} \n" +
                        $"{moonRow.Unknown10} \n" +
-                       $"{moonRow.Unknown11} \n" +
-                       $"{moonRow.Unknown12} \n" +
+                       $"{moonRow.WKSMissionSupplyItem} \n" +
+                       $"{moonRow.WKSMissionRecipe} \n" +
                        $"{moonRow.Unknown13} \n" +
                        $"{moonRow.Unknown14} \n" +
                        $"{moonRow.Unknown15} \n" +
@@ -438,10 +439,10 @@ internal class DebugWindow : Window
             var moonItemRow = moonItemSheet.GetRow(523);
 
             ImGui.Text($"  WKS Item Info\n" +
-                       $"{moonItemRow.Unknown0}\n" +
+                       $"{moonItemRow.Item}\n" +
                        $"{moonItemRow.Unknown1}\n" +
                        $"{moonItemRow.Unknown2}\n" +
-                       $"{moonItemRow.Unknown3}\n");
+                       $"{moonItemRow.WKSItemSubCategory}\n");
 
             ImGui.TreePop();
         }
@@ -466,7 +467,7 @@ internal class DebugWindow : Window
             {
                 var agent = AgentMap.Instance();
 
-                SetGatheringRing(agent->CurrentTerritoryId, XLoc, YLoc, Radius);
+                Utils.SetGatheringRing(agent->CurrentTerritoryId, XLoc, YLoc, Radius);
             }
 
             ImGui.TreePop();

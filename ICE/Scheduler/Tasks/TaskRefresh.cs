@@ -13,10 +13,10 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? CloseMissionWindow()
         {
-            if (!IsAddonActive("WKSMission"))
+            if (!AddonHelper.IsAddonActive("WKSMission"))
                 return true;
 
-            if (TryGetAddonMaster<WKSMission>("WKSMission", out var m) && m.IsAddonReady)
+            if (GenericHelpers.TryGetAddonMaster<WKSMission>("WKSMission", out var m) && m.IsAddonReady)
             {
                 if (EzThrottler.Throttle("Closing Mission Window"))
                     Callback.Fire(m.Base, true, 1);
@@ -27,10 +27,10 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? OpenMissionWindow()
         {
-            if (IsAddonActive("WKSMission"))
+            if (AddonHelper.IsAddonActive("WKSMission"))
                 return true;
 
-            if (TryGetAddonMaster<WKSHud>("WKSHud", out var SpaceHud) && SpaceHud.IsAddonReady)
+            if (GenericHelpers.TryGetAddonMaster<WKSHud>("WKSHud", out var SpaceHud) && SpaceHud.IsAddonReady)
             {
                 if (EzThrottler.Throttle("Opening the mission hud"))
                     SpaceHud.Mission();

@@ -14,7 +14,7 @@ namespace ICE.Scheduler.Handlers
                 {
                     WasChanged = false;
                     UnlockTA();
-                    PluginDebug($"TextAdvance unlocked");
+                    IceLogging.Debug($"TextAdvance unlocked", true);
                 }
             }
             else
@@ -23,7 +23,7 @@ namespace ICE.Scheduler.Handlers
                 {
                     WasChanged = true;
                     LockTA();
-                    PluginDebug($"TextAdvance locked");
+                    IceLogging.Debug($"TextAdvance locked", true);
                 }
             }
         }
