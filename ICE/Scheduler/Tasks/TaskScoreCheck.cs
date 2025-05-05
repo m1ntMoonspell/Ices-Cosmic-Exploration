@@ -7,7 +7,7 @@ namespace ICE.Scheduler.Tasks
     {
         public static void TryCheckScore()
         {
-            if(CurrentLunarMission == 0)
+            if (CurrentLunarMission == 0)
             {
                 // this in theory shouldn't happen but going to add it just in case
                 PluginLog.Debug("[Score Checker] Current mission is 0, aborting");
@@ -48,7 +48,7 @@ namespace ICE.Scheduler.Tasks
                     }
 
                     var enoughMain = TaskCrafting.HaveEnoughMain();
-                    if(enoughMain == null)
+                    if (enoughMain == null)
                     {
                         PluginLog.Debug("[Score Checker] Current mission is 0, aborting");
                         SchedulerMain.State = IceState.GrabMission;
@@ -109,20 +109,20 @@ namespace ICE.Scheduler.Tasks
 
                 P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission", config);
 
-                if (abortIfNoReport)
+                if (abortIfNoReport && C.StopOnAbort)
                 {
-                    if (C.StopOnAbort)
+                    SchedulerMain.StopBeforeGrab = true;
+                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                     {
-                        SchedulerMain.StopBeforeGrab = true;
-                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
-                        {
-                            Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n"+
-                            $"If you expect Mission ID {CurrentLunarMission} to not reach " + (C.Missions[(int)CurrentLunarMission].TurnInSilver ? "Silver" : "Gold") +
-                            "- please mark it as Silver/ASAP accordingly.\n"+
-                            "If you were expecting it to reach the target, check your Artisan settings/gear.",
-                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                        });
-                    }
+                        Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n" +
+                        $"If you expect Mission ID {CurrentLunarMission} to not reach " + (C.Missions.SingleOrDefault(x => x.Id == CurrentLunarMission).TurnInSilver ? "Silver" : "Gold") +
+                        " - please mark it as Silver/ASAP accordingly.\n" +
+                        "If you were expecting it to reach the target, check your Artisan settings/gear.",
+                        Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                    });
+                }
+                if (abortIfNoReport && CurrentLunarMission != 0)
+                {
                     SchedulerMain.Abandon = true;
                     SchedulerMain.State = IceState.GrabMission;
                     P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
