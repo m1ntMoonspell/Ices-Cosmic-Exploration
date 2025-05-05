@@ -126,7 +126,7 @@ public static unsafe class Utils
 
     public static unsafe bool HasStatusId(params uint[] statusIDs)
     {
-        var statusID = Svc.ClientState.LocalPlayer?.StatusList
+        var statusID = Svc.ClientState.LocalPlayer.StatusList
             .Select(se => se.StatusId)
             .ToList().Intersect(statusIDs)
             .FirstOrDefault();
