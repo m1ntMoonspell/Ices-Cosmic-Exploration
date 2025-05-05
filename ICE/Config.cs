@@ -56,6 +56,8 @@ namespace ICE
         public uint JobId { get; set; }
         public bool TurnInSilver { get; set; } = false;
         public bool TurnInASAP { get; set; } = false;
+        public bool ManualMode { get; set; } = false;
+        public string TurnInMode;
     }
 
     public enum MissionType
