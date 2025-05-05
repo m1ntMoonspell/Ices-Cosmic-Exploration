@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
+using ECommons.Throttlers;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
@@ -10,23 +11,17 @@ namespace ICE.Scheduler.Tasks
             if(CurrentLunarMission == 0)
             {
                 // this in theory shouldn't happen but going to add it just in case
-                PluginLog.Debug("[Score Checker] Current mission is 0, aborting");
+                PluginDebug("[Score Checker] Current mission is 0, aborting");
                 SchedulerMain.State = IceState.GrabMission;
                 return;
             }
 
-            PluginLog.Debug($"[Score Checker] Current Scoring Mission Id: {CurrentLunarMission}");
+
+            PluginDebug($"Current Scoring Mission Id: {CurrentLunarMission}");
             var currentMission = C.Missions.Single(x => x.Id == CurrentLunarMission);
 
             if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                if (SchedulerMain.State == IceState.AbortInProgress)
-                {
-                    PluginWarning("[Score Checker] Aborting mission");
-                    TurnIn(z, true);
-                    return;
-                }
-
                 var (currentScore, silverScore, goldScore) = TaskCrafting.GetCurrentScores();
 
                 if (currentScore != 0)
@@ -67,17 +62,24 @@ namespace ICE.Scheduler.Tasks
 
                     if (LogThrottle)
                         PluginLog.Debug($"[Score Checker] Seeing if Player not busy: {PlayerNotBusy()} && is not Preparing to craft: {Svc.Condition[ConditionFlag.PreparingToCraft]}");
-                    if (PlayerNotBusy() && currentScore >= goldScore)
+                    if (currentScore >= goldScore)
                     {
                         PluginLog.Debug($"[Score Checker] Conditions for gold was met. Turning in");
                         TurnIn(z);
                         return;
                     }
                 }
+                if (SchedulerMain.State == IceState.AbortInProgress)
+                {
+                    PluginWarning("Aborting mission");
+                    TurnIn(z, true);
+                    return;
+                }
                 PluginLog.Debug($"[Score Checker] Player is in state: {string.Join(',', Svc.Condition.AsReadOnlySet().Select(x => x.ToString()))}");
                 PluginLog.Debug($"[Score Checker] Artisan is busy?: {P.Artisan.IsBusy()}");
                 if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
                 {
+                    PluginLog.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore}");
                     PluginLog.Debug("[Score Checker] Player is not busy but hasnt hit score, resetting state to try craft");
                     SchedulerMain.State = IceState.StartCraft;
                 }
@@ -91,16 +93,17 @@ namespace ICE.Scheduler.Tasks
 
         private unsafe static void TurnIn(WKSMissionInfomation z, bool abortIfNoReport = false)
         {
-            if (EzThrottler.Throttle("Turning in item", 200))
+            if (EzThrottler.Throttle("Turning in item", 100))
             {
                 P.Artisan.SetEnduranceStatus(false);
                 var scores = TaskCrafting.GetCurrentScores();
                 if (TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady && scores.currentScore < scores.goldScore)
                 {
-                    PluginLog.Debug("[Score Checker] Player is preparing to craft, trying to fix");
+                    PluginDebug("[Score Checker] Player is preparing to craft, trying to fix");
                     cr.Addon->FireCallbackInt(-1);
                 }
-                P.TaskManager.EnqueueDelay(1500);
+                // P.TaskManager.EnqueueDelay(1500);
+                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true);
 
                 var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
 
@@ -113,16 +116,13 @@ namespace ICE.Scheduler.Tasks
                         SchedulerMain.StopBeforeGrab = true;
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                         {
-                            Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n"+
-                            $"If you expect Mission ID {CurrentLunarMission} to not reach " + (C.Missions[(int)CurrentLunarMission].TurnInSilver ? "Silver" : "Gold") +
-                            "- please mark it as Silver/ASAP accordingly.\n"+
-                            "If you were expecting it to reach the target, check your Artisan settings/gear.",
+                            Message = "[ICE] Unexpected error. Insufficient materials. Stopping.",
                             Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                         });
                     }
                     SchedulerMain.Abandon = true;
                     SchedulerMain.State = IceState.GrabMission;
-                    P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
+                    P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 1000 });
                 }
             }
         }

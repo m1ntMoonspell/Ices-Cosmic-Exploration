@@ -98,31 +98,28 @@ namespace ICE.Scheduler.Tasks
             if (hasCritical)
             {
                 P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
-                P.TaskManager.EnqueueDelay(200);
                 P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
             }
             if (hasWeather || hasTimed || hasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
             {
                 P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
-                P.TaskManager.EnqueueDelay(200);
                 P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
             }
             if (hasStandard)
             {
                 P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
-                P.TaskManager.EnqueueDelay(200);
                 P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
                 P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
             }
             P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
-            P.TaskManager.EnqueueDelay(250);
+            DelayMission();
             P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
             P.TaskManager.Enqueue(() =>
             {
                 if (SchedulerMain.Abandon)
                 {
                     P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
-                    //P.TaskManager.EnqueueDelay(250);
+                    DelayMission();
                     SchedulerMain.Abandon = false;
                     SchedulerMain.State = IceState.GrabMission;
                 }
@@ -561,6 +558,12 @@ namespace ICE.Scheduler.Tasks
                     SchedulerMain.State = IceState.GrabMission;
                 }
             }
+        }
+
+        internal static void DelayMission()
+        {
+            if (C.DelayGrabMission)
+                P.TaskManager.EnqueueDelay(C.DelayIncrease);
         }
     }
 }
