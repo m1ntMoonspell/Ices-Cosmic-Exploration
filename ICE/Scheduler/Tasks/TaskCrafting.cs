@@ -90,7 +90,7 @@ namespace ICE.Scheduler.Tasks
 
                 bool OOMMain = false;
                 bool OOMSub = false;
-                
+
                 foreach (var main in mainCrafts)
                 {
                     var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
@@ -112,7 +112,7 @@ namespace ICE.Scheduler.Tasks
 
                     PluginLog.Debug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
                     PluginLog.Debug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
-                    
+
                     // Increase how many crafts we want to have made if needed so we can reach Score Checker goals.
                     subItemNeed = subItemNeed * CraftMultipleMissionItems;
                     mainNeed = mainNeed * CraftMultipleMissionItems;
@@ -151,7 +151,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
                             var currentAmount = GetItemCount((int)itemId);
-                            
+
                             var PreCraftItemName = ItemSheet.GetRow(itemId).Name.ToString();
                             PluginLog.Debug($"[Pre-Crafts] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
                             PluginLog.Debug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
@@ -190,7 +190,7 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
                         P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
-                           TimeLimitMS = 240000, // 4 minute limit per craft
+                            TimeLimitMS = 240000, // 4 minute limit per craft
                         });
                         P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
@@ -209,7 +209,7 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
                         P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
-                           TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
+                            TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
                         P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
@@ -279,49 +279,39 @@ namespace ICE.Scheduler.Tasks
 
         internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
         {
-            var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
-            var currentMission = C.Missions.SingleOrDefault(x => x.Id == CurrentLunarMission);
-
-            var enoughMain = HaveEnoughMain();
-            if (enoughMain == null || currentMission == null)
+            if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                PluginLog.Error($"Current mission is {CurrentLunarMission}, aborting");
-                SchedulerMain.State = IceState.GrabMission;
-                return false;
-            }
+                var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
+                var currentMission = C.Missions.SingleOrDefault(x => x.Id == CurrentLunarMission);
 
-            if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
-            {
-                P.Artisan.SetEnduranceStatus(false);
-                return true;
-            }
-            else if (currentScore >= goldScore && enoughMain.Value)
-            {
-                P.Artisan.SetEnduranceStatus(false);
-                return true;
-            }
-
-
-            if (GetItemCount((int)item.RowId) != craftAmount)
-            {
-                if (P.Artisan.GetEnduranceStatus() == false && Svc.Condition[ConditionFlag.PreparingToCraft] && GetItemCount((int)item.RowId) != craftAmount)
+                var enoughMain = HaveEnoughMain();
+                if (enoughMain == null || currentMission == null)
                 {
-                    PluginLog.Error($"I think I have {GetItemCount((int)item.RowId)} craft of {craftAmount}");
-                    PluginLog.Error("Endurance is off, we are not doing anything but not complete?");
+                    PluginLog.Error($"[WaitTillActuallyDone] Current mission is {CurrentLunarMission}, aborting");
+                    SchedulerMain.State = IceState.GrabMission;
                     return true;
                 }
 
-                if (LogThrottle)
+                if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
                 {
-                    PluginLog.Debug("Waiting for Artisan to finish crafting");
-                    PluginLog.Debug("Returning false");
+                    PluginLog.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.");
+                    P.Artisan.SetEnduranceStatus(false);
+                    return true;
                 }
-                return false;
+                else if (currentScore >= goldScore && enoughMain.Value)
+                {
+                    PluginLog.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.");
+                    P.Artisan.SetEnduranceStatus(false);
+                    return true;
+                }
+
+                if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
+                {
+                    PluginLog.Debug("[WaitTillActuallyDone] We seem to no longer be crafting");
+                    return true;
+                }
             }
-
-
-            PluginLog.Debug("Returning true");
-            return true;
+            return false;
         }
 
         internal static bool? WaitingForCrafting()
