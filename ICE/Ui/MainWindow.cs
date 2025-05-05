@@ -6,6 +6,7 @@ using ICE.Enums;
 using Dalamud.Interface.Colors;
 using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
+using System.Reflection;
 
 namespace ICE.Ui
 {
@@ -15,7 +16,11 @@ namespace ICE.Ui
         /// Constructor for the main window. Adjusts window size, flags, and initializes data.
         /// </summary>
         public MainWindow() :
+#if DEBUG
+            base($"Ice's Cosmic Exploration {P.GetType().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion} Debug build ###ICEMainWindow")
+#else
             base($"Ice's Cosmic Exploration {P.GetType().Assembly.GetName().Version} ###ICEMainWindow")
+#endif
         {
             // No special window flags by default.
             Flags = ImGuiWindowFlags.None;
@@ -176,7 +181,7 @@ namespace ICE.Ui
             ImGui.NewLine();
 
             if (C.AutoPickCurrentJob && usingSupportedJob)
-            {    
+            {
                 selectedJobIndex = jobOptions.IndexOf(job => job.Id == currentJobId + 1);
                 selectedJobId = jobOptions[selectedJobIndex].Id;
 
@@ -474,7 +479,7 @@ namespace ICE.Ui
                         {
                             mission.TurnInSilver = silver;
 
-                            if(mission.TurnInASAP && silver)
+                            if (mission.TurnInASAP && silver)
                             {
                                 mission.TurnInASAP = false;
                             }
@@ -501,13 +506,13 @@ namespace ICE.Ui
                         if (entry.Value.Weather != CosmicWeather.FairSkies)
                         {
                             hasPreviousNotes = true;
-                            
+
                             ImGui.Text(entry.Value.Weather.ToString());
                         }
                         else if (entry.Value.Time != 0)
                         {
                             hasPreviousNotes = true;
-                            
+
                             ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
                         }
                         else if (entry.Value.PreviousMissionID != 0)
@@ -672,12 +677,13 @@ namespace ICE.Ui
                 }
             }
 
-            #if DEBUG
+#if DEBUG
             if (ImGui.CollapsingHeader("Debug Settings"))
             {
-
+                ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
+                ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
             }
-            #endif
+#endif
 
             ImGui.EndTabItem();
         }

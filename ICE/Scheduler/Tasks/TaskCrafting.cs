@@ -183,6 +183,10 @@ namespace ICE.Scheduler.Tasks
                         }
                     }
                 }
+                #if DEBUG
+                OOMMain = OOMMain || SchedulerMain.DebugOOMMain;
+                OOMSub = OOMSub || SchedulerMain.DebugOOMSub;
+                #endif
 
                 if (OOMMain && (OOMSub || !needPreCraft) && CosmicHelper.CurrentLunarMission < 361) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
                 {

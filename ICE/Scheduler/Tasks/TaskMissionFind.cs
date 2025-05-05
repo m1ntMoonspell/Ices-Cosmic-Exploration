@@ -470,7 +470,7 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? AbandonMission()
         {
-            if (SchedulerMain.Abandon == false)
+            if (SchedulerMain.Abandon == false || CosmicHelper.CurrentLunarMission == 0)
                 return true;
             else if (EzThrottler.Throttle("AbandonMission", 250))
             {
