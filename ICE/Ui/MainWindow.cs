@@ -99,6 +99,8 @@ namespace ICE.Ui
         // Configuration booleans bound to checkboxes.
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
+        private static bool delayGrabMission = C.DelayGrabMission;
+        private static int delayAmount = C.DelayIncrease;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
@@ -556,6 +558,24 @@ namespace ICE.Ui
                     "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
                     "You have been warned. Disable at your own risk."
                 );
+                if (ImGui.Checkbox("Add delay to abandon missions", ref delayGrabMission))
+                {
+                    C.DelayGrabMission = delayGrabMission;
+                    C.Save();
+                }
+                if (delayGrabMission)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("ms", ref delayAmount, 0, 1000))
+                    {
+                        if (C.DelayIncrease != delayAmount)
+                        {
+                            C.DelayIncrease = delayAmount;
+                            C.Save();
+                        }
+                    }
+                }
             }
 
             if (ImGui.CollapsingHeader("Mission Settings"))

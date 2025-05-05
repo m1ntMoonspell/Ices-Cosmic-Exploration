@@ -15,6 +15,8 @@ namespace ICE
         // Safety settings
         public bool StopOnAbort { get; set; } = true;
         public bool RejectUnknownYesno { get; set; } = true;
+        public bool DelayGrabMission { get; set; } = true;
+        public int DelayIncrease { get; set; } = 500;
 
         // Mission settings
         public bool OnlyGrabMission { get; set; } = false;
