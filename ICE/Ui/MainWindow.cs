@@ -558,11 +558,15 @@ namespace ICE.Ui
                     "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
                     "You have been warned. Disable at your own risk."
                 );
-                if (ImGui.Checkbox("Add delay to abandon missions", ref delayGrabMission))
+                if (ImGui.Checkbox("Add delay to mission menu", ref delayGrabMission))
                 {
                     C.DelayGrabMission = delayGrabMission;
                     C.Save();
                 }
+                ImGuiEx.HelpMarker(
+                    "This is here for safety! If you want to decrease the delay between missions be my guest.\n" +
+                    "Safety is around... 250? If you're having animation locks you can absolutely increase it higher\n" +
+                    "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
                 if (delayGrabMission)
                 {
                     ImGui.SetNextItemWidth(150);
