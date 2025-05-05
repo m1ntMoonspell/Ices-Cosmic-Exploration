@@ -1,5 +1,4 @@
 ﻿using ECommons.Automation.LegacyTaskManager;
-using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -66,7 +65,7 @@ namespace ICE.Scheduler.Handlers
                         }
                     }
 
-                    if (TryGetAddonByName<AddonRequest>("Request", out var addon3))
+                    if (GenericHelpers.TryGetAddonByName<AddonRequest>("Request", out var addon3))
                     {
                         for (var i = 1; i <= addon3->EntryCount; i++)
                         {

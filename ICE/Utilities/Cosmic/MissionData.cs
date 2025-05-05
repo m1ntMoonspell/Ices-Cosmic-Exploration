@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace ICE.Utilities;
 
-public static unsafe class Data
+public static unsafe partial class CosmicHelper
 {
 
     public static readonly HashSet<uint> Ranks = [1, 2, 3, 4];
@@ -54,7 +54,6 @@ public static unsafe class Data
     }
 
     public static Dictionary<uint, MissionListInfo> MissionInfoDict = [];
-
     public class MoonRecipieInfo
     {
         public Dictionary<ushort, int> MainCraftsDict = [];
@@ -62,7 +61,7 @@ public static unsafe class Data
         public Dictionary<ushort, int> PreCraftDict = [];
     }
 
-    public static Dictionary<uint, MoonRecipieInfo> MoonRecipies = new();
+    public static Dictionary<uint, MoonRecipieInfo> MoonRecipies = [];
 
     #endregion
 }

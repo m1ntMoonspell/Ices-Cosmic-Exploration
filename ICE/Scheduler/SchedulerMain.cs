@@ -21,13 +21,17 @@ namespace ICE.Scheduler
         internal static bool inMission = false;
         internal static bool Abandon = false;
         internal static bool StopBeforeGrab = false;
-
+        #if DEBUG
+        // Debug only settings
+        internal static bool DebugOOMMain = false;
+        internal static bool DebugOOMSub = false;
+        #endif
 
         internal static IceState State = IceState.Idle;
 
         internal static void Tick()
         {
-            if (GenericThrottle && P.TaskManager.Tasks.Count == 0)
+            if (Throttles.GenericThrottle && P.TaskManager.Tasks.Count == 0)
             {
                 switch (State)
                 {

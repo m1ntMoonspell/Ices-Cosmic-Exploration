@@ -1,5 +1,4 @@
 ﻿using ECommons.Automation;
-using ECommons.Throttlers;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace ICE.Scheduler.Handlers
@@ -18,7 +17,7 @@ namespace ICE.Scheduler.Handlers
 
         internal static unsafe bool? FireCallback(string AddonName, bool visibilty, params int[] callback_fires)
         {
-            if (TryGetAddonByName<AtkUnitBase>(AddonName, out var addon) && IsAddonReady(addon))
+            if (GenericHelpers.TryGetAddonByName<AtkUnitBase>(AddonName, out var addon) && GenericHelpers.IsAddonReady(addon))
             {
                 Callback.Fire(addon, visibilty, callback_fires.Cast<object>().ToArray());
                 return true;

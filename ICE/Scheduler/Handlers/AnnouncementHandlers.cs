@@ -48,25 +48,17 @@ namespace ICE.Scheduler.Handlers
 
         internal static LocationEntry CheckForRedAlert()
         {
-            if (!IsInCosmicZone() || !IsPlayerReady()) return default;
-            try
+            if (AddonHelper.GetAtkTextNode(Announcement, 48)->IsVisible()) // Red Alert Preparation
             {
-                if (GetAtkTextNode(Announcement, 48)->IsVisible()) // Red Alert Preparation
-                {
-                    var description = GetNodeText(Announcement, 47).ToLower();
+                var description = AddonHelper.GetNodeText(Announcement, 47).ToLower();
 
-                    Dictionary<string, (JobPairs first, JobPairs second)[]>? redAlert = default;
-                    if (IsInSinusArdorum()) redAlert = sinusRedAlert; //Reassign based on Territory
+                Dictionary<string, (JobPairs first, JobPairs second)[]>? redAlert = default;
+                if (PlayerHelper.IsInSinusArdorum()) redAlert = sinusRedAlert; //Reassign based on Territory
 
-                    if (redAlert == default) return default;
-                    return redAlert.FirstOrDefault(location => description.Contains(location.Key));
-                }
-                else
-                {
-                    return default;
-                }
+                if (redAlert == default) return default;
+                return redAlert.FirstOrDefault(location => description.Contains(location.Key));
             }
-            catch (Exception ex)
+            else
             {
                 return default;
             }
