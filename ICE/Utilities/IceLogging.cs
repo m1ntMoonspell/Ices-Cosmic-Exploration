@@ -12,7 +12,7 @@ internal class IceLogging
     public static void Info(string message, bool noThrottle = false, string name = "LogThrottle", int delay = 2000)
     {
         if (EzThrottler.Throttle(name, delay) || noThrottle)
-            PluginLog.Debug(message);
+            PluginLog.Information(message);
     }
 
     public static void Error(string message)
