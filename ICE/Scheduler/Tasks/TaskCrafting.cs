@@ -302,42 +302,39 @@ namespace ICE.Scheduler.Tasks
 
         internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
         {
-            var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
-            var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
-
-            var enoughMain = HaveEnoughMain();
-            if (enoughMain == null || currentMission == null)
+            if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                IceLogging.Error($"Current mission is {CosmicHelper.CurrentLunarMission}, aborting");
-                SchedulerMain.State = IceState.GrabMission;
-                return false;
-            }
+              var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
+              var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
 
-            if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
-            {
-                P.Artisan.SetEnduranceStatus(false);
-                return true;
-            }
-            else if (currentScore >= goldScore && enoughMain.Value)
-            {
-                P.Artisan.SetEnduranceStatus(false);
-                return true;
-            }
+              var enoughMain = HaveEnoughMain();
+              if (enoughMain == null || currentMission == null)
+              {
+                  IceLogging.Error($"Current mission is {CosmicHelper.CurrentLunarMission}, aborting");
+                  SchedulerMain.State = IceState.GrabMission;
+                  return false;
+              }
 
+              if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
+              {
+                  IceLogging.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.");
+                  P.Artisan.SetEnduranceStatus(false);
+                  return true;
+              }
+              else if (currentScore >= goldScore && enoughMain.Value)
+              {
+                  IceLogging.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.");
+                  P.Artisan.SetEnduranceStatus(false);
+                  return true;
+              }
 
-            if (PlayerHelper.GetItemCount((int)item.RowId, out var itemCount) && itemCount != craftAmount)
-            {
-                if (P.Artisan.GetEnduranceStatus() == false && Svc.Condition[ConditionFlag.PreparingToCraft] && itemCount != craftAmount)
-                {
-                    IceLogging.Error($"I think I have {itemCount} craft of {craftAmount}");
-                    IceLogging.Error("Endurance is off, we are not doing anything but not complete?");
-                    return true;
-                }
-                IceLogging.Debug("Waiting for Artisan to finish crafting");
-                return false;
+              if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
+              {
+                  PluginLog.Debug("[WaitTillActuallyDone] We seem to no longer be crafting");
+                  return true;
+              }
             }
-
-            return true;
+            return false;
         }
 
         internal static bool? WaitingForCrafting()
