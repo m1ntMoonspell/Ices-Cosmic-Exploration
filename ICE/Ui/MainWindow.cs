@@ -4,10 +4,9 @@ using Dalamud.Interface.Utility.Raii;
 using System.Collections.Generic;
 using ICE.Enums;
 using Dalamud.Interface.Colors;
-using System.Drawing;
+using static ICE.Utilities.CosmicHelper;
+using ICE.Utilities.Cosmic;
 using System.Reflection;
-using ICE.Scheduler.Handlers;
-using ICE.Utilities;
 
 namespace ICE.Ui
 {
@@ -81,17 +80,17 @@ namespace ICE.Ui
             (2, "Mission ID", missions => missions),
             (3, "Cosmocredits", missions => missions.OrderBy(x => x.Value.CosmoCredit)),
             (4, "Lunar Credits", missions => missions.OrderBy(x => x.Value.LunarCredit)),
-            (5, "Research I", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount)),
-            (6, "Research II", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount)),
-            (7, "Research III", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount)),
-            (8, "Research IV", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount))
+            (5, "Research I", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount)),
+            (6, "Research II", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount)),
+            (7, "Research III", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount)),
+            (8, "Research IV", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount))
         };
 
         // Index of the currently selected job in jobOptions.
         private static int selectedJobIndex = 0;
         // ID of the currently selected crafting job.
         private static uint selectedJobId = jobOptions[selectedJobIndex].Id;
-        private static uint? currentJobId => GetClassJobId();
+        private static uint? currentJobId => PlayerHelper.GetClassJobId();
         private static bool isCrafter => currentJobId >= 8 && currentJobId <= 15;
         private static bool isGatherer => currentJobId >= 16 && currentJobId <= 18;
         private static bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId + 1);
@@ -305,7 +304,6 @@ namespace ICE.Ui
                     float col1Width = 0;
                     float col2Width = 0;
                     float col3Width = 15;
-                    float col4Width = 0;
 
                     // used to keep track of where the column index is at, mainly for centering text
                     int columnIndex = 0;
@@ -536,7 +534,7 @@ namespace ICE.Ui
             }
         }
 
-        public void DrawConfigTab()
+        public static void DrawConfigTab()
         {
             var tab = ImRaii.TabItem("Config");
 
@@ -682,7 +680,6 @@ namespace ICE.Ui
 #if DEBUG
             if (ImGui.CollapsingHeader("Debug Settings"))
             {
-                ImGui.Checkbox("Accurate/Base10 Time", ref WeatherForecastHandler.AccurateTime);
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
             }

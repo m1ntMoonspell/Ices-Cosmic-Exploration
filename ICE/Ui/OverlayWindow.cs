@@ -3,7 +3,6 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ICE.Scheduler;
 using ICE.Scheduler.Handlers;
-using ICE.Utilities;
 
 namespace ICE.Ui
 {
@@ -62,7 +61,7 @@ namespace ICE.Ui
                     (string job, uint territoryId, float x, float y) = locations[i].first;
                     if (ImGui.Button($"{job}"))
                     {
-                        SetFlagForNPC(territoryId, x, y);
+                        Utils.SetFlagForNPC(territoryId, x, y);
                     }
 
                     ImGui.SameLine();
@@ -70,7 +69,7 @@ namespace ICE.Ui
                     (job, territoryId, x, y) = locations[i].second;
                     if (ImGui.Button($"{job}"))
                     {
-                        SetFlagForNPC(territoryId, x, y);
+                        Utils.SetFlagForNPC(territoryId, x, y);
                     }
                     ImGui.Spacing();
                 }
@@ -87,7 +86,7 @@ namespace ICE.Ui
             ImGui.SameLine();
 
             // Start button (disabled while already ticking).
-            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !UsingSupportedJob()))
+            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !PlayerHelper.UsingSupportedJob()))
             {
                 if (ImGui.Button("Start"))
                 {

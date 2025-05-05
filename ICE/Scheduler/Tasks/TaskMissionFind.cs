@@ -5,31 +5,33 @@ using ICE.Enums;
 using ICE.Ui;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
-using Dalamud.Game.ClientState.Conditions;
 using ECommons.GameHelpers;
+using ICE.Utilities.Cosmic;
+
+using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
+using static ECommons.GenericHelpers;
 
 namespace ICE.Scheduler.Tasks
 {
     internal static class TaskMissionFind
     {
         private static uint MissionId = 0;
-        private static uint? currentClassJob => GetClassJobId();
+        private static uint? currentClassJob => PlayerHelper.GetClassJobId();
         private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
-        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
-        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
-        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
-        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
-        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
-        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
-        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
-        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
-        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
-        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
+        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
+        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
+        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
+        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
+        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
+        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
+        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
+        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
+        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
+        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
 
         public static void EnqueueResumeCheck()
         {
-            if (CurrentLunarMission != 0)
+            if (CosmicHelper.CurrentLunarMission != 0)
             {
                 if (!ModeChangeCheck(isGatherer))
                 {
@@ -50,7 +52,7 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (hud.CosmoCredit >= 30000)
                     {
-                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
+                        IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                         {
                             Message = $"[ICE] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits.",
@@ -65,11 +67,11 @@ namespace ICE.Scheduler.Tasks
 
             if (C.StopOnceHitLunarCredits)
             {
-                if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
                     if (hud.LunarCredit >= 10000)
                     {
-                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
+                        IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                         {
                             Message = $"[ICE] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits",
@@ -85,7 +87,7 @@ namespace ICE.Scheduler.Tasks
             if (Player.Level >= C.TargetLevel && C.StopWhenLevel)
             {
                 SchedulerMain.StopBeforeGrab = true;
-                PluginDebug($"StopWhenLevel: Stopped at target level {Player.Level}");
+                IceLogging.Debug($"StopWhenLevel: Stopped at target level {Player.Level}");
             }
             if (SchedulerMain.StopBeforeGrab)
             {
@@ -124,7 +126,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (SchedulerMain.Abandon)
                 {
-                    P.TaskManager.Enqueue(() => CurrentLunarMission == 0);
+                    P.TaskManager.Enqueue(() => CosmicHelper.CurrentLunarMission == 0);
                     DelayMission();
                     SchedulerMain.Abandon = false;
                     SchedulerMain.State = IceState.GrabMission;
@@ -134,17 +136,17 @@ namespace ICE.Scheduler.Tasks
             {
                 if (EzThrottler.Throttle("Opening Steller Missions"))
                 {
-                    if (CurrentLunarMission != 0)
+                    if (CosmicHelper.CurrentLunarMission != 0)
                     {
-                        if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
+                        if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !AddonHelper.IsAddonActive("WKSMissionInfomation"))
                         {
                             var gatherer = isGatherer;
-                            PluginLog.Debug("Opening Mission Menu");
+                            IceLogging.Debug("Opening Mission Menu", true);
                             hud.Mission();
 
-                            while (!IsAddonActive("WKSMissionInfomation"))
+                            while (!AddonHelper.IsAddonActive("WKSMissionInfomation"))
                             {
-                                PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
+                                IceLogging.Debug("Waiting for WKSMissionInfomation to be active");
                                 await Task.Delay(500);
                             }
                             if (!ModeChangeCheck(gatherer))
@@ -225,24 +227,25 @@ namespace ICE.Scheduler.Tasks
                 if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
                 {
                     x.ProvisionalMissions();
-                    var currentClassJob = GetClassJobId();
+                    var currentClassJob = PlayerHelper.GetClassJobId();
                     foreach (var m in x.StellerMissions)
                     {
                         var criticalMissionEntry = C.Missions.Where(x => x.Enabled && x.JobId == currentClassJob).FirstOrDefault(e => e.Id == m.MissionId);
 
                         if (criticalMissionEntry == default)
                         {
-                            PluginLog.Debug($"[Critical Mission] Critical mission entry is default. Which means id: {criticalMissionEntry}");
+                            IceLogging.Debug($"[Critical Mission] Critical mission entry is default. Which means id: {criticalMissionEntry}");
                             continue;
                         }
-                        PluginLog.Debug($"[Critical Mission] Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending");
+
+                        IceLogging.Debug($"[Critical Mission] Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending", true);
                         SelectMission(m);
                         break;
                     }
                 }
 
                 if (MissionId == 0)
-                    PluginLog.Debug("[Critical Mission] No mission was found under weather, continuing on");
+                    IceLogging.Debug("[Critical Mission] No mission was found under weather, continuing on", true);
                 return true;
             }
             return false;
@@ -252,7 +255,7 @@ namespace ICE.Scheduler.Tasks
         {
             if (MissionId != 0)
             {
-                PluginLog.Debug("[Weather Mission] You already have a mission found, skipping finding weather mission");
+                IceLogging.Debug("[Weather Mission] You already have a mission found, skipping finding weather mission");
                 return true;
             }
             if (EzThrottler.Throttle("FindWeatherMission"))
@@ -260,7 +263,7 @@ namespace ICE.Scheduler.Tasks
                 if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
                 {
                     x.ProvisionalMissions();
-                    var currentClassJob = GetClassJobId();
+                    var currentClassJob = PlayerHelper.GetClassJobId();
 
                     var weatherIds = C.Missions.Where(x => x.Type == MissionType.Weather).Select(w => w.Id).ToHashSet();
                     var sequenceIds = C.Missions.Where(x => x.Type == MissionType.Sequential).Select(s => s.Id).ToHashSet();
@@ -280,21 +283,21 @@ namespace ICE.Scheduler.Tasks
 
                     foreach (var m in sortedMissions)
                     {
-                        var weatherMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
+                        var weatherMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId && CosmicHelper.MissionInfoDict[e.Id].JobId == currentClassJob);
 
                         if (weatherMissionEntry == default)
                         {
-                            PluginLog.Debug($"[Weather Mission] Weather mission entry is default. Which means id: {weatherMissionEntry}");
+                            IceLogging.Debug($"[Weather Mission] Weather mission entry is default. Which means id: {weatherMissionEntry}", true);
                             continue;
                         }
-                        PluginLog.Debug($"[Weather Mission] Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending");
+                        IceLogging.Debug($"[Weather Mission] Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending", true);
                         SelectMission(m);
                         break;
                     }
                 }
 
                 if (MissionId == 0)
-                    PluginLog.Debug("[Weather Mission] No mission was found under weather.");
+                    IceLogging.Debug("[Weather Mission] No mission was found under weather.", true);
                 return true;
             }
             return false;
@@ -311,10 +314,10 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("Selecting Basic Mission"))
             {
-                PluginLog.Debug($"[Basic Mission] Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}");
+                IceLogging.Debug($"[Basic Mission] Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}", true);
                 if (MissionId != 0)
                 {
-                    PluginLog.Debug("[Basic Mission] You already have a mission found, skipping finding a basic mission");
+                    IceLogging.Debug("[Basic Mission] You already have a mission found, skipping finding a basic mission", true);
                     return true;
                 }
 
@@ -322,21 +325,21 @@ namespace ICE.Scheduler.Tasks
                 {
                     foreach (var m in x.StellerMissions)
                     {
-                        var basicMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId);
+                        var basicMissionEntry = C.Missions.Where(x => x.Enabled && (x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob)).FirstOrDefault(e => e.Id == m.MissionId);
 
                         if (basicMissionEntry == default)
                             continue;
 
                         if (EzThrottler.Throttle("[Reset Mission Finder] Selecting Basic Mission"))
                         {
-                            PluginLog.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending");
+                            IceLogging.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending", true);
                             SelectMission(m);
                             break;
                         }
                     }
 
                     if (MissionId == 0)
-                        PluginLog.Debug("[Basic Mission] No mission was found under basic missions.");
+                        IceLogging.Debug("[Basic Mission] No mission was found under basic missions.", true);
                     return true;
                 }
             }
@@ -347,20 +350,20 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("FindResetMission"))
             {
-                PluginLog.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
+                IceLogging.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}", true);
                 if (MissionId != 0)
                 {
-                    PluginLog.Debug("[Reset Mission Finder] You already have a mission found, skipping finding a basic mission.");
+                    IceLogging.Debug("[Reset Mission Finder] You already have a mission found, skipping finding a basic mission.", true);
                     return true;
                 }
 
                 if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
                 {
-                    PluginLog.Debug("[Reset Mission Finder] Found mission was false");
-                    var currentClassJob = GetClassJobId();
+                    IceLogging.Debug("[Reset Mission Finder] Found mission was false", true);
+                    var currentClassJob = PlayerHelper.GetClassJobId();
 
 
-                    if (!x.StellerMissions.Any(x => MissionInfoDict[x.MissionId].JobId == currentClassJob)) //Tryin to reroll but on wrong job list
+                    if (!x.StellerMissions.Any(x => CosmicHelper.MissionInfoDict[x.MissionId].JobId == currentClassJob)) //Tryin to reroll but on wrong job list
                     {
                         if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                         {
@@ -371,12 +374,12 @@ namespace ICE.Scheduler.Tasks
                                 hud.Mission();
                             }
                         }
-                        PluginLog.Debug("[Reset Mission Finder] Wrong class mission list, Restarting");
+                        IceLogging.Debug("[Reset Mission Finder] Wrong class mission list, Restarting", true);
                         return false;
                     }
 
-                    int A2 = x.StellerMissions.Where(x => MissionInfoDict[x.MissionId].Rank == 5).Count();
-                    int A1 = x.StellerMissions.Where(x => MissionInfoDict[x.MissionId].Rank == 4).Count();
+                    int A2 = x.StellerMissions.Where(x => CosmicHelper.MissionInfoDict[x.MissionId].Rank == 5).Count();
+                    int A1 = x.StellerMissions.Where(x => CosmicHelper.MissionInfoDict[x.MissionId].Rank == 4).Count();
                     var missionRanks = new List<(bool hasMission, uint rank)>
                     {
                         (A2 !=0 && HasA2, 5),
@@ -391,7 +394,7 @@ namespace ICE.Scheduler.Tasks
 
                     if (missionRanks.Length == 0)
                     {
-                        PluginLog.Debug("[Reset Mission Finder] No Standard Mission is Selected, nothing to reroll");
+                        IceLogging.Debug("[Reset Mission Finder] No Standard Mission is Selected, nothing to reroll", true);
                         return true;
                     }
 
@@ -399,21 +402,21 @@ namespace ICE.Scheduler.Tasks
 
                     foreach (var m in x.StellerMissions)
                     {
-                        var missionEntry = MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
+                        var missionEntry = CosmicHelper.MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
                         if (missionEntry.Value == null)
                             continue;
 
-                        PluginLog.Debug($"[Reset Mission Finder] Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}");
+                        IceLogging.Debug($"[Reset Mission Finder] Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}", true);
                         if (missionEntry.Value.Rank == rankToReset)
                         {
-                            PluginLog.Debug($"[Reset Mission Finder] Setting SchedulerMain.MissionName = {m.Name}");
+                            IceLogging.Debug($"[Reset Mission Finder] Setting SchedulerMain.MissionName = {m.Name}", true);
                             m.Select();
                             SchedulerMain.MissionName = m.Name;
                             MissionId = missionEntry.Key;
                             SchedulerMain.Abandon = true;
 
-                            PluginLog.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName}");
+                            IceLogging.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName}", true);
 
                             return true;
                         }
@@ -427,27 +430,27 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("GrabMission", 250))
             {
-                PluginLog.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
+                IceLogging.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
                 if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
                     string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？", "Commence selected mission?", "Ausgewählte Mission wird gestartet.Fortfahren?", "Commencer la mission sélectionnée ?"];
                     if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
-                        PluginLog.Debug($"[Grabbing Mission] Expected Commence window: {select.Text}");
+                        IceLogging.Debug($"[Grabbing Mission] Expected Commence window: {select.Text}", true);
                         select.Yes();
                     }
                     else
                     {
-                        PluginLog.Error($"[Grabbing Mission] Unexpected Commence window: {select.Text}");
+                        IceLogging.Error($"[Grabbing Mission] Unexpected Commence window: {select.Text}");
                         select.No();
                     }
                     return false;
                 }
                 else if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
                 {
-                    if (!MissionInfoDict.ContainsKey(MissionId))
+                    if (!CosmicHelper.MissionInfoDict.ContainsKey(MissionId))
                     {
-                        PluginLog.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
+                        IceLogging.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
                         SchedulerMain.DisablePlugin();
                         if (!hasStandard && (hasWeather || hasTimed))
                         {
@@ -457,7 +460,7 @@ namespace ICE.Scheduler.Tasks
                     else
                         Callback.Fire(x.Base, true, 13, MissionId); // Firing off to initiate quest
                 }
-                else if (!IsAddonActive("WKSMission"))
+                else if (!AddonHelper.IsAddonActive("WKSMission"))
                 {
                     return true;
                 }
@@ -467,7 +470,7 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? AbandonMission()
         {
-            if (SchedulerMain.Abandon == false || CurrentLunarMission == 0)
+            if (SchedulerMain.Abandon == false || CosmicHelper.CurrentLunarMission == 0)
                 return true;
             else if (EzThrottler.Throttle("AbandonMission", 250))
             {
@@ -476,25 +479,25 @@ namespace ICE.Scheduler.Tasks
                     string[] abandonStrings = ["受注中のミッションを破棄します。よろしいですか？", "Abandon mission?", "Aktuelle Mission abbrechen?", "Êtes-vous sûr de vouloir abandonner la mission en cours ?"];
                     if (abandonStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
-                        PluginLog.Debug($"[Abandoning Mission] Expected Abandon window: {select.Text}");
+                        IceLogging.Debug($"[Abandoning Mission] Expected Abandon window: {select.Text}");
                         select.Yes();
                         return true;
                     }
                     else
                     {
-                        PluginLog.Error($"[Abandoning Mission] Unexpected Abandon window: {select.Text}");
+                        IceLogging.Error($"[Abandoning Mission] Unexpected Abandon window: {select.Text}");
                         select.No();
                         return false;
                     }
                 }
                 if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var addon) && addon.IsAddonReady)
                 {
-                    PluginLog.Debug("[Abandoning Mission] Attempting Abandon.");
+                    IceLogging.Debug("[Abandoning Mission] Attempting Abandon.");
                     addon.Abandon();
                 }
                 else if (TryGetAddonMaster<WKSHud>("WKSHud", out var SpaceHud) && SpaceHud.IsAddonReady)
                 {
-                    PluginLog.Debug("[Abandoning Mission] WKSMissionInformation missing. Attempting opening.");
+                    IceLogging.Debug("[Abandoning Mission] WKSMissionInformation missing. Attempting opening.");
                     SpaceHud.Mission();
                 }
             }
@@ -503,7 +506,7 @@ namespace ICE.Scheduler.Tasks
 
         private static bool ModeChangeCheck(bool gatherer)
         {
-            if (C.OnlyGrabMission || MissionInfoDict[CurrentLunarMission].JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
+            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
             {
                 SchedulerMain.State = IceState.ManualMode;
                 return true;
@@ -521,7 +524,7 @@ namespace ICE.Scheduler.Tasks
 
         public static void WaitForNonStandard()
         {
-            if (!IsInCosmicZone()) return;
+            if (!PlayerHelper.IsInCosmicZone()) return;
 
             if (hasStandard) SchedulerMain.State = IceState.GrabMission;
 
@@ -532,9 +535,9 @@ namespace ICE.Scheduler.Tasks
             {
                 bool hasCorrectWeather = C.Missions
                     .Where(x => !UnsupportedMissions.Ids.Contains(x.Id))
-                    .Where(x => x.JobId == currentClassJob || MissionInfoDict[x.Id].JobId2 == currentClassJob)
+                    .Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob)
                     .Where(x => x.Type == MissionType.Weather && x.Enabled)
-                    .Any(x => (MissionInfoDict[x.Id].Weather == CosmicWeather.UmbralWind && isUmbralWind) || (MissionInfoDict[x.Id].Weather == CosmicWeather.MoonDust && isMoonDust));
+                    .Any(x => (CosmicHelper.MissionInfoDict[x.Id].Weather == CosmicWeather.UmbralWind && isUmbralWind) || (CosmicHelper.MissionInfoDict[x.Id].Weather == CosmicWeather.MoonDust && isMoonDust));
                 if (hasCorrectWeather)
                 {
                     SchedulerMain.State = IceState.GrabMission;

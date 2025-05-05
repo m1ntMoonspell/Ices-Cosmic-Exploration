@@ -6,22 +6,20 @@ namespace ICE.Scheduler.Tasks
     {
         public static void Enqueue()
         {
-            P.TaskManager.Enqueue(() => TurninGold(), "Waiting for valid turnin", DConfig);
-            P.TaskManager.Enqueue(() => PluginLog.Information("Turnin Complete"));
+            P.TaskManager.Enqueue(() => TurninGold(), "Waiting for valid turnin", Utils.TaskConfig);
+            P.TaskManager.Enqueue(() => IceLogging.Info("Turnin Complete"));
         }
 
         internal unsafe static bool? TurninGold()
         {
-            uint currentScore = 0;
-            uint goldScore = 0;
-
-            if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var x) && x.IsAddonReady)
+            uint currentScore, goldScore;
+            if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var x) && x.IsAddonReady)
             {
                 currentScore = x.CurrentScore;
                 goldScore = x.GoldScore;
                 bool scorecheck = currentScore != 0 && goldScore != 0;
 
-                if (goldScore <= currentScore && PlayerNotBusy() && scorecheck)
+                if (goldScore <= currentScore && PlayerHelper.IsPlayerNotBusy() && scorecheck)
                 {
                     if (EzThrottler.Throttle("Turning in item"))
                     {
@@ -36,12 +34,12 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? LeaveTurnin()
         {
-            if (!IsAddonActive("WKSMissionInfomation"))
+            if (!AddonHelper.IsAddonActive("WKSMissionInfomation"))
             {
                 return true;
             }
 
-            return false; //
+            return false;
         }
     }
 }

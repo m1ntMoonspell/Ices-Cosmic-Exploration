@@ -7,13 +7,13 @@ using ICE.Scheduler.Handlers;
 
 namespace ICE;
 
-public sealed class ICE : IDalamudPlugin
+public sealed partial class ICE : IDalamudPlugin
 {
     public static string Name => "ICE";
     public static Config C => P.Config;
 
     internal static ICE P = null!;
-    private Config Config;
+    private readonly Config Config;
 
     // Window's that I use, base window to the settings... need these to actually show shit 
     internal WindowSystem windowSystem;
@@ -80,21 +80,21 @@ public sealed class ICE : IDalamudPlugin
     {
         if (Svc.ClientState.LocalPlayer != null)
         {
+            PlayerHandlers.Tick();
             SchedulerMain.Tick();
             WeatherForecastHandler.Tick();
         }
         GenericManager.Tick();
-        PlayerHandlers.Tick();
         TextAdvancedManager.Tick();
         YesAlreadyManager.Tick();
     }
 
     public void Dispose()
     {
-        Safe(() => Svc.Framework.Update -= Tick);
-        Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
-        Safe(TextAdvancedManager.UnlockTA);
-        Safe(YesAlreadyManager.Unlock);
+        GenericHelpers.Safe(() => Svc.Framework.Update -= Tick);
+        GenericHelpers.Safe(() => Svc.PluginInterface.UiBuilder.Draw -= windowSystem.Draw);
+        GenericHelpers.Safe(TextAdvancedManager.UnlockTA);
+        GenericHelpers.Safe(YesAlreadyManager.Unlock);
         ECommonsMain.Dispose();
     }
 
