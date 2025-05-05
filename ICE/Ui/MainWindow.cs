@@ -595,17 +595,17 @@ namespace ICE.Ui
                     C.OnlyGrabMission = onlyGrabMission;
                     C.Save();
                 }
-                ImGui.Checkbox("Stop if Cosmocredits are capped", ref stopOnceHitCosmoCredits);
+                if (ImGui.Checkbox("Stop if Cosmocredits are capped", ref stopOnceHitCosmoCredits))
                 {
                     C.StopOnceHitCosmoCredits = stopOnceHitCosmoCredits;
                     C.Save();
                 }
-                ImGui.Checkbox("Stop if Lunar Credits are capped", ref stopOnceHitLunarCredits);
+                if (ImGui.Checkbox("Stop if Lunar Credits are capped", ref stopOnceHitLunarCredits))
                 {
                     C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
                     C.Save();
                 }
-                ImGui.Checkbox("Stop after @ level", ref stopWhenLevel);
+                if (ImGui.Checkbox("Stop after @ level", ref stopWhenLevel))
                 {
                     C.StopWhenLevel = stopWhenLevel;
                     C.Save();
