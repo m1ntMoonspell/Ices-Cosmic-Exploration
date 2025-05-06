@@ -8,6 +8,7 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskCrafting
     {
+        internal static bool PossiblyStuck = false;
         private static ExcelSheet<Item>? ItemSheet;
         private static ExcelSheet<Recipe>? RecipeSheet;
 
@@ -71,6 +72,7 @@ namespace ICE.Scheduler.Tasks
 
             if (!P.TaskManager.IsBusy) // ensure no pending tasks or manual craft while plogon enabled
             {
+                PossiblyStuck = false;
                 SchedulerMain.State = IceState.CraftInProcess;
 
                 CosmicHelper.OpenStellaMission();
@@ -304,11 +306,11 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                if (TaskScoreCheck.AnimationLockAbandon && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
+                if (TaskScoreCheck.AnimationLockAbandonState && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
                 {
                     IceLogging.Info("[WaitTillActuallyDone] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
                     SchedulerMain.State = IceState.StartCraft;
-                    TaskScoreCheck.AnimationLockAbandon = false;
+                    TaskScoreCheck.AnimationLockAbandonState = false;
                     P.Artisan.SetStopRequest(true);
                     return true;
                 }

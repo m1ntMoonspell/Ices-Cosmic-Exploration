@@ -5,7 +5,7 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskScoreCheck
     {
-        internal static bool AnimationLockAbandon = false;
+        internal static bool AnimationLockAbandonState = false;
         public static void TryCheckScore()
         {
             if (CosmicHelper.CurrentLunarMission == 0)
@@ -21,7 +21,7 @@ namespace ICE.Scheduler.Tasks
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                if (SchedulerMain.State == IceState.AbortInProgress || (AnimationLockAbandon && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
+                if (SchedulerMain.State == IceState.AbortInProgress || (AnimationLockAbandonState && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
                 {
                     IceLogging.Error("[Score Checker] Aborting mission");
                     TurnIn(z, true);
@@ -100,16 +100,24 @@ namespace ICE.Scheduler.Tasks
                     P.Artisan.SetStopRequest(true);
                     // cr.Addon->FireCallbackInt(-1);
                 }
+                if (!TaskCrafting.PossiblyStuck && C.AnimationLockAbandon)
+                {
+                    TaskCrafting.PossiblyStuck = true;
+                }
+                else
+                {
+                    AnimationLockAbandonState = true;
                 if ((!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
                 {
                     IceLogging.Error("[ICE] Unexpected error. I might be Animation Locked.");
                     Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                     {
-                        Message = "[ICE] Unexpected error. I might be Animation Locked. If you are stuck, please try the \"Experimental Animation Lock Unstuck\" in Settings.",
+                        Message = "[ICE] Unexpected error. I might be Animation Locked. Attempting experimental unstuck.",
                         Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                     });
                 }
-                if (!AnimationLockAbandon)
+                }
+                if (!AnimationLockAbandonState)
                     P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000});
 
                 var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();

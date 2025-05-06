@@ -102,6 +102,7 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         // Configuration booleans bound to checkboxes.
+        private static bool animationLockAbandon = C.AnimationLockAbandon;
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool delayGrabMission = C.DelayGrabMission;
@@ -546,8 +547,10 @@ namespace ICE.Ui
 
             if (ImGui.CollapsingHeader("Safety Settings"))
             {
-                if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref TaskScoreCheck.AnimationLockAbandon))
-                    IceLogging.Info($"[DEBUG OVERRIDE] Toggling Animation Lock Abandoning - {TaskScoreCheck.AnimationLockAbandon}", true);
+                if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref animationLockAbandon))
+                {
+                    C.AnimationLockAbandon = animationLockAbandon;
+                }
 
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {
