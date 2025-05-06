@@ -5,6 +5,7 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskScoreCheck
     {
+        internal static bool AnimationLockAbandon = false;
         public static void TryCheckScore()
         {
             if (CosmicHelper.CurrentLunarMission == 0)
@@ -20,7 +21,7 @@ namespace ICE.Scheduler.Tasks
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                if (SchedulerMain.State == IceState.AbortInProgress)
+                if (SchedulerMain.State == IceState.AbortInProgress || (AnimationLockAbandon && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
                 {
                     IceLogging.Error("[Score Checker] Aborting mission");
                     TurnIn(z, true);
@@ -98,8 +99,17 @@ namespace ICE.Scheduler.Tasks
                     IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix");
                     cr.Addon->FireCallbackInt(-1);
                 }
-
-                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true);
+                if ((!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
+                {
+                    IceLogging.Error("[ICE] Unexpected error. I'm stuck senpai.");
+                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                    {
+                        Message = "[ICE] Unexpected error. I'm stuck senpai.",
+                        Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                    });
+                }
+                if (!AnimationLockAbandon)
+                    P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000});
 
                 var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
 
@@ -117,7 +127,7 @@ namespace ICE.Scheduler.Tasks
                         Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                     });
                 }
-                if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0)
+                if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0 /* || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]) */)
                 {
                     SchedulerMain.Abandon = true;
                     SchedulerMain.State = IceState.GrabMission;

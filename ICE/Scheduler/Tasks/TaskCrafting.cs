@@ -214,7 +214,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft
                         });
-                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
+                        //P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -233,7 +233,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
-                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
+                        //P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -274,27 +274,27 @@ namespace ICE.Scheduler.Tasks
 
         internal static void Craft(ushort id, int craftAmount, Item item)
         {
-            if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
-            {
-                if (EzThrottler.Throttle("Selecting Item"))
-                {
-                    if (!m.SelectedCraftingItem.Contains($"{item.Name}"))
-                    {
-                        foreach (var i in m.CraftingItems)
-                        {
-                            if (i.Name.Contains(item.Name.ToString()))
-                            {
-                                IceLogging.Debug($"[Craft failsafe] Selecting item: {i.Name}", true);
-                                i.Select();
-                            }
-                            else
-                            {
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
+            // if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
+            // {
+            //     if (EzThrottler.Throttle("Selecting Item"))
+            //     {
+            //         if (!m.SelectedCraftingItem.Contains($"{item.Name}"))
+            //         {
+            //             foreach (var i in m.CraftingItems)
+            //             {
+            //                 if (i.Name.Contains(item.Name.ToString()))
+            //                 {
+            //                     IceLogging.Debug($"[Craft failsafe] Selecting item: {i.Name}", true);
+            //                     i.Select();
+            //                 }
+            //                 else
+            //                 {
+            //                     continue;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
 
             IceLogging.Debug($"[Main Item(s)] Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}", true);
             P.Artisan.CraftItem(id, craftAmount);
@@ -304,6 +304,14 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
+                if (TaskScoreCheck.AnimationLockAbandon && Svc.Condition[ConditionFlag.NormalConditions])
+                {
+                    IceLogging.Info("[WaitTillActuallyDone] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
+                    SchedulerMain.State = IceState.StartCraft;
+                    TaskScoreCheck.AnimationLockAbandon = false;
+                    P.Artisan.SetEnduranceStatus(false);
+                    return true;
+                }
               var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
               var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
 
@@ -317,20 +325,20 @@ namespace ICE.Scheduler.Tasks
 
               if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
               {
-                  IceLogging.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.");
+                  IceLogging.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.", true);
                   P.Artisan.SetEnduranceStatus(false);
                   return true;
               }
               else if (currentScore >= goldScore && enoughMain.Value)
               {
-                  IceLogging.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.");
+                  IceLogging.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.", true);
                   P.Artisan.SetEnduranceStatus(false);
                   return true;
               }
 
               if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
               {
-                  PluginLog.Debug("[WaitTillActuallyDone] We seem to no longer be crafting");
+                  IceLogging.Debug("[WaitTillActuallyDone] We seem to no longer be crafting", true);
                   return true;
               }
             }

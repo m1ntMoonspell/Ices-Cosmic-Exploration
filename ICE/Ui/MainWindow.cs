@@ -7,6 +7,7 @@ using Dalamud.Interface.Colors;
 using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
+using ICE.Scheduler.Tasks;
 
 namespace ICE.Ui
 {
@@ -682,6 +683,8 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
+                if (ImGui.Checkbox("Experimental Animation Lock Unstuck", ref TaskScoreCheck.AnimationLockAbandon))
+                    IceLogging.Info($"[DEBUG OVERRIDE] Toggling Animation Lock Abandoning - {TaskScoreCheck.AnimationLockAbandon}", true);
             }
 #endif
 
