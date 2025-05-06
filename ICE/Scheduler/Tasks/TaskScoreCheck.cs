@@ -96,15 +96,16 @@ namespace ICE.Scheduler.Tasks
                 var (currentScore, silverScore, goldScore) = TaskCrafting.GetCurrentScores();
                 if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady && currentScore < goldScore)
                 {
-                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix");
-                    cr.Addon->FireCallbackInt(-1);
+                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
+                    P.Artisan.SetStopRequest(true);
+                    // cr.Addon->FireCallbackInt(-1);
                 }
                 if ((!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
                 {
-                    IceLogging.Error("[ICE] Unexpected error. I'm stuck senpai.");
+                    IceLogging.Error("[ICE] Unexpected error. I might be Animation Locked.");
                     Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                     {
-                        Message = "[ICE] Unexpected error. I'm stuck senpai.",
+                        Message = "[ICE] Unexpected error. I might be Animation Locked. If you are stuck, please try the \"Experimental Animation Lock Unstuck\" in Settings.",
                         Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                     });
                 }

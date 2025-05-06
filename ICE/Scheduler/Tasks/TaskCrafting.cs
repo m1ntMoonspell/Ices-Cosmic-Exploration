@@ -304,12 +304,12 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                if (TaskScoreCheck.AnimationLockAbandon && Svc.Condition[ConditionFlag.NormalConditions])
+                if (TaskScoreCheck.AnimationLockAbandon && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
                 {
                     IceLogging.Info("[WaitTillActuallyDone] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
                     SchedulerMain.State = IceState.StartCraft;
                     TaskScoreCheck.AnimationLockAbandon = false;
-                    P.Artisan.SetEnduranceStatus(false);
+                    P.Artisan.SetStopRequest(true);
                     return true;
                 }
               var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
@@ -326,13 +326,13 @@ namespace ICE.Scheduler.Tasks
               if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
               {
                   IceLogging.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.", true);
-                  P.Artisan.SetEnduranceStatus(false);
+                  P.Artisan.SetStopRequest(true);
                   return true;
               }
               else if (currentScore >= goldScore && enoughMain.Value)
               {
                   IceLogging.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.", true);
-                  P.Artisan.SetEnduranceStatus(false);
+                  P.Artisan.SetStopRequest(true);
                   return true;
               }
 

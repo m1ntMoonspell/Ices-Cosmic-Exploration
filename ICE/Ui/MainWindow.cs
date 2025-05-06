@@ -546,6 +546,9 @@ namespace ICE.Ui
 
             if (ImGui.CollapsingHeader("Safety Settings"))
             {
+                if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref TaskScoreCheck.AnimationLockAbandon))
+                    IceLogging.Info($"[DEBUG OVERRIDE] Toggling Animation Lock Abandoning - {TaskScoreCheck.AnimationLockAbandon}", true);
+
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {
                     C.StopOnAbort = stopOnAbort;
@@ -683,8 +686,6 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
-                if (ImGui.Checkbox("Experimental Animation Lock Unstuck", ref TaskScoreCheck.AnimationLockAbandon))
-                    IceLogging.Info($"[DEBUG OVERRIDE] Toggling Animation Lock Abandoning - {TaskScoreCheck.AnimationLockAbandon}", true);
             }
 #endif
 
