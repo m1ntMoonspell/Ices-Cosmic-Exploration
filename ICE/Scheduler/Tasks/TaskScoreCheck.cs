@@ -100,48 +100,48 @@ namespace ICE.Scheduler.Tasks
                     P.Artisan.SetStopRequest(true);
                     // cr.Addon->FireCallbackInt(-1);
                 }
-                if (!TaskCrafting.PossiblyStuck && C.AnimationLockAbandon)
-                {
-                    TaskCrafting.PossiblyStuck = true;
-                }
-                else
-                {
-                    AnimationLockAbandonState = true;
                 if ((!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
                 {
                     IceLogging.Error("[ICE] Unexpected error. I might be Animation Locked.");
-                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                    if (!TaskCrafting.PossiblyStuck && C.AnimationLockAbandon)
                     {
-                        Message = "[ICE] Unexpected error. I might be Animation Locked. " + (C.AnimationLockAbandon ? "Attempting experimental unstuck." : "Please enable Experimental unstuck to attempt unstuck."),
-                        Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                    });
-                }
-                }
-                if (!AnimationLockAbandonState)
-                    P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000});
-
-                var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
-
-                P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission", config);
-
-                if (abortIfNoReport && C.StopOnAbort)
-                {
-                    SchedulerMain.StopBeforeGrab = true;
-                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        TaskCrafting.PossiblyStuck = true;
+                    }
+                    else
                     {
-                        Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n" +
-                        $"If you expect Mission ID {CosmicHelper.CurrentLunarMission} to not reach " + (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).TurnInSilver ? "Silver" : "Gold") +
-                        " - please mark it as Silver/ASAP accordingly.\n" +
-                        "If you were expecting it to reach the target, check your Artisan settings/gear.",
-                        Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                    });
+                        AnimationLockAbandonState = true;
+                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        {
+                            Message = "[ICE] Unexpected error. I might be Animation Locked. " + (C.AnimationLockAbandon ? "Attempting experimental unstuck." : "Please enable Experimental unstuck to attempt unstuck."),
+                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                        });
+                    }
                 }
-                if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0 /* || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]) */)
+            }
+            if (!AnimationLockAbandonState)
+                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
+
+            var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
+
+            P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission", config);
+
+            if (abortIfNoReport && C.StopOnAbort)
+            {
+                SchedulerMain.StopBeforeGrab = true;
+                Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                 {
-                    SchedulerMain.Abandon = true;
-                    SchedulerMain.State = IceState.GrabMission;
-                    P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
-                }
+                    Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n" +
+                    $"If you expect Mission ID {CosmicHelper.CurrentLunarMission} to not reach " + (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).TurnInSilver ? "Silver" : "Gold") +
+                    " - please mark it as Silver/ASAP accordingly.\n" +
+                    "If you were expecting it to reach the target, check your Artisan settings/gear.",
+                    Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                });
+            }
+            if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0 /* || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]) */)
+            {
+                SchedulerMain.Abandon = true;
+                SchedulerMain.State = IceState.GrabMission;
+                P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
             }
         }
 
