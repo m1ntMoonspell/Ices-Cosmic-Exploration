@@ -50,7 +50,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
-                    if (hud.CosmoCredit >= 30000)
+                    if (hud.CosmoCredit >= C.CosmoCreditsCap)
                     {
                         IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
@@ -69,7 +69,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
-                    if (hud.LunarCredit >= 10000)
+                    if (hud.LunarCredit >= C.LunarCreditsCap)
                     {
                         IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()

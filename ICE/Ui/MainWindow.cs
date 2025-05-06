@@ -112,6 +112,8 @@ namespace ICE.Ui
         private static bool showOverlay = C.ShowOverlay;
         private static bool stopOnceHitCosmoCredits = C.StopOnceHitCosmoCredits;
         private static bool stopOnceHitLunarCredits = C.StopOnceHitLunarCredits;
+        private static int cosmoCreditsCap = C.CosmoCreditsCap;
+        private static int lunarCreditsCap = C.LunarCreditsCap;
         private static bool stopWhenLevel = C.StopWhenLevel;
         private static int targetLevel = C.TargetLevel;
         private static bool ShowSeconds = C.ShowSeconds;
@@ -604,15 +606,41 @@ namespace ICE.Ui
                     C.OnlyGrabMission = onlyGrabMission;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Stop if Cosmocredits are capped", ref stopOnceHitCosmoCredits))
+                if (ImGui.Checkbox("Stop @ Cosmocredits", ref stopOnceHitCosmoCredits))
                 {
                     C.StopOnceHitCosmoCredits = stopOnceHitCosmoCredits;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Stop if Lunar Credits are capped", ref stopOnceHitLunarCredits))
+                if (stopOnceHitCosmoCredits)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("###Cosmocredits", ref cosmoCreditsCap, 0, 30000))
+                    {
+                        if (C.CosmoCreditsCap != cosmoCreditsCap)
+                        {
+                            C.CosmoCreditsCap = cosmoCreditsCap;
+                            C.Save();
+                        }
+                    }
+                }
+                if (ImGui.Checkbox("Stop @ Lunar Credits", ref stopOnceHitLunarCredits))
                 {
                     C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
                     C.Save();
+                }
+                if (stopOnceHitLunarCredits)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("###Lunar Credits", ref lunarCreditsCap, 0, 10000))
+                    {
+                        if (C.LunarCreditsCap != lunarCreditsCap)
+                        {
+                            C.LunarCreditsCap = lunarCreditsCap;
+                            C.Save();
+                        }
+                    }
                 }
                 if (ImGui.Checkbox("Stop after @ level", ref stopWhenLevel))
                 {
