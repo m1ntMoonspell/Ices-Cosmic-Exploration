@@ -91,7 +91,7 @@ namespace ICE.Scheduler.Handlers
 
             weathers = [BuildResultObject(currentWeather, GetRootTime(0))];
 
-            for (var i = 1; i <= 10; i++)
+            for (var i = 1; i <= 24; i++)
             {
                 byte weatherId = wm->GetWeatherForDaytime(Svc.ClientState.TerritoryType, i);
                 var weather = WeatherSheet.GetRow(weatherId)!;
