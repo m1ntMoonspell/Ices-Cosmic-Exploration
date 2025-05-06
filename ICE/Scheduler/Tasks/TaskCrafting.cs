@@ -214,7 +214,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft
                         });
-                        //P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
+                        P.TaskManager.EnqueueDelay(250); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -233,7 +233,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
-                        //P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
+                        P.TaskManager.EnqueueDelay(250); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
