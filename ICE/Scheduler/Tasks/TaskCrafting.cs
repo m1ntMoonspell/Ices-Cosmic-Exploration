@@ -117,7 +117,7 @@ namespace ICE.Scheduler.Tasks
                     IceLogging.Debug($"RecipeID: {main.Key}", true);
                     IceLogging.Debug($"ItemID: {itemId}", true);
 
-                    if ((currentSubItemAmount / (subItemNeed / mainNeed)) == 0) // This should OOM only if not enough to craft a single Main
+                    if (((currentSubItemAmount / (subItemNeed / mainNeed)) == 0) && !TaskScoreCheck.AnimationLockAbandonState) // This should OOM only if not enough to craft a single Main
                     {
                         IceLogging.Error($"[OOM] Not enough to craft main item");
                         OOMMain = true; // All current 3x Main items share Sub items
@@ -216,7 +216,8 @@ namespace ICE.Scheduler.Tasks
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft
                         });
-                        P.TaskManager.EnqueueDelay(250); // Post-craft delay between Synthesis and RecipeLog reopening
+                        if (C.DelayCraft)
+                            P.TaskManager.EnqueueDelay(C.DelayCraftIncrease); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -235,10 +236,11 @@ namespace ICE.Scheduler.Tasks
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
-                        P.TaskManager.EnqueueDelay(250); // Post-craft delay between Synthesis and RecipeLog reopening
+                        if (C.DelayCraft)
+                            P.TaskManager.EnqueueDelay(C.DelayCraftIncrease); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
-
+                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] || (Svc.Condition [ConditionFlag.Crafting] && Svc.Condition [ConditionFlag.PreparingToCraft]));
                 P.TaskManager.Enqueue(() =>
                 {
                     IceLogging.Debug("Check score and turn in cause crafting is done.", true);

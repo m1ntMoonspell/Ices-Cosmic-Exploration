@@ -106,7 +106,9 @@ namespace ICE.Ui
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool delayGrabMission = C.DelayGrabMission;
+        private static bool delayCraft = C.DelayCraft;
         private static int delayAmount = C.DelayIncrease;
+        private static int delayCraftAmount = C.DelayCraftIncrease;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
@@ -551,6 +553,7 @@ namespace ICE.Ui
                 {
                     C.AnimationLockAbandon = animationLockAbandon;
                 }
+                ImGui.Checkbox("[Expertimental] Animation Lock Manual Unstuck", ref TaskScoreCheck.AnimationLockAbandonState);
 
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {
@@ -591,6 +594,28 @@ namespace ICE.Ui
                         if (C.DelayIncrease != delayAmount)
                         {
                             C.DelayIncrease = delayAmount;
+                            C.Save();
+                        }
+                    }
+                }
+                if (ImGui.Checkbox("Add delay to crafting menu", ref delayCraft))
+                {
+                    C.DelayCraft = delayCraft;
+                    C.Save();
+                }
+                ImGuiEx.HelpMarker(
+                    "This is here for safety! If you want to decrease the delay before turnin be my guest.\n" +
+                    "Safety is around... 2500? If you're having animation locks you can absolutely increase it higher\n" +
+                    "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+                if (delayCraft)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("ms", ref delayCraftAmount, 0, 10000))
+                    {
+                        if (C.DelayCraftIncrease != delayCraftAmount)
+                        {
+                            C.DelayCraftIncrease = delayCraftAmount;
                             C.Save();
                         }
                     }
