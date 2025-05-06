@@ -553,7 +553,7 @@ namespace ICE.Ui
                 {
                     C.AnimationLockAbandon = animationLockAbandon;
                 }
-                ImGui.Checkbox("[Expertimental] Animation Lock Manual Unstuck", ref TaskScoreCheck.AnimationLockAbandonState);
+                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref C.AnimationLockAbandonState);
 
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {
@@ -714,6 +714,7 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
+                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
             }
 #endif
 

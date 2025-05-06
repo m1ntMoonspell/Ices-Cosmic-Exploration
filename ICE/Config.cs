@@ -19,7 +19,12 @@ namespace ICE
         public bool DelayCraft { get; set; } = true;
         public int DelayIncrease { get; set; } = 500;
         public int DelayCraftIncrease { get; set; } = 2500;
-        public bool AnimationLockAbandon { get; set; } = true;
+        public int PossiblyStuck = 0;
+        public bool AnimationLockAbandon { get; set; } = false;
+        public bool AnimationLockAbandonState = false;
+#if DEBUG
+        public bool FailsafeRecipeSelect = false;
+#endif
 
         // Mission settings
         public bool OnlyGrabMission { get; set; } = false;
