@@ -330,19 +330,22 @@ namespace ICE.Scheduler.Tasks
               if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
               {
                   IceLogging.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.", true);
-                  P.Artisan.SetStopRequest(true);
+                  P.Artisan.SetEnduranceStatus(false);
+                  SchedulerMain.State = IceState.CheckScoreAndTurnIn;
                   return true;
               }
               else if (currentScore >= goldScore && enoughMain.Value)
               {
                   IceLogging.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.", true);
-                  P.Artisan.SetStopRequest(true);
+                  P.Artisan.SetEnduranceStatus(false);
+                  SchedulerMain.State = IceState.CheckScoreAndTurnIn;
                   return true;
               }
 
               if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
               {
                   IceLogging.Debug("[WaitTillActuallyDone] We seem to no longer be crafting", true);
+                  SchedulerMain.State = IceState.CheckScoreAndTurnIn;
                   return true;
               }
             }

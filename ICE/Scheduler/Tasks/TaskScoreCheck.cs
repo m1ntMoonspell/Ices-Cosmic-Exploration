@@ -112,7 +112,7 @@ namespace ICE.Scheduler.Tasks
                     IceLogging.Error("[ICE] Unexpected error. I might be Animation Locked.");
                     Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                     {
-                        Message = "[ICE] Unexpected error. I might be Animation Locked. Attempting experimental unstuck.",
+                        Message = "[ICE] Unexpected error. I might be Animation Locked. " + (C.AnimationLockAbandon ? "Attempting experimental unstuck." : "Please enable Experimental unstuck to attempt unstuck."),
                         Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                     });
                 }
