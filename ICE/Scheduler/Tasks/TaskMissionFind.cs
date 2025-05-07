@@ -400,7 +400,14 @@ namespace ICE.Scheduler.Tasks
 
                     var rankToReset = missionRanks.Max();
 
-                    foreach (var m in x.StellerMissions)
+                    Random rng = new Random();
+
+                    var missions = x.StellerMissions
+                        .GroupBy(m => CosmicHelper.MissionInfoDict[m.MissionId].Rank) // Group By Rank
+                        .SelectMany(g => g.OrderBy(m => rng.Next())) // Reorder inside each group randomly
+                        .ToArray();
+
+                    foreach (var m in missions)
                     {
                         var missionEntry = CosmicHelper.MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
