@@ -30,17 +30,17 @@ namespace ICE.Scheduler.Tasks
         private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
 
         public static void EnqueueResumeCheck()
-        {
-            if (CosmicHelper.CurrentLunarMission != 0)
+        {   
+            if (SchedulerMain.AnimationLockAbandonState)
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+            }
+            else if (CosmicHelper.CurrentLunarMission != 0)
             {
                 if (!ModeChangeCheck(isGatherer))
                 {
                     SchedulerMain.State = IceState.CheckScoreAndTurnIn;
                 }
-            }
-            else if (C.AnimationLockAbandonState)
-            {
-                SchedulerMain.State = IceState.AnimationLock;
             }
             else
             {

@@ -8,7 +8,6 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskCrafting
     {
-        internal static bool PossiblyStuck = false;
         private static ExcelSheet<Item>? ItemSheet;
         private static ExcelSheet<Recipe>? RecipeSheet;
 
@@ -57,7 +56,7 @@ namespace ICE.Scheduler.Tasks
 
             if (!P.TaskManager.IsBusy) // ensure no pending tasks or manual craft while plogon enabled
             {
-                C.PossiblyStuck = 0;
+                SchedulerMain.PossiblyStuck = 0;
                 SchedulerMain.State = IceState.CraftInProcess;
 
                 CosmicHelper.OpenStellaMission();
@@ -175,7 +174,7 @@ namespace ICE.Scheduler.Tasks
                 OOMSub = OOMSub || SchedulerMain.DebugOOMSub;
 #endif
 
-                if (OOMMain && (OOMSub || !needPreCraft) && CosmicHelper.CurrentLunarMission < 361 && !C.AnimationLockAbandonState) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
+                if (OOMMain && (OOMSub || !needPreCraft) && CosmicHelper.CurrentLunarMission < 361 && !SchedulerMain.AnimationLockAbandonState) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
                 {
                     IceLogging.Error($"[Crafting] [OOM] Not enough to craft");
                     SchedulerMain.State = IceState.AbortInProgress;
@@ -297,16 +296,6 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                if (C.AnimationLockAbandonState && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
-                {
-                    IceLogging.Info("[Crafting] [Wait] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
-                    SchedulerMain.State = IceState.StartCraft;
-                    C.PossiblyStuck = 0;
-                    C.AnimationLockAbandonState = false;
-                    if (Svc.Condition[ConditionFlag.NormalConditions])
-                        P.Artisan.SetEnduranceStatus(false);
-                    return true;
-                }
                 var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
                 var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
                 var enoughMain = HaveEnoughMain();

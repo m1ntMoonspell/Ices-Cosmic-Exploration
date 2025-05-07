@@ -20,6 +20,8 @@ namespace ICE.Scheduler
         internal static string MissionName = string.Empty;
         internal static bool inMission = false;
         internal static bool Abandon = false;
+        internal static bool AnimationLockAbandonState = false;
+        internal static int PossiblyStuck = 0;
         internal static bool StopBeforeGrab = false;
         #if DEBUG
         // Debug only settings
@@ -31,6 +33,8 @@ namespace ICE.Scheduler
 
         internal static void Tick()
         {
+            if (State == IceState.AnimationLock)
+                
             if (Throttles.GenericThrottle && P.TaskManager.Tasks.Count == 0)
             {
                 switch (State)

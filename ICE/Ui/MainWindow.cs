@@ -104,6 +104,7 @@ namespace ICE.Ui
 
         // Configuration booleans bound to checkboxes.
         private static bool animationLockAbandon = C.AnimationLockAbandon;
+        private static bool AnimationLockAbandonState = SchedulerMain.AnimationLockAbandonState;
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool delayGrabMission = C.DelayGrabMission;
@@ -579,7 +580,7 @@ namespace ICE.Ui
                     C.AnimationLockAbandon = animationLockAbandon;
                     C.Save();
                 }
-                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref C.AnimationLockAbandonState);
+                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
 
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {

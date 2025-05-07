@@ -1,12 +1,6 @@
-﻿using ECommons.Automation;
-using ECommons.UIHelpers.AddonMasterImplementations;
-using ICE.Scheduler.Handlers;
-using ICE.Enums;
-using ICE.Ui;
-using System.Collections.Generic;
+﻿using Dalamud.Game.ClientState.Conditions;
+using ECommons.Automation;
 using System.Threading.Tasks;
-using ECommons.GameHelpers;
-using ICE.Utilities.Cosmic;
 
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ECommons.GenericHelpers;
@@ -24,34 +18,50 @@ namespace ICE.Scheduler.Tasks
                 SchedulerMain.State = IceState.GrabMission;
                 return;
             }
-            P.TaskManager.Enqueue(TaskMissionFind.UpdateValues, "Updating Task Mission Values");
-            P.TaskManager.Enqueue(TaskMissionFind.OpenMissionFinder, "Opening the Mission finder");
-            P.TaskManager.Enqueue(TaskMissionFind.BasicMissionButton, "Selecting Basic Missions");
-            P.TaskManager.Enqueue(FindResetMission, "Finding Basic Mission");
-            P.TaskManager.Enqueue(GrabMission, "Grabbing the mission");
-            P.TaskManager.Enqueue(async () =>
+            if (SchedulerMain.AnimationLockAbandonState && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
             {
-                if (EzThrottler.Throttle("Opening Steller Missions"))
+                IceLogging.Info("[Animation Lock] [Wait] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
+                SchedulerMain.State = IceState.GrabMission;
+                SchedulerMain.PossiblyStuck = 0;
+                SchedulerMain.AnimationLockAbandonState = false;
+                return;
+            }
+            else
+            {
+                P.TaskManager.Enqueue(TaskMissionFind.UpdateValues, "Updating Task Mission Values");
+                P.TaskManager.Enqueue(TaskMissionFind.OpenMissionFinder, "Opening the Mission finder");
+                P.TaskManager.Enqueue(TaskMissionFind.BasicMissionButton, "Selecting Basic Missions");
+                P.TaskManager.Enqueue(FindResetMission, "Finding Basic Mission");
+                P.TaskManager.Enqueue(GrabMission, "Grabbing the mission");
+                P.TaskManager.Enqueue(async () =>
                 {
-                    if (CosmicHelper.CurrentLunarMission != 0)
+                    if (EzThrottler.Throttle("Opening Steller Missions"))
                     {
-                        CosmicHelper.OpenStellaMission();
-                        SchedulerMain.State = IceState.StartCraft;
+                        if (CosmicHelper.CurrentLunarMission != 0)
+                        {
+                            if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !AddonHelper.IsAddonActive("WKSMissionInfomation"))
+                            {
+                                IceLogging.Debug("Opening Mission Menu", true);
+                                hud.Mission();
+
+                                while (!AddonHelper.IsAddonActive("WKSMissionInfomation"))
+                                {
+                                    IceLogging.Debug("Waiting for WKSMissionInfomation to be active");
+                                    await Task.Delay(500);
+                                }
+                            }
+                        }
                     }
-                }
-            });
+                });
+                P.TaskManager.Enqueue(AbandonMission, "Abandoning mission");
+            }
         }
-        
+
         internal unsafe static bool? FindResetMission()
         {
             if (EzThrottler.Throttle("FindResetMission"))
             {
                 IceLogging.Debug($"[Animation Lock] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}", true);
-                if (MissionId != 0)
-                {
-                    IceLogging.Debug("[Animation Lock] You already have a mission found, skipping finding a basic mission.", true);
-                    return true;
-                }
 
                 if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
                 {
@@ -134,6 +144,41 @@ namespace ICE.Scheduler.Tasks
                 else if (!AddonHelper.IsAddonActive("WKSMission"))
                 {
                     return true;
+                }
+            }
+            return false;
+        }
+        internal unsafe static bool? AbandonMission()
+        {
+            if (CosmicHelper.CurrentLunarMission == 0)
+                return true;
+            else if (EzThrottler.Throttle("AbandonMission", 250))
+            {
+                if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
+                {
+                    string[] abandonStrings = ["受注中のミッションを破棄します。よろしいですか？", "Abandon mission?", "Aktuelle Mission abbrechen?", "Êtes-vous sûr de vouloir abandonner la mission en cours ?"];
+                    if (abandonStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
+                    {
+                        IceLogging.Debug($"[Abandoning Mission] Expected Abandon window: {select.Text}");
+                        select.Yes();
+                        return true;
+                    }
+                    else
+                    {
+                        IceLogging.Error($"[Abandoning Mission] Unexpected Abandon window: {select.Text}");
+                        select.No();
+                        return false;
+                    }
+                }
+                if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var addon) && addon.IsAddonReady)
+                {
+                    IceLogging.Debug("[Abandoning Mission] Attempting Abandon.");
+                    addon.Abandon();
+                }
+                else if (TryGetAddonMaster<WKSHud>("WKSHud", out var SpaceHud) && SpaceHud.IsAddonReady)
+                {
+                    IceLogging.Debug("[Abandoning Mission] WKSMissionInformation missing. Attempting opening.");
+                    SpaceHud.Mission();
                 }
             }
             return false;

@@ -21,7 +21,6 @@ namespace ICE
         public int DelayCraftIncrease { get; set; } = 2500;
         public int PossiblyStuck = 0;
         public bool AnimationLockAbandon { get; set; } = true;
-        public bool AnimationLockAbandonState = false;
 #if DEBUG
         public bool FailsafeRecipeSelect = false;
 #endif
