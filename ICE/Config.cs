@@ -16,7 +16,15 @@ namespace ICE
         public bool StopOnAbort { get; set; } = true;
         public bool RejectUnknownYesno { get; set; } = true;
         public bool DelayGrabMission { get; set; } = true;
+        public bool DelayCraft { get; set; } = true;
         public int DelayIncrease { get; set; } = 500;
+        public int DelayCraftIncrease { get; set; } = 2500;
+        public int PossiblyStuck = 0;
+        public bool AnimationLockAbandon { get; set; } = false;
+        public bool AnimationLockAbandonState = false;
+#if DEBUG
+        public bool FailsafeRecipeSelect = false;
+#endif
 
         // Mission settings
         public bool OnlyGrabMission { get; set; } = false;
