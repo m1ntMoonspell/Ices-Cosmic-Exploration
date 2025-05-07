@@ -105,7 +105,9 @@ namespace ICE.Ui
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool delayGrabMission = C.DelayGrabMission;
+        private static bool delayCraft = C.DelayCraft;
         private static int delayAmount = C.DelayIncrease;
+        private static int delayCraftAmount = C.DelayCraftIncrease;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
@@ -356,7 +358,7 @@ namespace ICE.Ui
                     }
 
                     // Settings column
-                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 150);
+                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
 
                     // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
@@ -487,27 +489,39 @@ namespace ICE.Ui
                         }
 
                         ImGui.TableNextColumn();
-                        var silver = mission.TurnInSilver;
-                        if (ImGui.Checkbox($"Silver###{entry.Value.Name}_{entry.Key}_silver", ref silver))
+                        string[] modes;
+                        int currentModeIndex = 0;
+                        if (unsupported)
                         {
-                            mission.TurnInSilver = silver;
-
-                            if (mission.TurnInASAP && silver)
-                            {
-                                mission.TurnInASAP = false;
-                            }
-
-                            C.Save();
+                            modes = ["Manual"];
+                            mission.ManualMode = true;
                         }
-                        ImGui.SameLine();
-                        var asap = mission.TurnInASAP;
-                        if (ImGui.Checkbox($"ASAP###{entry.Value.Name}_{entry.Key}_asap", ref asap))
+                        else
                         {
-                            mission.TurnInASAP = asap;
+                            modes = ["Gold", "Silver", "ASAP", "Manual"];
+                            if (mission.TurnInSilver)
+                                currentModeIndex = 1;
+                            if (mission.TurnInASAP)
+                                currentModeIndex = 2;
+                            if (mission.ManualMode)
+                                currentModeIndex = 3;
+                        }
 
-                            if (mission.TurnInSilver && asap)
+                        ImGui.SetNextItemWidth(-1);
+                        if (ImGui.Combo($"###{entry.Value.Name}_{entry.Key}_turninMode", ref currentModeIndex, modes, modes.Length))
+                        {
+                            mission.TurnInSilver = mission.TurnInASAP = mission.ManualMode = false;
+                            switch (modes[currentModeIndex])
                             {
-                                mission.TurnInSilver = false;
+                                case "Silver":
+                                    mission.TurnInSilver = true;
+                                    break;
+                                case "ASAP":
+                                    mission.TurnInASAP = true;
+                                    break;
+                                case "Manual":
+                                    mission.ManualMode = true;
+                                    break;
                             }
 
                             C.Save();
@@ -558,6 +572,12 @@ namespace ICE.Ui
 
             if (ImGui.CollapsingHeader("Safety Settings"))
             {
+                if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref animationLockAbandon))
+                {
+                    C.AnimationLockAbandon = animationLockAbandon;
+                }
+                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref C.AnimationLockAbandonState);
+
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {
                     C.StopOnAbort = stopOnAbort;
@@ -592,11 +612,33 @@ namespace ICE.Ui
                 {
                     ImGui.SetNextItemWidth(150);
                     ImGui.SameLine();
-                    if (ImGui.SliderInt("ms", ref delayAmount, 0, 1000))
+                    if (ImGui.SliderInt("ms###Mission", ref delayAmount, 0, 1000))
                     {
                         if (C.DelayIncrease != delayAmount)
                         {
                             C.DelayIncrease = delayAmount;
+                            C.Save();
+                        }
+                    }
+                }
+                if (ImGui.Checkbox("Add delay to crafting menu", ref delayCraft))
+                {
+                    C.DelayCraft = delayCraft;
+                    C.Save();
+                }
+                ImGuiEx.HelpMarker(
+                    "This is here for safety! If you want to decrease the delay before turnin be my guest.\n" +
+                    "Safety is around... 2500? If you're having animation locks you can absolutely increase it higher\n" +
+                    "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+                if (delayCraft)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("ms###Crafting", ref delayCraftAmount, 0, 10000))
+                    {
+                        if (C.DelayCraftIncrease != delayCraftAmount)
+                        {
+                            C.DelayCraftIncrease = delayCraftAmount;
                             C.Save();
                         }
                     }
@@ -695,7 +737,8 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
-
+                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);                
+                
                 var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
                 {
                     ("Sequence Missions", new Func<byte>(() => C.SequenceMissionPriority), new Action<byte>(v => { C.SequenceMissionPriority = v; C.Save(); })),

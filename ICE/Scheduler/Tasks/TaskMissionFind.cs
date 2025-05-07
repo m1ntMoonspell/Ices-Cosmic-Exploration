@@ -404,7 +404,14 @@ namespace ICE.Scheduler.Tasks
 
                     var rankToReset = missionRanks.Max();
 
-                    foreach (var m in x.StellerMissions)
+                    Random rng = new Random();
+
+                    var missions = x.StellerMissions
+                        .GroupBy(m => CosmicHelper.MissionInfoDict[m.MissionId].Rank) // Group By Rank
+                        .SelectMany(g => g.OrderBy(m => rng.Next())) // Reorder inside each group randomly
+                        .ToArray();
+
+                    foreach (var m in missions)
                     {
                         var missionEntry = CosmicHelper.MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
@@ -510,7 +517,7 @@ namespace ICE.Scheduler.Tasks
 
         private static bool ModeChangeCheck(bool gatherer)
         {
-            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
+            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0 || C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode) // Manual Mode for Only Grab Mission / Dual Class Mission
             {
                 SchedulerMain.State = IceState.ManualMode;
                 return true;
