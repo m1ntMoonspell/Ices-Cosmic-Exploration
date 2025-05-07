@@ -474,27 +474,37 @@ namespace ICE.Ui
                         }
 
                         ImGui.TableNextColumn();
-                        string[] modes = ["Gold", "Silver", "ASAP", "Manual"];
+                        string[] modes;
                         int currentModeIndex = 0;
-                        if (mission.TurnInSilver)
-                            currentModeIndex = 1;
-                        if (mission.TurnInASAP)
-                            currentModeIndex = 2;
-                        if (mission.ManualMode)
-                            currentModeIndex = 3;
+                        if (unsupported)
+                        {
+                            modes = ["Manual"];
+                            mission.ManualMode = true;
+                        }
+                        else
+                        {
+                            modes = ["Gold", "Silver", "ASAP", "Manual"];
+                            if (mission.TurnInSilver)
+                                currentModeIndex = 1;
+                            if (mission.TurnInASAP)
+                                currentModeIndex = 2;
+                            if (mission.ManualMode)
+                                currentModeIndex = 3;
+                        }
+
                         ImGui.SetNextItemWidth(-1);
                         if (ImGui.Combo($"###{entry.Value.Name}_{entry.Key}_turninMode", ref currentModeIndex, modes, modes.Length))
                         {
                             mission.TurnInSilver = mission.TurnInASAP = mission.ManualMode = false;
-                            switch (currentModeIndex)
+                            switch (modes[currentModeIndex])
                             {
-                                case 1:
+                                case "Silver":
                                     mission.TurnInSilver = true;
                                     break;
-                                case 2:
+                                case "ASAP":
                                     mission.TurnInASAP = true;
                                     break;
-                                case 3:
+                                case "Manual":
                                     mission.ManualMode = true;
                                     break;
                             }
