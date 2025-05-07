@@ -8,7 +8,6 @@ using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
 using Dalamud.Interface.Utility;
-using Dalamud.Game.ClientState.Conditions;
 
 namespace ICE.Ui
 {
