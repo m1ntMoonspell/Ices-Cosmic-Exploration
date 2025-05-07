@@ -25,12 +25,19 @@ namespace ICE.Scheduler.Handlers
             if (!PlayerHelper.IsInCosmicZone()) return;
 
             Weather currWeather = GetCurrentWeather();
-            var CurrentWeatherInFirstSpot = weathers.FirstOrDefault()?.Name == currWeather.Name;
+            var CorrectFirstWeather = true;
+            var NeedToRefreshBecauseRedAlert = true;
+            if (weathers.Count > 0)
+            {
+                CorrectFirstWeather = weathers[0].Name == currWeather.Name;
+
+                if (weathers[1].Time - DateTime.UtcNow < TimeSpan.Zero) NeedToRefreshBecauseRedAlert = true;
+            }
 
             //Only allow refresh if territory changed
             //Or weather is not in first spot (ex: Red Alert)
             //Or already past 5 minutes since the last refresh
-            if (Svc.ClientState.TerritoryType == previousZoneForecast && CurrentWeatherInFirstSpot && DateTime.Now - _lastProcessed < _delay) return;
+            if (Svc.ClientState.TerritoryType == previousZoneForecast && CorrectFirstWeather && !NeedToRefreshBecauseRedAlert && DateTime.Now - _lastProcessed < _delay) return;
             RefreshForecast();
         }
 
@@ -60,25 +67,12 @@ namespace ICE.Scheduler.Handlers
         internal static unsafe (string, string, string) GetNextWeather()
         {
             if (!PlayerHelper.IsInCosmicZone()) return default;
+            if (weathers.Count == 0) return default;
 
-            Weather currWeather = GetCurrentWeather();
+            var currentWeather = weathers[0];
+            var nextWeather = weathers[1];
 
-            try
-            {
-                var currentWeather = weathers
-                                .Select((item, index) => new { item, index })
-                                .First(w => w.item.Name == currWeather.Name);
-                var nextWeather = weathers
-                    .Skip(currentWeather.index + 1)
-                    .Select((item, index) => new { item, index })
-                    .First();
-                return (currentWeather.item.Name, nextWeather.item.Name, FormatForecastTime(nextWeather.item.Time));
-            }
-            catch (Exception ex)
-            {
-                IceLogging.Error($"{ex}");
-                return default;
-            }
+            return (currentWeather.Name, nextWeather.Name, FormatForecastTime(nextWeather.Time));
         }
 
         internal static unsafe void GetForecast()
@@ -103,9 +97,33 @@ namespace ICE.Scheduler.Handlers
                     weathers.Add(BuildResultObject(weather, time));
                 }
             }
-            weathers = [.. weathers.Take(3)];
         }
 
+        internal static unsafe List<WeatherForecast> GetTerritoryForecast(ushort territoryId)
+        {
+            List<WeatherForecast> territoryForecast = [];
+
+            WeatherManager* wm = WeatherManager.Instance();
+            byte weatherId = wm->GetWeatherForDaytime(territoryId, 0);
+            Weather currentWeather = WeatherSheet.GetRow(weatherId);
+            Weather lastWeather = currentWeather;
+
+            territoryForecast = [BuildResultObject(currentWeather, GetRootTime(0))];
+
+            for (var i = 1; i <= 24; i++)
+            {
+                weatherId = wm->GetWeatherForDaytime(territoryId, i);
+                var weather = WeatherSheet.GetRow(weatherId)!;
+                var time = GetRootTime(i * WeatherPeriod);
+
+                if (lastWeather.RowId != weather.RowId)
+                {
+                    lastWeather = weather;
+                    territoryForecast.Add(BuildResultObject(weather, time));
+                }
+            }
+            return territoryForecast;
+        }
         private static WeatherForecast BuildResultObject(Weather weather, DateTime time)
         {
             var name = weather.Name.ExtractText();

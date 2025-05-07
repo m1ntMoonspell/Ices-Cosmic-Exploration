@@ -8,6 +8,7 @@ using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
 using Dalamud.Interface.Utility;
+using ICE.Scheduler.Handlers;
 
 namespace ICE.Ui
 {
@@ -776,6 +777,34 @@ namespace ICE.Ui
                                 ImGui.ResetMouseDragDelta();
                             }
                         }
+                    }
+                }
+
+                if (ImGui.Button("Get Sinus Forecast"))
+                {
+                    List<WeatherForecast> forecast = WeatherForecastHandler.GetTerritoryForecast(1237);
+                    Func<WeatherForecast, string> formatTime = (forecast) => WeatherForecastHandler.FormatForecastTime(forecast.Time);
+
+                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                    {
+                        Message = $"Sinus Ardorum Weather - {forecast[0].Name}",
+                        Type = Dalamud.Game.Text.XivChatType.Echo,
+                    });
+                    for (int i = 1; i < forecast.Count; i++)
+                    {
+                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        {
+                            Message = $"{forecast[i].Name} In {formatTime(forecast[i])}",
+                            Type = Dalamud.Game.Text.XivChatType.Echo,
+                        });
+                    }
+                }
+
+                using (ImRaii.Disabled(!PlayerHelper.IsInCosmicZone()))
+                {
+                    if (ImGui.Button("Refresh Forecast"))
+                    {
+                        WeatherForecastHandler.GetForecast();
                     }
                 }
             }
