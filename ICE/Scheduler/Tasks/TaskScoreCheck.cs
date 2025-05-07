@@ -123,7 +123,7 @@ namespace ICE.Scheduler.Tasks
                 }
             }
             if (!SchedulerMain.AnimationLockAbandonState)
-                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
+                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 1000 });
 
             var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
             IceLogging.Info("[TurnIn] Attempting turnin", true);
@@ -146,7 +146,7 @@ namespace ICE.Scheduler.Tasks
                 SchedulerMain.Abandon = true;
                 if (abortIfNoReport)
                     SchedulerMain.State = IceState.GrabMission;
-                else if (SchedulerMain.AnimationLockAbandonState)
+                if (SchedulerMain.AnimationLockAbandonState)
                     SchedulerMain.State = IceState.AnimationLock;
                 P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
             }
@@ -160,17 +160,14 @@ namespace ICE.Scheduler.Tasks
                 return true;
             }
 
-            if (!Throttles.OneSecondThrottle)
-            {
-                //IceLogging.Debug("[Score Checker] Throttling, skipping turn in");
-                return false;
-            }
-
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 //IceLogging.Debug("[Score Checker] REPORTING", true);
                 z.Report();
-                return false;
+            }
+            else
+            {
+                CosmicHelper.OpenStellaMission();
             }
 
             return false;

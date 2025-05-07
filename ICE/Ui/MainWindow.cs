@@ -8,7 +8,7 @@ using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
 using Dalamud.Interface.Utility;
-using ECommons.Configuration;
+using Dalamud.Game.ClientState.Conditions;
 
 namespace ICE.Ui
 {
@@ -741,8 +741,13 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
-                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);                
-                
+                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
+                if (ImGui.Button("RecipeNote"))
+                {
+                    if (EzThrottler.Throttle("RecipeNote", 50))
+                        AddonHelper.OpenRecipeNote();
+                }
+
                 var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
                 {
                     ("Sequence Missions", new Func<byte>(() => C.SequenceMissionPriority), new Action<byte>(v => { C.SequenceMissionPriority = v; C.Save(); })),

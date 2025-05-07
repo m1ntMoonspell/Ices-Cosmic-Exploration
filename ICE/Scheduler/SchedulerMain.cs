@@ -33,8 +33,6 @@ namespace ICE.Scheduler
 
         internal static void Tick()
         {
-            if (State == IceState.AnimationLock)
-                
             if (Throttles.GenericThrottle && P.TaskManager.Tasks.Count == 0)
             {
                 switch (State)

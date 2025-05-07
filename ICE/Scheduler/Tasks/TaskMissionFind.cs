@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ECommons.GameHelpers;
 using ICE.Utilities.Cosmic;
+using Dalamud.Game.ClientState.Conditions;
 
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ECommons.GenericHelpers;
@@ -31,7 +32,7 @@ namespace ICE.Scheduler.Tasks
 
         public static void EnqueueResumeCheck()
         {   
-            if (SchedulerMain.AnimationLockAbandonState)
+            if (SchedulerMain.AnimationLockAbandonState || (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
             {
                 SchedulerMain.State = IceState.AnimationLock;
             }
