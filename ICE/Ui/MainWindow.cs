@@ -589,7 +589,7 @@ namespace ICE.Ui
                 {
                     ImGui.SetNextItemWidth(150);
                     ImGui.SameLine();
-                    if (ImGui.SliderInt("ms", ref delayAmount, 0, 1000))
+                    if (ImGui.SliderInt("ms###Mission", ref delayAmount, 0, 1000))
                     {
                         if (C.DelayIncrease != delayAmount)
                         {
@@ -611,7 +611,7 @@ namespace ICE.Ui
                 {
                     ImGui.SetNextItemWidth(150);
                     ImGui.SameLine();
-                    if (ImGui.SliderInt("ms", ref delayCraftAmount, 0, 10000))
+                    if (ImGui.SliderInt("ms###Crafting", ref delayCraftAmount, 0, 10000))
                     {
                         if (C.DelayCraftIncrease != delayCraftAmount)
                         {
