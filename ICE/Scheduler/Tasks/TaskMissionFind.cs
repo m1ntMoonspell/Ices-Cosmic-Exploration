@@ -269,16 +269,20 @@ namespace ICE.Scheduler.Tasks
                     var sequenceIds = C.Missions.Where(x => x.Type == MissionType.Sequential).Select(s => s.Id).ToHashSet();
                     var timedIds = C.Missions.Where(x => x.Type == MissionType.Timed).Select(t => t.Id).ToHashSet();
 
-                    var sortedMissions = x.StellerMissions
-                        .Where(m => weatherIds.Contains(m.MissionId))
-                        .Concat(
-                            x.StellerMissions.Where(m =>
-                                !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId))
-                        )
-                        .Concat(
-                            x.StellerMissions.Where(m =>
-                                !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId))
-                        )
+                    var weatherMissions = x.StellerMissions.Where(m => !timedIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId));
+                    var timedMissions = x.StellerMissions.Where(m => !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId));
+                    var sequenceMissions = x.StellerMissions.Where(m => !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId));
+
+                    var priorityMissions = new List<(int prio, IEnumerable<WKSMission.StellarMissions> missions)>
+                    {
+                        (C.SequenceMissionPriority, sequenceMissions),
+                        (C.TimedMissionPriority, timedMissions),
+                        (C.WeatherMissionPriority, weatherMissions)
+                    };
+
+                    var sortedMissions = priorityMissions
+                        .OrderBy(p => p.prio)
+                        .SelectMany(p => p.missions)
                         .ToArray();
 
                     foreach (var m in sortedMissions)
