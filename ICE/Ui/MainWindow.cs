@@ -345,7 +345,7 @@ namespace ICE.Ui
                     }
 
                     // Settings column
-                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 150);
+                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
 
                     // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
@@ -476,27 +476,39 @@ namespace ICE.Ui
                         }
 
                         ImGui.TableNextColumn();
-                        var silver = mission.TurnInSilver;
-                        if (ImGui.Checkbox($"Silver###{entry.Value.Name}_{entry.Key}_silver", ref silver))
+                        string[] modes;
+                        int currentModeIndex = 0;
+                        if (unsupported)
                         {
-                            mission.TurnInSilver = silver;
-
-                            if (mission.TurnInASAP && silver)
-                            {
-                                mission.TurnInASAP = false;
-                            }
-
-                            C.Save();
+                            modes = ["Manual"];
+                            mission.ManualMode = true;
                         }
-                        ImGui.SameLine();
-                        var asap = mission.TurnInASAP;
-                        if (ImGui.Checkbox($"ASAP###{entry.Value.Name}_{entry.Key}_asap", ref asap))
+                        else
                         {
-                            mission.TurnInASAP = asap;
+                            modes = ["Gold", "Silver", "ASAP", "Manual"];
+                            if (mission.TurnInSilver)
+                                currentModeIndex = 1;
+                            if (mission.TurnInASAP)
+                                currentModeIndex = 2;
+                            if (mission.ManualMode)
+                                currentModeIndex = 3;
+                        }
 
-                            if (mission.TurnInSilver && asap)
+                        ImGui.SetNextItemWidth(-1);
+                        if (ImGui.Combo($"###{entry.Value.Name}_{entry.Key}_turninMode", ref currentModeIndex, modes, modes.Length))
+                        {
+                            mission.TurnInSilver = mission.TurnInASAP = mission.ManualMode = false;
+                            switch (modes[currentModeIndex])
                             {
-                                mission.TurnInSilver = false;
+                                case "Silver":
+                                    mission.TurnInSilver = true;
+                                    break;
+                                case "ASAP":
+                                    mission.TurnInASAP = true;
+                                    break;
+                                case "Manual":
+                                    mission.ManualMode = true;
+                                    break;
                             }
 
                             C.Save();
