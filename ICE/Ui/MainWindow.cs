@@ -7,6 +7,7 @@ using Dalamud.Interface.Colors;
 using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
+using Dalamud.Interface.Utility;
 
 namespace ICE.Ui
 {
@@ -103,6 +104,7 @@ namespace ICE.Ui
         // Configuration booleans bound to checkboxes.
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
+        private static bool animationLockAbandon = C.AnimationLockAbandon;
         private static bool delayGrabMission = C.DelayGrabMission;
         private static bool delayCraft = C.DelayCraft;
         private static int delayAmount = C.DelayIncrease;
@@ -252,21 +254,33 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
-            DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.Time != 0);
             timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.PreviousMissionID != 0);
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
-            DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
+
+            void DrawWeatherMissions() => DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions);
+            void DrawTimedMissions() => DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
+            void DrawSequentialMissions() => DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
+
+            var missionList = new List<(int prio, Action action)>
+                {
+                    (C.SequenceMissionPriority, DrawSequentialMissions),
+                    (C.TimedMissionPriority, DrawTimedMissions),
+                    (C.WeatherMissionPriority, DrawWeatherMissions)
+                };
+            foreach (var (_, drawMission) in missionList.OrderBy(t => t.prio))
+            {
+                drawMission();
+            }
 
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
@@ -345,7 +359,7 @@ namespace ICE.Ui
                     }
 
                     // Settings column
-                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 150);
+                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
 
                     // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
@@ -476,27 +490,39 @@ namespace ICE.Ui
                         }
 
                         ImGui.TableNextColumn();
-                        var silver = mission.TurnInSilver;
-                        if (ImGui.Checkbox($"Silver###{entry.Value.Name}_{entry.Key}_silver", ref silver))
+                        string[] modes;
+                        int currentModeIndex = 0;
+                        if (unsupported)
                         {
-                            mission.TurnInSilver = silver;
-
-                            if (mission.TurnInASAP && silver)
-                            {
-                                mission.TurnInASAP = false;
-                            }
-
-                            C.Save();
+                            modes = ["Manual"];
+                            mission.ManualMode = true;
                         }
-                        ImGui.SameLine();
-                        var asap = mission.TurnInASAP;
-                        if (ImGui.Checkbox($"ASAP###{entry.Value.Name}_{entry.Key}_asap", ref asap))
+                        else
                         {
-                            mission.TurnInASAP = asap;
+                            modes = ["Gold", "Silver", "ASAP", "Manual"];
+                            if (mission.TurnInSilver)
+                                currentModeIndex = 1;
+                            if (mission.TurnInASAP)
+                                currentModeIndex = 2;
+                            if (mission.ManualMode)
+                                currentModeIndex = 3;
+                        }
 
-                            if (mission.TurnInSilver && asap)
+                        ImGui.SetNextItemWidth(-1);
+                        if (ImGui.Combo($"###{entry.Value.Name}_{entry.Key}_turninMode", ref currentModeIndex, modes, modes.Length))
+                        {
+                            mission.TurnInSilver = mission.TurnInASAP = mission.ManualMode = false;
+                            switch (modes[currentModeIndex])
                             {
-                                mission.TurnInSilver = false;
+                                case "Silver":
+                                    mission.TurnInSilver = true;
+                                    break;
+                                case "ASAP":
+                                    mission.TurnInASAP = true;
+                                    break;
+                                case "Manual":
+                                    mission.ManualMode = true;
+                                    break;
                             }
 
                             C.Save();
@@ -712,7 +738,46 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
-                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
+                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);                
+                
+                var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
+                {
+                    ("Sequence Missions", new Func<byte>(() => C.SequenceMissionPriority), new Action<byte>(v => { C.SequenceMissionPriority = v; C.Save(); })),
+                    ("Timed Missions", new Func<byte>(() => C.TimedMissionPriority), new Action<byte>(v => { C.TimedMissionPriority = v; C.Save(); })),
+                    ("Weather Missions", new Func<byte>(() => C.WeatherMissionPriority), new Action<byte>(v => { C.WeatherMissionPriority = v; C.Save(); }))
+                };
+
+                var sorted = missionMap
+                    .Select((m, i) => new { Index = i, Name = m.name, Priority = m.get() })
+                    .OrderBy(m => m.Priority)
+                    .ToList();
+                ImGuiHelpers.ScaledDummy(5, 0);
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Provision Mission Priority"))
+                {
+                    for (int i = 0; i < sorted.Count; i++)
+                    {
+                        var item = sorted[i];
+                        ImGuiHelpers.ScaledDummy(5, 0);
+                        ImGui.SameLine();
+                        ImGui.Selectable(item.Name);
+                        if (ImGui.IsItemActive() && !ImGui.IsItemHovered())
+                        {
+                            int nextIndex = i + (ImGui.GetMouseDragDelta(0).Y < 0f ? -1 : 1);
+                            if (nextIndex >= 0 && nextIndex < sorted.Count)
+                            {
+                                // Swap the priority values
+                                var otherItem = sorted[nextIndex];
+
+                                // Swap their priority values via the original setters
+                                byte temp = missionMap[item.Index].get();
+                                missionMap[item.Index].set(missionMap[otherItem.Index].get());
+                                missionMap[otherItem.Index].set(temp);
+                                ImGui.ResetMouseDragDelta();
+                            }
+                        }
+                    }
+                }
             }
 #endif
 
