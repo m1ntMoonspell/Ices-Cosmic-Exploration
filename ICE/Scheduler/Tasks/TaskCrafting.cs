@@ -8,6 +8,7 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskCrafting
     {
+        internal static bool PossiblyStuck = false;
         private static ExcelSheet<Item>? ItemSheet;
         private static ExcelSheet<Recipe>? RecipeSheet;
 
@@ -196,7 +197,7 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft
                         });
@@ -215,7 +216,7 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
@@ -292,7 +293,7 @@ namespace ICE.Scheduler.Tasks
             P.Artisan.CraftItem(id, craftAmount);
         }
 
-        internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
+        internal static bool? WaitTillActuallyDone()
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {

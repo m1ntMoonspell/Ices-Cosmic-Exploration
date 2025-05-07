@@ -42,6 +42,8 @@ namespace ICE.Scheduler
                         break;
                     case IceState.WaitForCrafts:
                     case IceState.CraftInProcess:
+                        TaskCrafting.WaitTillActuallyDone();
+                        break;
                     case IceState.GrabbingMission:
                         break;
                     case IceState.WaitForNonStandard:
