@@ -117,9 +117,8 @@ namespace ICE.Scheduler.Tasks
                 }
                 if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady && currentScore < goldScore)
                 {
-                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
-                    P.Artisan.SetStopRequest(true);
-                    // cr.Addon->FireCallbackInt(-1);
+                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix");
+                    cr.Addon->FireCallbackInt(-1);
                 }
             }
             if (!C.AnimationLockAbandonState)
@@ -141,7 +140,7 @@ namespace ICE.Scheduler.Tasks
                     Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                 });
             }
-            if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0 && C.AnimationLockAbandonState)
+            if ((abortIfNoReport || C.AnimationLockAbandonState) && CosmicHelper.CurrentLunarMission != 0)
             {
                 SchedulerMain.Abandon = true;
                 SchedulerMain.State = IceState.GrabMission;

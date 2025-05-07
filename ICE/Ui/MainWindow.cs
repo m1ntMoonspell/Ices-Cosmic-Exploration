@@ -7,7 +7,6 @@ using Dalamud.Interface.Colors;
 using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
-using ICE.Scheduler.Tasks;
 
 namespace ICE.Ui
 {
@@ -102,7 +101,6 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         // Configuration booleans bound to checkboxes.
-        private static bool animationLockAbandon = C.AnimationLockAbandon;
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool delayGrabMission = C.DelayGrabMission;
