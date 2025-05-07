@@ -402,44 +402,40 @@ namespace ICE.Ui
 
                         // Column 0: Enable checkbox
                         ImGui.TableSetColumnIndex(0);
-                        using (ImRaii.Disabled(unsupported))
+                        // Estimate the width of the checkbox (label is invisible, so the box is all that matters)
+                        float cellWidth = ImGui.GetContentRegionAvail().X;
+                        float checkboxWidth = ImGui.GetFrameHeight(); // Width of the square checkbox only
+                        float offset = (cellWidth - checkboxWidth) * 0.5f;
+
+                        if (offset > 0f)
+                            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+                        // Use an invisible label for the checkbox to avoid text spacing
+                        if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref isEnabled))
                         {
-                            // Estimate the width of the checkbox (label is invisible, so the box is all that matters)
-                            float cellWidth = ImGui.GetContentRegionAvail().X;
-                            float checkboxWidth = ImGui.GetFrameHeight(); // Width of the square checkbox only
-                            float offset = (cellWidth - checkboxWidth) * 0.5f;
+                            mission.Enabled = isEnabled;
+                            CosmicMission chain;
 
-                            if (offset > 0f)
-                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
-
-                            // Use an invisible label for the checkbox to avoid text spacing
-                            if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref isEnabled))
+                            if (isEnabled)
                             {
-                                mission.Enabled = isEnabled;
-                                CosmicMission chain;
-
-                                if (isEnabled)
+                                var prevChainList = GetOnlyPreviousMissionsRecursive(mission.Id);
+                                foreach (var missionId in prevChainList)
                                 {
-                                    var prevChainList = GetOnlyPreviousMissionsRecursive(mission.Id);
-                                    foreach (var missionId in prevChainList)
-                                    {
-                                        chain = C.Missions.Single(x => x.Id == missionId);
-                                        chain.Enabled = isEnabled;
-                                    }
+                                    chain = C.Missions.Single(x => x.Id == missionId);
+                                    chain.Enabled = isEnabled;
                                 }
-                                else
+                            }
+                            else
+                            {
+                                var nextChainList = GetOnlyNextMissionsRecursive(mission.Id);
+                                foreach (var missionId in nextChainList)
                                 {
-                                    var nextChainList = GetOnlyNextMissionsRecursive(mission.Id);
-                                    foreach (var missionId in nextChainList)
-                                    {
-                                        chain = C.Missions.Single(x => x.Id == missionId);
-                                        chain.Enabled = isEnabled;
-                                    }
+                                    chain = C.Missions.Single(x => x.Id == missionId);
+                                    chain.Enabled = isEnabled;
                                 }
-
-                                C.Save();
                             }
 
+                            C.Save();
                         }
 
                         // Column 1: Mission ID
@@ -456,7 +452,7 @@ namespace ICE.Ui
                             ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), MissionName);
                             if (ImGui.IsItemHovered())
                             {
-                                ImGui.SetTooltip("Currently not supported");
+                                ImGui.SetTooltip("Currently can only be done in manual mode");
                             }
                         }
                         else

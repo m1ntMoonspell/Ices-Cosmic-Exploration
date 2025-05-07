@@ -33,6 +33,7 @@ internal class DebugWindow : Window
     private int Radius = 10;
     private int XLoc = 0;
     private int YLoc = 0;
+    private int TableRow = 1;
 
     public override unsafe void Draw()
     {
@@ -473,7 +474,22 @@ internal class DebugWindow : Window
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNode("Map test"))
+        {
+            ImGui.InputInt("TableId", ref TableRow);
 
+            var MapInfo = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
+
+            int x = MapInfo.GetRow((uint)TableRow).Unknown1.ToInt() / 2;
+            int y = MapInfo.GetRow((uint)TableRow).Unknown2.ToInt() / 2;
+
+            if (ImGui.Button($"Test Radius"))
+            {
+                var agent = AgentMap.Instance();
+
+                Utils.SetGatheringRing(agent->CurrentTerritoryId, x, y, 100);
+            }
+        }
     }
 
     private void Table()
@@ -655,5 +671,8 @@ internal class DebugWindow : Window
         }
     }
 
-
+    private static float ConvertWorldCoordXzToMapCoord(float value, uint scale, int offset)
+    {
+        return (0.02f * offset) + (2048f / scale) + (0.02f * value) + 1f;
+    }
 }
