@@ -36,6 +36,10 @@ namespace ICE.Scheduler
                 switch (State)
                 {
                     case IceState.Idle:
+                        break;
+                    case IceState.AnimationLock:
+                        TaskAnimationLock.Enqueue();
+                        break;
                     case IceState.WaitForCrafts:
                     case IceState.CraftInProcess:
                     case IceState.GrabbingMission:
@@ -69,6 +73,7 @@ namespace ICE.Scheduler
     internal enum IceState
     {
         Idle,
+        AnimationLock,
         GrabMission,
         GrabbingMission,
         StartCraft,

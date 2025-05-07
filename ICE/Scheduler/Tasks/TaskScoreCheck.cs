@@ -143,7 +143,10 @@ namespace ICE.Scheduler.Tasks
             if ((abortIfNoReport || C.AnimationLockAbandonState) && CosmicHelper.CurrentLunarMission != 0)
             {
                 SchedulerMain.Abandon = true;
-                SchedulerMain.State = IceState.GrabMission;
+                if (abortIfNoReport)
+                    SchedulerMain.State = IceState.GrabMission;
+                else if (C.AnimationLockAbandonState)
+                    SchedulerMain.State = IceState.AnimationLock;
                 P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
             }
         }

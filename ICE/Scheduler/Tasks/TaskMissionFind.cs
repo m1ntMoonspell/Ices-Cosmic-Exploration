@@ -38,6 +38,10 @@ namespace ICE.Scheduler.Tasks
                     SchedulerMain.State = IceState.CheckScoreAndTurnIn;
                 }
             }
+            else if (C.AnimationLockAbandonState)
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+            }
             else
             {
                 SchedulerMain.State = IceState.GrabMission;
