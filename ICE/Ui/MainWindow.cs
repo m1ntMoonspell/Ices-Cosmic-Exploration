@@ -104,6 +104,7 @@ namespace ICE.Ui
         // Configuration booleans bound to checkboxes.
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
+        private static bool animationLockAbandon = C.AnimationLockAbandon;
         private static bool delayGrabMission = C.DelayGrabMission;
         private static bool delayCraft = C.DelayCraft;
         private static int delayAmount = C.DelayIncrease;
