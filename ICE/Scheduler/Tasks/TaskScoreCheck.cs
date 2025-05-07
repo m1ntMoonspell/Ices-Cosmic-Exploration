@@ -5,7 +5,6 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskScoreCheck
     {
-        internal static bool AnimationLockAbandonState = false;
         public static void TryCheckScore()
         {
             if (CosmicHelper.CurrentLunarMission == 0)
@@ -21,7 +20,7 @@ namespace ICE.Scheduler.Tasks
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                if (SchedulerMain.State == IceState.AbortInProgress || (AnimationLockAbandonState && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
+                if (SchedulerMain.State == IceState.AbortInProgress)
                 {
                     IceLogging.Error("[Score Checker] Aborting mission");
                     TurnIn(z, true);
@@ -96,29 +95,11 @@ namespace ICE.Scheduler.Tasks
                 var (currentScore, silverScore, goldScore) = TaskCrafting.GetCurrentScores();
                 if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady && currentScore < goldScore)
                 {
-                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
-                    P.Artisan.SetStopRequest(true);
-                    // cr.Addon->FireCallbackInt(-1);
+                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix");
+                    cr.Addon->FireCallbackInt(-1);
                 }
-                if (!TaskCrafting.PossiblyStuck && C.AnimationLockAbandon)
-                {
-                    TaskCrafting.PossiblyStuck = true;
-                }
-                else
-                {
-                    AnimationLockAbandonState = true;
-                if ((!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
-                {
-                    IceLogging.Error("[ICE] Unexpected error. I might be Animation Locked.");
-                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
-                    {
-                        Message = "[ICE] Unexpected error. I might be Animation Locked. Attempting experimental unstuck.",
-                        Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                    });
-                }
-                }
-                if (!AnimationLockAbandonState)
-                    P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000});
+
+                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true);
 
                 var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
 
@@ -136,7 +117,7 @@ namespace ICE.Scheduler.Tasks
                         Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                     });
                 }
-                if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0 /* || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]) */)
+                if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0)
                 {
                     SchedulerMain.Abandon = true;
                     SchedulerMain.State = IceState.GrabMission;

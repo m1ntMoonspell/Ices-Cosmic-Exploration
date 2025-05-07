@@ -8,7 +8,6 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskCrafting
     {
-        internal static bool PossiblyStuck = false;
         private static ExcelSheet<Item>? ItemSheet;
         private static ExcelSheet<Recipe>? RecipeSheet;
 
@@ -72,7 +71,6 @@ namespace ICE.Scheduler.Tasks
 
             if (!P.TaskManager.IsBusy) // ensure no pending tasks or manual craft while plogon enabled
             {
-                PossiblyStuck = false;
                 SchedulerMain.State = IceState.CraftInProcess;
 
                 CosmicHelper.OpenStellaMission();
@@ -212,11 +210,11 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft
                         });
-                        P.TaskManager.EnqueueDelay(250); // Post-craft delay between Synthesis and RecipeLog reopening
+                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -231,11 +229,11 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
                         P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
-                        P.TaskManager.EnqueueDelay(250); // Post-craft delay between Synthesis and RecipeLog reopening
+                        P.TaskManager.EnqueueDelay(2500); // Post-craft delay between Synthesis and RecipeLog reopening
                     }
                 }
 
@@ -276,44 +274,36 @@ namespace ICE.Scheduler.Tasks
 
         internal static void Craft(ushort id, int craftAmount, Item item)
         {
-            // if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
-            // {
-            //     if (EzThrottler.Throttle("Selecting Item"))
-            //     {
-            //         if (!m.SelectedCraftingItem.Contains($"{item.Name}"))
-            //         {
-            //             foreach (var i in m.CraftingItems)
-            //             {
-            //                 if (i.Name.Contains(item.Name.ToString()))
-            //                 {
-            //                     IceLogging.Debug($"[Craft failsafe] Selecting item: {i.Name}", true);
-            //                     i.Select();
-            //                 }
-            //                 else
-            //                 {
-            //                     continue;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
+            if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var m) && m.IsAddonReady)
+            {
+                if (EzThrottler.Throttle("Selecting Item"))
+                {
+                    if (!m.SelectedCraftingItem.Contains($"{item.Name}"))
+                    {
+                        foreach (var i in m.CraftingItems)
+                        {
+                            if (i.Name.Contains(item.Name.ToString()))
+                            {
+                                IceLogging.Debug($"[Craft failsafe] Selecting item: {i.Name}", true);
+                                i.Select();
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
 
             IceLogging.Debug($"[Main Item(s)] Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}", true);
             P.Artisan.CraftItem(id, craftAmount);
         }
 
-        internal static bool? WaitTillActuallyDone()
+        internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                if (TaskScoreCheck.AnimationLockAbandonState && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
-                {
-                    IceLogging.Info("[WaitTillActuallyDone] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
-                    SchedulerMain.State = IceState.StartCraft;
-                    TaskScoreCheck.AnimationLockAbandonState = false;
-                    P.Artisan.SetStopRequest(true);
-                    return true;
-                }
               var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
               var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
 
@@ -327,20 +317,20 @@ namespace ICE.Scheduler.Tasks
 
               if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
               {
-                  IceLogging.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.", true);
-                  P.Artisan.SetStopRequest(true);
+                  IceLogging.Debug("[WaitTillActuallyDone] Silver wanted. Silver reached.");
+                  P.Artisan.SetEnduranceStatus(false);
                   return true;
               }
               else if (currentScore >= goldScore && enoughMain.Value)
               {
-                  IceLogging.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.", true);
-                  P.Artisan.SetStopRequest(true);
+                  IceLogging.Debug("[WaitTillActuallyDone] Gold wanted. Gold reached.");
+                  P.Artisan.SetEnduranceStatus(false);
                   return true;
               }
 
               if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
               {
-                  IceLogging.Debug("[WaitTillActuallyDone] We seem to no longer be crafting", true);
+                  PluginLog.Debug("[WaitTillActuallyDone] We seem to no longer be crafting");
                   return true;
               }
             }
