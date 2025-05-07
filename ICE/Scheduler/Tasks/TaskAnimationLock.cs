@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
+using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
 {
@@ -6,7 +7,7 @@ namespace ICE.Scheduler.Tasks
     {
         public static void Enqueue()
         {   
-            if (SchedulerMain.AnimationLockAbandonState && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
+            if (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction] || AddonHelper.IsAddonActive("RecipeNote") || AddonHelper.IsAddonActive("WKSRecipeNotebook"))
             {
                 IceLogging.Info("[Animation Lock] [Wait] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
                 SchedulerMain.State = IceState.GrabMission;
