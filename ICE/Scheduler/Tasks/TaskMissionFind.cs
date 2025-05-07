@@ -18,16 +18,16 @@ namespace ICE.Scheduler.Tasks
         private static uint MissionId = 0;
         private static uint? currentClassJob => PlayerHelper.GetClassJobId();
         private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
-        private static bool hasCritical => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
-        private static bool hasWeather => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
-        private static bool hasTimed => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
-        private static bool hasSequence => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
-        private static bool hasStandard => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
-        private static bool HasA2 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
-        private static bool HasA1 => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
-        private static bool HasB => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
-        private static bool HasC => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
-        private static bool HasD => C.Missions.Where(x => !UnsupportedMissions.Ids.Contains(x.Id)).Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
+        private static bool hasCritical => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Critical && x.Enabled);
+        private static bool hasWeather => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Weather && x.Enabled);
+        private static bool hasTimed => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Timed && x.Enabled);
+        private static bool hasSequence => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Enabled).Any(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
+        private static bool hasStandard => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && x.Enabled);
+        private static bool HasA2 => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
+        private static bool HasA1 => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 4 && x.Enabled);
+        private static bool HasB => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 3 && x.Enabled);
+        private static bool HasC => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 2 && x.Enabled);
+        private static bool HasD => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
 
         public static void EnqueueResumeCheck()
         {
@@ -269,16 +269,20 @@ namespace ICE.Scheduler.Tasks
                     var sequenceIds = C.Missions.Where(x => x.Type == MissionType.Sequential).Select(s => s.Id).ToHashSet();
                     var timedIds = C.Missions.Where(x => x.Type == MissionType.Timed).Select(t => t.Id).ToHashSet();
 
-                    var sortedMissions = x.StellerMissions
-                        .Where(m => weatherIds.Contains(m.MissionId))
-                        .Concat(
-                            x.StellerMissions.Where(m =>
-                                !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId))
-                        )
-                        .Concat(
-                            x.StellerMissions.Where(m =>
-                                !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId))
-                        )
+                    var weatherMissions = x.StellerMissions.Where(m => !timedIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId));
+                    var timedMissions = x.StellerMissions.Where(m => !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId));
+                    var sequenceMissions = x.StellerMissions.Where(m => !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId));
+
+                    var priorityMissions = new List<(int prio, IEnumerable<WKSMission.StellarMissions> missions)>
+                    {
+                        (C.SequenceMissionPriority, sequenceMissions),
+                        (C.TimedMissionPriority, timedMissions),
+                        (C.WeatherMissionPriority, weatherMissions)
+                    };
+
+                    var sortedMissions = priorityMissions
+                        .OrderBy(p => p.prio)
+                        .SelectMany(p => p.missions)
                         .ToArray();
 
                     foreach (var m in sortedMissions)
@@ -400,7 +404,14 @@ namespace ICE.Scheduler.Tasks
 
                     var rankToReset = missionRanks.Max();
 
-                    foreach (var m in x.StellerMissions)
+                    Random rng = new Random();
+
+                    var missions = x.StellerMissions
+                        .GroupBy(m => CosmicHelper.MissionInfoDict[m.MissionId].Rank) // Group By Rank
+                        .SelectMany(g => g.OrderBy(m => rng.Next())) // Reorder inside each group randomly
+                        .ToArray();
+
+                    foreach (var m in missions)
                     {
                         var missionEntry = CosmicHelper.MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
@@ -506,7 +517,7 @@ namespace ICE.Scheduler.Tasks
 
         private static bool ModeChangeCheck(bool gatherer)
         {
-            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
+            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0 || C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode) // Manual Mode for Only Grab Mission / Dual Class Mission
             {
                 SchedulerMain.State = IceState.ManualMode;
                 return true;
