@@ -1,11 +1,17 @@
 ﻿using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using Lumina.Excel.Sheets;
 
 namespace ICE.Utilities;
 
 public static class AddonHelper
 {
+    public static unsafe void OpenRecipeNote(uint recipeId = 1)
+    {
+        AgentRecipeNote.Instance()->SearchRecipeByItemId(Svc.Data.GetExcelSheet<Recipe>().GetRow(recipeId).RowId);
+    }
     public static unsafe bool IsAddonActive(string AddonName) // Used to see if the addon is active/ready to be fired on
     {
         var addon = RaptureAtkUnitManager.Instance()->GetAddonByName(AddonName);

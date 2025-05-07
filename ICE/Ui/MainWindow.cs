@@ -742,11 +742,6 @@ namespace ICE.Ui
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
                 ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
-                if (ImGui.Button("RecipeNote"))
-                {
-                    if (EzThrottler.Throttle("RecipeNote", 50))
-                        AddonHelper.OpenRecipeNote();
-                }
 
                 var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
                 {
