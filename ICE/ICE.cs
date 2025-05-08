@@ -61,6 +61,7 @@ public sealed partial class ICE : IDalamudPlugin
             """);
         EzCmd.Add("/ice", OnCommand);
         EzCmd.Add("/IceCosmic", OnCommand);
+        Init();
         Svc.Framework.Update += Tick;
 
         TaskManager = new(new(showDebug: true));
@@ -74,6 +75,12 @@ public sealed partial class ICE : IDalamudPlugin
             settingWindow.IsOpen = true;
         };
         DictionaryCreation();
+    }
+
+    private void Init()
+    {
+        CosmicHelper.Init();
+        WeatherForecastHandler.Init();
     }
 
     private void Tick(object _)

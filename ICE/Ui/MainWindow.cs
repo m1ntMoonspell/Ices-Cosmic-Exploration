@@ -7,6 +7,8 @@ using Dalamud.Interface.Colors;
 using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
+using Dalamud.Interface.Utility;
+using ICE.Scheduler.Handlers;
 
 namespace ICE.Ui
 {
@@ -101,15 +103,21 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         // Configuration booleans bound to checkboxes.
+        private static bool animationLockAbandon = C.AnimationLockAbandon;
+        private static bool AnimationLockAbandonState = SchedulerMain.AnimationLockAbandonState;
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
         private static bool delayGrabMission = C.DelayGrabMission;
+        private static bool delayCraft = C.DelayCraft;
         private static int delayAmount = C.DelayIncrease;
+        private static int delayCraftAmount = C.DelayCraftIncrease;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
         private static bool showOverlay = C.ShowOverlay;
         private static bool stopOnceHitCosmoCredits = C.StopOnceHitCosmoCredits;
         private static bool stopOnceHitLunarCredits = C.StopOnceHitLunarCredits;
+        private static int cosmoCreditsCap = C.CosmoCreditsCap;
+        private static int lunarCreditsCap = C.LunarCreditsCap;
         private static bool stopWhenLevel = C.StopWhenLevel;
         private static int targetLevel = C.TargetLevel;
         private static bool ShowSeconds = C.ShowSeconds;
@@ -250,21 +258,33 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
-            DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.Time != 0);
             timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.PreviousMissionID != 0);
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
-            DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
+
+            void DrawWeatherMissions() => DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions);
+            void DrawTimedMissions() => DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
+            void DrawSequentialMissions() => DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
+
+            var missionList = new List<(int prio, Action action)>
+                {
+                    (C.SequenceMissionPriority, DrawSequentialMissions),
+                    (C.TimedMissionPriority, DrawTimedMissions),
+                    (C.WeatherMissionPriority, DrawWeatherMissions)
+                };
+            foreach (var (_, drawMission) in missionList.OrderBy(t => t.prio))
+            {
+                drawMission();
+            }
 
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
@@ -343,7 +363,7 @@ namespace ICE.Ui
                     }
 
                     // Settings column
-                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 150);
+                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
 
                     // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
@@ -386,44 +406,40 @@ namespace ICE.Ui
 
                         // Column 0: Enable checkbox
                         ImGui.TableSetColumnIndex(0);
-                        using (ImRaii.Disabled(unsupported))
+                        // Estimate the width of the checkbox (label is invisible, so the box is all that matters)
+                        float cellWidth = ImGui.GetContentRegionAvail().X;
+                        float checkboxWidth = ImGui.GetFrameHeight(); // Width of the square checkbox only
+                        float offset = (cellWidth - checkboxWidth) * 0.5f;
+
+                        if (offset > 0f)
+                            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+                        // Use an invisible label for the checkbox to avoid text spacing
+                        if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref isEnabled))
                         {
-                            // Estimate the width of the checkbox (label is invisible, so the box is all that matters)
-                            float cellWidth = ImGui.GetContentRegionAvail().X;
-                            float checkboxWidth = ImGui.GetFrameHeight(); // Width of the square checkbox only
-                            float offset = (cellWidth - checkboxWidth) * 0.5f;
+                            mission.Enabled = isEnabled;
+                            CosmicMission chain;
 
-                            if (offset > 0f)
-                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
-
-                            // Use an invisible label for the checkbox to avoid text spacing
-                            if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref isEnabled))
+                            if (isEnabled)
                             {
-                                mission.Enabled = isEnabled;
-                                CosmicMission chain;
-
-                                if (isEnabled)
+                                var prevChainList = GetOnlyPreviousMissionsRecursive(mission.Id);
+                                foreach (var missionId in prevChainList)
                                 {
-                                    var prevChainList = GetOnlyPreviousMissionsRecursive(mission.Id);
-                                    foreach (var missionId in prevChainList)
-                                    {
-                                        chain = C.Missions.Single(x => x.Id == missionId);
-                                        chain.Enabled = isEnabled;
-                                    }
+                                    chain = C.Missions.Single(x => x.Id == missionId);
+                                    chain.Enabled = isEnabled;
                                 }
-                                else
+                            }
+                            else
+                            {
+                                var nextChainList = GetOnlyNextMissionsRecursive(mission.Id);
+                                foreach (var missionId in nextChainList)
                                 {
-                                    var nextChainList = GetOnlyNextMissionsRecursive(mission.Id);
-                                    foreach (var missionId in nextChainList)
-                                    {
-                                        chain = C.Missions.Single(x => x.Id == missionId);
-                                        chain.Enabled = isEnabled;
-                                    }
+                                    chain = C.Missions.Single(x => x.Id == missionId);
+                                    chain.Enabled = isEnabled;
                                 }
-
-                                C.Save();
                             }
 
+                            C.Save();
                         }
 
                         // Column 1: Mission ID
@@ -440,7 +456,7 @@ namespace ICE.Ui
                             ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), MissionName);
                             if (ImGui.IsItemHovered())
                             {
-                                ImGui.SetTooltip("Currently not supported");
+                                ImGui.SetTooltip("Currently can only be done in manual mode");
                             }
                         }
                         else
@@ -474,27 +490,39 @@ namespace ICE.Ui
                         }
 
                         ImGui.TableNextColumn();
-                        var silver = mission.TurnInSilver;
-                        if (ImGui.Checkbox($"Silver###{entry.Value.Name}_{entry.Key}_silver", ref silver))
+                        string[] modes;
+                        int currentModeIndex = 0;
+                        if (unsupported)
                         {
-                            mission.TurnInSilver = silver;
-
-                            if (mission.TurnInASAP && silver)
-                            {
-                                mission.TurnInASAP = false;
-                            }
-
-                            C.Save();
+                            modes = ["Manual"];
+                            mission.ManualMode = true;
                         }
-                        ImGui.SameLine();
-                        var asap = mission.TurnInASAP;
-                        if (ImGui.Checkbox($"ASAP###{entry.Value.Name}_{entry.Key}_asap", ref asap))
+                        else
                         {
-                            mission.TurnInASAP = asap;
+                            modes = ["Gold", "Silver", "ASAP", "Manual"];
+                            if (mission.TurnInSilver)
+                                currentModeIndex = 1;
+                            if (mission.TurnInASAP)
+                                currentModeIndex = 2;
+                            if (mission.ManualMode)
+                                currentModeIndex = 3;
+                        }
 
-                            if (mission.TurnInSilver && asap)
+                        ImGui.SetNextItemWidth(-1);
+                        if (ImGui.Combo($"###{entry.Value.Name}_{entry.Key}_turninMode", ref currentModeIndex, modes, modes.Length))
+                        {
+                            mission.TurnInSilver = mission.TurnInASAP = mission.ManualMode = false;
+                            switch (modes[currentModeIndex])
                             {
-                                mission.TurnInSilver = false;
+                                case "Silver":
+                                    mission.TurnInSilver = true;
+                                    break;
+                                case "ASAP":
+                                    mission.TurnInASAP = true;
+                                    break;
+                                case "Manual":
+                                    mission.ManualMode = true;
+                                    break;
                             }
 
                             C.Save();
@@ -545,6 +573,13 @@ namespace ICE.Ui
 
             if (ImGui.CollapsingHeader("Safety Settings"))
             {
+                if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref animationLockAbandon))
+                {
+                    C.AnimationLockAbandon = animationLockAbandon;
+                    C.Save();
+                }
+                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
+
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {
                     C.StopOnAbort = stopOnAbort;
@@ -579,11 +614,33 @@ namespace ICE.Ui
                 {
                     ImGui.SetNextItemWidth(150);
                     ImGui.SameLine();
-                    if (ImGui.SliderInt("ms", ref delayAmount, 0, 1000))
+                    if (ImGui.SliderInt("ms###Mission", ref delayAmount, 0, 1000))
                     {
                         if (C.DelayIncrease != delayAmount)
                         {
                             C.DelayIncrease = delayAmount;
+                            C.Save();
+                        }
+                    }
+                }
+                if (ImGui.Checkbox("Add delay to crafting menu", ref delayCraft))
+                {
+                    C.DelayCraft = delayCraft;
+                    C.Save();
+                }
+                ImGuiEx.HelpMarker(
+                    "This is here for safety! If you want to decrease the delay before turnin be my guest.\n" +
+                    "Safety is around... 2500? If you're having animation locks you can absolutely increase it higher\n" +
+                    "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+                if (delayCraft)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("ms###Crafting", ref delayCraftAmount, 0, 10000))
+                    {
+                        if (C.DelayCraftIncrease != delayCraftAmount)
+                        {
+                            C.DelayCraftIncrease = delayCraftAmount;
                             C.Save();
                         }
                     }
@@ -597,15 +654,41 @@ namespace ICE.Ui
                     C.OnlyGrabMission = onlyGrabMission;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Stop if Cosmocredits are capped", ref stopOnceHitCosmoCredits))
+                if (ImGui.Checkbox("Stop @ Cosmocredits", ref stopOnceHitCosmoCredits))
                 {
                     C.StopOnceHitCosmoCredits = stopOnceHitCosmoCredits;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Stop if Lunar Credits are capped", ref stopOnceHitLunarCredits))
+                if (stopOnceHitCosmoCredits)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("###Cosmocredits", ref cosmoCreditsCap, 0, 30000))
+                    {
+                        if (C.CosmoCreditsCap != cosmoCreditsCap)
+                        {
+                            C.CosmoCreditsCap = cosmoCreditsCap;
+                            C.Save();
+                        }
+                    }
+                }
+                if (ImGui.Checkbox("Stop @ Lunar Credits", ref stopOnceHitLunarCredits))
                 {
                     C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
                     C.Save();
+                }
+                if (stopOnceHitLunarCredits)
+                {
+                    ImGui.SetNextItemWidth(150);
+                    ImGui.SameLine();
+                    if (ImGui.SliderInt("###Lunar Credits", ref lunarCreditsCap, 0, 10000))
+                    {
+                        if (C.LunarCreditsCap != lunarCreditsCap)
+                        {
+                            C.LunarCreditsCap = lunarCreditsCap;
+                            C.Save();
+                        }
+                    }
                 }
                 if (ImGui.Checkbox("Stop after @ level", ref stopWhenLevel))
                 {
@@ -682,6 +765,74 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
+                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
+
+                var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
+                {
+                    ("Sequence Missions", new Func<byte>(() => C.SequenceMissionPriority), new Action<byte>(v => { C.SequenceMissionPriority = v; C.Save(); })),
+                    ("Timed Missions", new Func<byte>(() => C.TimedMissionPriority), new Action<byte>(v => { C.TimedMissionPriority = v; C.Save(); })),
+                    ("Weather Missions", new Func<byte>(() => C.WeatherMissionPriority), new Action<byte>(v => { C.WeatherMissionPriority = v; C.Save(); }))
+                };
+
+                var sorted = missionMap
+                    .Select((m, i) => new { Index = i, Name = m.name, Priority = m.get() })
+                    .OrderBy(m => m.Priority)
+                    .ToList();
+                ImGuiHelpers.ScaledDummy(5, 0);
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Provision Mission Priority"))
+                {
+                    for (int i = 0; i < sorted.Count; i++)
+                    {
+                        var item = sorted[i];
+                        ImGuiHelpers.ScaledDummy(5, 0);
+                        ImGui.SameLine();
+                        ImGui.Selectable(item.Name);
+                        if (ImGui.IsItemActive() && !ImGui.IsItemHovered())
+                        {
+                            int nextIndex = i + (ImGui.GetMouseDragDelta(0).Y < 0f ? -1 : 1);
+                            if (nextIndex >= 0 && nextIndex < sorted.Count)
+                            {
+                                // Swap the priority values
+                                var otherItem = sorted[nextIndex];
+
+                                // Swap their priority values via the original setters
+                                byte temp = missionMap[item.Index].get();
+                                missionMap[item.Index].set(missionMap[otherItem.Index].get());
+                                missionMap[otherItem.Index].set(temp);
+                                ImGui.ResetMouseDragDelta();
+                            }
+                        }
+                    }
+                }
+
+                if (ImGui.Button("Get Sinus Forecast"))
+                {
+                    List<WeatherForecast> forecast = WeatherForecastHandler.GetTerritoryForecast(1237);
+                    Func<WeatherForecast, string> formatTime = (forecast) => WeatherForecastHandler.FormatForecastTime(forecast.Time);
+
+                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                    {
+                        Message = $"Sinus Ardorum Weather - {forecast[0].Name}",
+                        Type = Dalamud.Game.Text.XivChatType.Echo,
+                    });
+                    for (int i = 1; i < forecast.Count; i++)
+                    {
+                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        {
+                            Message = $"{forecast[i].Name} In {formatTime(forecast[i])}",
+                            Type = Dalamud.Game.Text.XivChatType.Echo,
+                        });
+                    }
+                }
+
+                using (ImRaii.Disabled(!PlayerHelper.IsInCosmicZone()))
+                {
+                    if (ImGui.Button("Refresh Forecast"))
+                    {
+                        WeatherForecastHandler.GetForecast();
+                    }
+                }
             }
 #endif
 

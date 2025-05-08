@@ -16,12 +16,24 @@ namespace ICE
         public bool StopOnAbort { get; set; } = true;
         public bool RejectUnknownYesno { get; set; } = true;
         public bool DelayGrabMission { get; set; } = true;
+        public bool DelayCraft { get; set; } = true;
         public int DelayIncrease { get; set; } = 500;
+        public int DelayCraftIncrease { get; set; } = 2500;
+        public int PossiblyStuck = 0;
+        public bool AnimationLockAbandon { get; set; } = true;
+#if DEBUG
+        public bool FailsafeRecipeSelect = false;
+#endif
 
         // Mission settings
         public bool OnlyGrabMission { get; set; } = false;
         public bool StopOnceHitCosmoCredits { get; set; } = false;
         public bool StopOnceHitLunarCredits { get; set; } = false;
+        public int CosmoCreditsCap { get; set; } = 30000;
+        public int LunarCreditsCap { get; set; } = 10000;
+        public byte SequenceMissionPriority { get; set; } = 1;
+        public byte WeatherMissionPriority { get; set; } = 2;
+        public byte TimedMissionPriority { get; set; } = 3;
 
         public int TargetLevel { get; set; } = 10;
         public bool StopWhenLevel { get; set; } = false;
@@ -56,6 +68,8 @@ namespace ICE
         public uint JobId { get; set; }
         public bool TurnInSilver { get; set; } = false;
         public bool TurnInASAP { get; set; } = false;
+        public bool ManualMode { get; set; } = false;
+        public string TurnInMode;
     }
 
     public enum MissionType
