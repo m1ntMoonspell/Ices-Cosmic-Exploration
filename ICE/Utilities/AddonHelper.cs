@@ -10,7 +10,7 @@ public static class AddonHelper
 {
     public static unsafe void OpenRecipeNote(uint recipeId = 1)
     {
-        AgentRecipeNote.Instance()->SearchRecipeByItemId(Svc.Data.GetExcelSheet<Recipe>().GetRow(recipeId).RowId);
+        AgentRecipeNote.Instance()->OpenRecipeByRecipeId(Svc.Data.GetExcelSheet<Recipe>().GetRow(recipeId).RowId);
     }
     public static unsafe bool IsAddonActive(string AddonName) // Used to see if the addon is active/ready to be fired on
     {
