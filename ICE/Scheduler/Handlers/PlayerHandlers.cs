@@ -53,11 +53,16 @@ internal static unsafe class PlayerHandlers
 
         if (C.EnableAutoSprint && PlayerHelper.IsInCosmicZone() && !PlayerHelper.HasStatusId(stellarSprintID) && Svc.Condition[ConditionFlag.NormalConditions] && IsMoving()) UseSprint();
 
-        if ((Svc.ClientState.LocalPlayer == null || !PlayerHelper.IsInCosmicZone() || !PlayerHelper.UsingSupportedJob()) && SchedulerMain.State != IceState.Idle)
+        if ((!PlayerHelper.IsInCosmicZone() || !PlayerHelper.UsingSupportedJob()) && SchedulerMain.State != IceState.Idle)
         {
-            P.TaskManager.Abort();
-            SchedulerMain.DisablePlugin();
+            DisablePlugin();
         }
+    }
+
+    internal static void DisablePlugin()
+    {
+        P.TaskManager.Abort();
+        SchedulerMain.DisablePlugin();
     }
 
     private static void UseSprint()
