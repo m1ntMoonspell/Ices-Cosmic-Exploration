@@ -19,9 +19,13 @@ namespace ICE.Scheduler.Handlers
         private static TimeSpan _delay = TimeSpan.FromSeconds(300);
         private static uint previousZoneForecast = 0;
 
-        internal static unsafe void Tick()
+        internal static void Init()
         {
             WeatherSheet ??= Svc.Data.GetExcelSheet<Weather>();
+        }
+
+        internal static unsafe void Tick()
+        {
             if (!PlayerHelper.IsInCosmicZone()) return;
 
             Weather currWeather = GetCurrentWeather();

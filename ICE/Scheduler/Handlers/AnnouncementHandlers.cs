@@ -41,6 +41,10 @@ namespace ICE.Scheduler.Handlers
                     (
                         ("ARM/GSM/ALC", 1237, 24.9f, 33.1f),
                         ("MIN/FSH", 1237, 19.2f, 15.0f)
+                    ),
+                    (
+                        ("CRP/GSM/WVR", 1237, 19.8f, 36.8f),
+                        ("CUL/MIN/FSH", 1237, 12.3f, 20.0f)
                     )
                 }
             },

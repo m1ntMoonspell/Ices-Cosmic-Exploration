@@ -3,13 +3,14 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System.Collections.Generic;
+using Time = (int start, int end);
 
 namespace ICE.Scheduler.Handlers;
 
 internal static unsafe class PlayerHandlers
 {
-    public static readonly Dictionary<(int start, int end), string[]> timeMap = new Dictionary<(int start, int end), string[]>
-        {
+    public static readonly Dictionary<Time, string[]> timeMap = new()
+    {
             { (0, 1), new[] { "CRP", "ALC" } },
             { (2, 3), new[] { "MIN" } },
             { (4, 5), new[] { "BSM", "CUL" } },
@@ -20,6 +21,21 @@ internal static unsafe class PlayerHandlers
             { (16, 17), new[] { "LTW" } },
             { (20, 21), new[] { "WVR" } }
         };
+    public static readonly Dictionary<Time, string[]> stage9TimeMap = new()
+    {
+        { (0, 1), new[] { "CRP", "ALC", "GSM" } },
+        { (2, 3), new[] { "MIN" } },
+        { (4, 5), new[] { "BSM", "CUL", "LTW" } },
+        { (6, 7), new[] { "FSH" } },
+        { (8, 9), new[] { "ARM", "WVR",  } },
+        { (10, 11), new[] { "BTN" } },
+        { (12, 13), new[] { "GSM", "CRP", "ALC" } },
+        { (14, 15), new[] { "MIN" } },
+        { (16, 17), new[] { "LTW", "BSM", "CUL" } },
+        //{ (18, 19), new[] { "FSH" } },
+        { (20, 21), new[] { "WVR", "ARM" } },
+        { (22, 23), new[] { "BTN" } }
+    };
     private static readonly uint stellarSprintID = 4398;
 
     public static float Distance(this Vector3 v, Vector3 v2)
@@ -64,14 +80,16 @@ internal static unsafe class PlayerHandlers
     {
         KeyValuePair<(int start, int end), string[]> currentTimeBonus = default;
         KeyValuePair<(int start, int end), string[]> nextTimeBonus = default;
+        Dictionary<Time, string[]> currentTimeMap = timeMap;
+        if (CosmicHelper.CurrentLunarDevelopment >= 9) currentTimeMap = stage9TimeMap;
 
         (long hours, _) = GetEorzeaTime();
-        var currentTime = timeMap.FirstOrDefault(time => hours >= time.Key.start && hours <= time.Key.end);
+        var currentTime = currentTimeMap.FirstOrDefault(time => hours >= time.Key.start && hours <= time.Key.end);
         if (!currentTime.Equals(default(KeyValuePair<(int, int), string[]>))) currentTimeBonus = currentTime;
 
-        var nextTime = timeMap.FirstOrDefault(time => hours < time.Key.start);
+        var nextTime = currentTimeMap.FirstOrDefault(time => hours < time.Key.start);
         if (!nextTime.Equals(default(KeyValuePair<(int, int), string[]>))) nextTimeBonus = nextTime;
-        else nextTimeBonus = timeMap.First();
+        else nextTimeBonus = currentTimeMap.First();
 
         return (currentTimeBonus, nextTimeBonus);
     }
