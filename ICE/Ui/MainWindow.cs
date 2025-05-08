@@ -394,7 +394,11 @@ namespace ICE.Ui
                     foreach (var entry in missions)
                     {
                         // Skip unsupported missions if the user has chosen to hide them
+
                         bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
+
+                        if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18) || entry.Value.IsCriticalMission)
+                            unsupported = true;
                         if (unsupported && hideUnsupported)
                             continue;
 
