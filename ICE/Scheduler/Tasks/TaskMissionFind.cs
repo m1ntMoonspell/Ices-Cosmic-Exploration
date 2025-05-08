@@ -51,6 +51,11 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
+            if (SchedulerMain.AnimationLockAbandonState)
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+                return;
+            }
             if (C.StopOnceHitCosmoCredits)
             {
                 if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)

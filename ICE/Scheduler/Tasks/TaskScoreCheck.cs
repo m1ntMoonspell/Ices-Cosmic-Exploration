@@ -7,6 +7,12 @@ namespace ICE.Scheduler.Tasks
     {
         public static void TryCheckScore()
         {
+            if (SchedulerMain.AnimationLockAbandonState)
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+                return;
+            }
+
             if (CosmicHelper.CurrentLunarMission == 0)
             {
                 // this in theory shouldn't happen but going to add it just in case
@@ -163,7 +169,7 @@ namespace ICE.Scheduler.Tasks
                 //IceLogging.Debug("[Score Checker] REPORTING", true);
                 z.Report();
             }
-            else
+            else 
             {
                 CosmicHelper.OpenStellaMission();
             }
