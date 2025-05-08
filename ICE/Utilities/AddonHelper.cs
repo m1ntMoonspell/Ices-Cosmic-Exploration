@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ECommons.GameHelpers;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -8,8 +9,11 @@ namespace ICE.Utilities;
 
 public static class AddonHelper
 {
-    public static unsafe void OpenRecipeNote(uint recipeId = 1)
+    public static unsafe void OpenRecipeNote()
     {
+        int[] basicCrafts = [1008, 1, 170, 663, 302, 464, 1101, 901];
+        uint recipeId = (uint)basicCrafts[(int)PlayerHelper.GetClassJobId()-8];
+
         AgentRecipeNote.Instance()->OpenRecipeByRecipeId(Svc.Data.GetExcelSheet<Recipe>().GetRow(recipeId).RowId);
     }
     public static unsafe bool IsAddonActive(string AddonName) // Used to see if the addon is active/ready to be fired on
