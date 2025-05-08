@@ -120,6 +120,17 @@ public static unsafe class GatheringUtil
         }},
     };
 
+    public class GatheringInfo
+    {
+        public uint NodeSet { get; set; } // which nodeset does this belong to
+        public uint Type { get; set; } // What kind of mission does this belong in?
+    }
+
+    public static Dictionary<uint, GatheringInfo> GatherMissionInfo = new Dictionary<uint, GatheringInfo>()
+    {
+
+    };
+
     public class GathNodeInfo
     {
         public Vector3 Position { get; set; }

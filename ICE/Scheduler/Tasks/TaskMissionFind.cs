@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ECommons.GameHelpers;
 using ICE.Utilities.Cosmic;
+using Dalamud.Game.ClientState.Conditions;
 
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ECommons.GenericHelpers;
@@ -42,8 +43,12 @@ namespace ICE.Scheduler.Tasks
         private static bool HasD => DMissions.Any();
 
         public static void EnqueueResumeCheck()
-        {
-            if (CosmicHelper.CurrentLunarMission != 0)
+        {   
+            if (SchedulerMain.AnimationLockAbandonState || (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+            }
+            else if (CosmicHelper.CurrentLunarMission != 0)
             {
                 if (!ModeChangeCheck(isGatherer))
                 {
@@ -58,11 +63,16 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
+            if (SchedulerMain.AnimationLockAbandonState)
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+                return;
+            }
             if (C.StopOnceHitCosmoCredits)
             {
                 if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
-                    if (hud.CosmoCredit >= 30000)
+                    if (hud.CosmoCredit >= C.CosmoCreditsCap)
                     {
                         IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
@@ -81,7 +91,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
-                    if (hud.LunarCredit >= 10000)
+                    if (hud.LunarCredit >= C.LunarCreditsCap)
                     {
                         IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
                         Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
@@ -281,16 +291,20 @@ namespace ICE.Scheduler.Tasks
                     var sequenceIds = C.Missions.Where(x => x.Type == MissionType.Sequential).Select(s => s.Id).ToHashSet();
                     var timedIds = C.Missions.Where(x => x.Type == MissionType.Timed).Select(t => t.Id).ToHashSet();
 
-                    var sortedMissions = x.StellerMissions
-                        .Where(m => weatherIds.Contains(m.MissionId))
-                        .Concat(
-                            x.StellerMissions.Where(m =>
-                                !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId))
-                        )
-                        .Concat(
-                            x.StellerMissions.Where(m =>
-                                !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId))
-                        )
+                    var weatherMissions = x.StellerMissions.Where(m => !timedIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId));
+                    var timedMissions = x.StellerMissions.Where(m => !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId));
+                    var sequenceMissions = x.StellerMissions.Where(m => !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId));
+
+                    var priorityMissions = new List<(int prio, IEnumerable<WKSMission.StellarMissions> missions)>
+                    {
+                        (C.SequenceMissionPriority, sequenceMissions),
+                        (C.TimedMissionPriority, timedMissions),
+                        (C.WeatherMissionPriority, weatherMissions)
+                    };
+
+                    var sortedMissions = priorityMissions
+                        .OrderBy(p => p.prio)
+                        .SelectMany(p => p.missions)
                         .ToArray();
 
                     foreach (var m in sortedMissions)
@@ -412,7 +426,14 @@ namespace ICE.Scheduler.Tasks
 
                     var rankToReset = missionRanks.Max();
 
-                    foreach (var m in x.StellerMissions)
+                    Random rng = new Random();
+
+                    var missions = x.StellerMissions
+                        .GroupBy(m => CosmicHelper.MissionInfoDict[m.MissionId].Rank) // Group By Rank
+                        .SelectMany(g => g.OrderBy(m => rng.Next())) // Reorder inside each group randomly
+                        .ToArray();
+
+                    foreach (var m in missions)
                     {
                         var missionEntry = CosmicHelper.MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
@@ -518,7 +539,7 @@ namespace ICE.Scheduler.Tasks
 
         private static bool ModeChangeCheck(bool gatherer)
         {
-            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
+            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0 || C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode) // Manual Mode for Only Grab Mission / Dual Class Mission
             {
                 SchedulerMain.State = IceState.ManualMode;
                 return true;

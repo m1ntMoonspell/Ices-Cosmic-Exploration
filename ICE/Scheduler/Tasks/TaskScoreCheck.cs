@@ -7,6 +7,12 @@ namespace ICE.Scheduler.Tasks
     {
         public static void TryCheckScore()
         {
+            if (SchedulerMain.AnimationLockAbandonState)
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+                return;
+            }
+
             if (CosmicHelper.CurrentLunarMission == 0)
             {
                 // this in theory shouldn't happen but going to add it just in case
@@ -15,12 +21,12 @@ namespace ICE.Scheduler.Tasks
                 return;
             }
 
-            IceLogging.Debug($"Current Scoring Mission Id: {CosmicHelper.CurrentLunarMission}", true);
+            IceLogging.Debug($"[Score Checker] Current Scoring Mission Id: {CosmicHelper.CurrentLunarMission}", true);
             var currentMission = C.Missions.Single(x => x.Id == CosmicHelper.CurrentLunarMission);
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                if (SchedulerMain.State == IceState.AbortInProgress)
+                if (SchedulerMain.State == IceState.AbortInProgress || (SchedulerMain.AnimationLockAbandonState && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
                 {
                     IceLogging.Error("[Score Checker] Aborting mission");
                     TurnIn(z, true);
@@ -57,7 +63,7 @@ namespace ICE.Scheduler.Tasks
 
                     if (currentScore >= silverScore && enoughMain.Value && currentMission.TurnInSilver)
                     {
-                        IceLogging.Info($"Silver was enabled, and you also meet silver threshold.", true);
+                        IceLogging.Info($"[Score Checker] Silver was enabled, and you also meet silver threshold.", true);
                         TurnIn(z);
                         return;
                     }
@@ -89,40 +95,64 @@ namespace ICE.Scheduler.Tasks
 
         private unsafe static void TurnIn(WKSMissionInfomation z, bool abortIfNoReport = false)
         {
-            if (IceLogging.ShouldLog("Turning in item", 100))
+            if (IceLogging.ShouldLog("Turning in item", 250))
             {
                 P.Artisan.SetEnduranceStatus(false);
                 var (currentScore, silverScore, goldScore) = TaskCrafting.GetCurrentScores();
+                
+                if (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
+                {
+                    IceLogging.Error("[TurnIn] Unexpected error. Potential Crafting Animation Lock.");
+#if DEBUG
+                    IceLogging.Error($"[TurnIn] PossiblyStuck: {SchedulerMain.PossiblyStuck} | AnimationLockToggle {C.AnimationLockAbandon} | AnimationLockState {SchedulerMain.AnimationLockAbandonState}");
+#endif
+                    if (SchedulerMain.PossiblyStuck < 2 && C.AnimationLockAbandon)
+                    {
+                        SchedulerMain.PossiblyStuck += 1;
+                    }
+                    else if (SchedulerMain.PossiblyStuck >= 2 && C.AnimationLockAbandon)
+                    {
+                        SchedulerMain.AnimationLockAbandonState = true;
+                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                        {
+                            Message = "[ICE] Unexpected error. I might be Animation Locked. Trigger count: " + SchedulerMain.PossiblyStuck + " " +
+                            (C.AnimationLockAbandon ? "Attempting experimental unstuck." : "Please enable Experimental unstuck to attempt unstuck."),
+                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                        });
+                    }
+                }
                 if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady && currentScore < goldScore)
                 {
-                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix");
-                    cr.Addon->FireCallbackInt(-1);
+                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
+                    P.Artisan.SetStopRequest(true);
+                    // cr.Addon->FireCallbackInt(-1);
                 }
+            }
+            if (!SchedulerMain.AnimationLockAbandonState)
+                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true, new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 1000 });
 
-                P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] == true);
+            var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
+            IceLogging.Info("[TurnIn] Attempting turnin", true);
+            P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission", config);
 
-                var config = abortIfNoReport ? new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000, AbortOnTimeout = false } : new();
-
-                P.TaskManager.Enqueue(TurnInInternals, "Changing to grab mission", config);
-
-                if (abortIfNoReport && C.StopOnAbort)
+            if (abortIfNoReport && C.StopOnAbort && !SchedulerMain.AnimationLockAbandonState)
+            {
+                SchedulerMain.StopBeforeGrab = true;
+                Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                 {
-                    SchedulerMain.StopBeforeGrab = true;
-                    Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
-                    {
-                        Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n" +
-                        $"If you expect Mission ID {CosmicHelper.CurrentLunarMission} to not reach " + (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).TurnInSilver ? "Silver" : "Gold") +
-                        " - please mark it as Silver/ASAP accordingly.\n" +
-                        "If you were expecting it to reach the target, check your Artisan settings/gear.",
-                        Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                    });
-                }
-                if (abortIfNoReport && CosmicHelper.CurrentLunarMission != 0)
-                {
-                    SchedulerMain.Abandon = true;
-                    SchedulerMain.State = IceState.GrabMission;
-                    P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
-                }
+                    Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n" +
+                    $"If you expect Mission ID {CosmicHelper.CurrentLunarMission} to not reach " + (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).TurnInSilver ? "Silver" : "Gold") +
+                    " - please mark it as Silver/ASAP accordingly.\n" +
+                    "If you were expecting it to reach the target, check your Artisan settings/gear.",
+                    Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                });
+            }
+            if ((abortIfNoReport || SchedulerMain.AnimationLockAbandonState) && CosmicHelper.CurrentLunarMission != 0)
+            {
+                SchedulerMain.Abandon = true;
+                if (SchedulerMain.AnimationLockAbandonState)
+                    P.TaskManager.Enqueue(() => SchedulerMain.State = IceState.AnimationLock, "Animation Lock", config);
+                P.TaskManager.Enqueue(TaskMissionFind.AbandonMission, "Aborting mission", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration() { TimeLimitMS = 5000 });
             }
         }
 
@@ -134,17 +164,14 @@ namespace ICE.Scheduler.Tasks
                 return true;
             }
 
-            if (!Throttles.OneSecondThrottle)
-            {
-                IceLogging.Debug("[Score Checker] Throttling, skipping turn in");
-                return false;
-            }
-
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                IceLogging.Debug("[Score Checker] REPORTING", true);
+                //IceLogging.Debug("[Score Checker] REPORTING", true);
                 z.Report();
-                return false;
+            }
+            else 
+            {
+                CosmicHelper.OpenStellaMission();
             }
 
             return false;
