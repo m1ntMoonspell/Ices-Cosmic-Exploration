@@ -102,9 +102,10 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         // Configuration booleans bound to checkboxes.
+        private static bool animationLockAbandon = C.AnimationLockAbandon;
+        private static bool AnimationLockAbandonState = SchedulerMain.AnimationLockAbandonState;
         private static bool stopOnAbort = C.StopOnAbort;
         private static bool rejectUnknownYesNo = C.RejectUnknownYesno;
-        private static bool animationLockAbandon = C.AnimationLockAbandon;
         private static bool delayGrabMission = C.DelayGrabMission;
         private static bool delayCraft = C.DelayCraft;
         private static int delayAmount = C.DelayIncrease;
@@ -574,8 +575,9 @@ namespace ICE.Ui
                 if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref animationLockAbandon))
                 {
                     C.AnimationLockAbandon = animationLockAbandon;
+                    C.Save();
                 }
-                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref C.AnimationLockAbandonState);
+                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
 
                 if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
                 {
@@ -762,8 +764,8 @@ namespace ICE.Ui
             {
                 ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
                 ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
-                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);                
-                
+                ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
+
                 var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
                 {
                     ("Sequence Missions", new Func<byte>(() => C.SequenceMissionPriority), new Action<byte>(v => { C.SequenceMissionPriority = v; C.Save(); })),

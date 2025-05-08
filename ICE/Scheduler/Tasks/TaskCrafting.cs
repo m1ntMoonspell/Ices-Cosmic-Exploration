@@ -56,7 +56,7 @@ namespace ICE.Scheduler.Tasks
 
             if (!P.TaskManager.IsBusy) // ensure no pending tasks or manual craft while plogon enabled
             {
-                C.PossiblyStuck = 0;
+                SchedulerMain.PossiblyStuck = 0;
                 SchedulerMain.State = IceState.CraftInProcess;
 
                 CosmicHelper.OpenStellaMission();
@@ -174,7 +174,7 @@ namespace ICE.Scheduler.Tasks
                 OOMSub = OOMSub || SchedulerMain.DebugOOMSub;
 #endif
 
-                if (OOMMain && (OOMSub || !needPreCraft) && CosmicHelper.CurrentLunarMission < 361 && !C.AnimationLockAbandonState) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
+                if (OOMMain && (OOMSub || !needPreCraft) && CosmicHelper.CurrentLunarMission < 361 && !SchedulerMain.AnimationLockAbandonState) // We only OOM if both are true: 1) Main is OOM, 2) Either Sub is OOM and we somehow don't need PreCrafts.
                 {
                     IceLogging.Error($"[Crafting] [OOM] Not enough to craft");
                     SchedulerMain.State = IceState.AbortInProgress;
@@ -189,40 +189,22 @@ namespace ICE.Scheduler.Tasks
                 if (preItemsToCraft.Count > 0)
                 {
                     IceLogging.Debug("[Crafting] Queuing up pre-craft items", true);
-                    foreach (var pre in preItemsToCraft)
+                    foreach (var craft in preItemsToCraft)
                     {
-                        var item = ItemSheet.GetRow(RecipeSheet.GetRow(pre.Key).ItemResult.RowId);
-                        IceLogging.Debug($"[Crafting] Adding craft {pre} | {item.Name}", true);
-                        P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
-                        P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
-                        P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
-                        {
-                            TimeLimitMS = 240000, // 4 minute limit per craft
-                        });
-                        if (C.DelayCraft)
-                            P.TaskManager.EnqueueDelay(C.DelayCraftIncrease); // Post-craft delay between Synthesis and RecipeLog reopening
+                        EnqueueCraft(craft);
                     }
                 }
 
                 if (itemsToCraft.Count > 0)
                 {
-                    IceLogging.Debug("Queuing up main craft items", true);
-                    foreach (var main in itemsToCraft)
+                    IceLogging.Debug("[Crafting] Queuing up main craft items", true);
+                    foreach (var craft in itemsToCraft)
                     {
-                        var item = ItemSheet.GetRow(RecipeSheet.GetRow(main.Key).ItemResult.RowId);
-                        IceLogging.Debug($"[Crafting] Adding craft {main} | {item.Name}", true);
-                        P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
-                        P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
-                        P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
-                        {
-                            TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
-                        });
-                        if (C.DelayCraft)
-                            P.TaskManager.EnqueueDelay(C.DelayCraftIncrease); // Post-craft delay between Synthesis and RecipeLog reopening
+                        EnqueueCraft(craft);
                     }
                 }
+                if (C.DelayCraft)
+                    P.TaskManager.EnqueueDelay(C.DelayCraftIncrease); // Post-craft delay between Synthesis and RecipeLog reopening
                 P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]));
                 P.TaskManager.Enqueue(() =>
                 {
@@ -232,6 +214,19 @@ namespace ICE.Scheduler.Tasks
 
                 P.TaskManager.EnqueueStack();
             }
+        }
+
+        private static void EnqueueCraft(KeyValuePair<ushort, Tuple<int, int>> craft)
+        {
+            var item = ItemSheet.GetRow(RecipeSheet.GetRow(craft.Key).ItemResult.RowId);
+            IceLogging.Debug($"[Crafting] Adding craft {craft} | {item.Name}", true);
+            P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
+            P.TaskManager.Enqueue(() => Craft(craft.Key, craft.Value.Item1, item), "PreCraft item");
+            P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
+            P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+            {
+                TimeLimitMS = 240000, // 4 minute limit per craft
+            });
         }
 
         internal static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
@@ -292,20 +287,10 @@ namespace ICE.Scheduler.Tasks
             P.Artisan.CraftItem(id, craftAmount);
         }
 
-        internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
+        internal static bool? WaitTillActuallyDone()
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                if (C.AnimationLockAbandonState && (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction]))
-                {
-                    IceLogging.Info("[Crafting] [Wait] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
-                    SchedulerMain.State = IceState.StartCraft;
-                    C.PossiblyStuck = 0;
-                    C.AnimationLockAbandonState = false;
-                    if (Svc.Condition[ConditionFlag.NormalConditions])
-                        P.Artisan.SetEnduranceStatus(false);
-                    return true;
-                }
                 var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
                 var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
                 var enoughMain = HaveEnoughMain();
