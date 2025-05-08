@@ -91,6 +91,10 @@ public sealed partial class ICE : IDalamudPlugin
             SchedulerMain.Tick();
             WeatherForecastHandler.Tick();
         }
+        else
+        {
+            PlayerHandlers.DisablePlugin();
+        }
         GenericManager.Tick();
         TextAdvancedManager.Tick();
         YesAlreadyManager.Tick();
