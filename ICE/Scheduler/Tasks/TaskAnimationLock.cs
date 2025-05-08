@@ -16,7 +16,7 @@ namespace ICE.Scheduler.Tasks
             }
             else
             {
-                if (EzThrottler.Throttle("Open Recipe", 3000))
+                if (EzThrottler.Throttle("Open Recipe", 1000))
                     AddonHelper.OpenRecipeNote();
             }
         }
