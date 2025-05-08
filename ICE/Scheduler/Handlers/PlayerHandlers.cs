@@ -61,8 +61,11 @@ internal static unsafe class PlayerHandlers
 
     internal static void DisablePlugin()
     {
-        P.TaskManager.Abort();
-        SchedulerMain.DisablePlugin();
+        if (SchedulerMain.State != IceState.Idle)
+        {
+            P.TaskManager.Abort();
+            SchedulerMain.DisablePlugin();
+        }
     }
 
     private static void UseSprint()
