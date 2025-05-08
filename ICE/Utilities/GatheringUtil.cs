@@ -126,6 +126,11 @@ public static unsafe class GatheringUtil
         public uint Type { get; set; } // What kind of mission does this belong in?
     }
 
+    /// <summary>
+    /// Key {uint} - The missionID #
+    /// Nodeset {uint} - Which gathering path does it need to follow
+    /// Type {uint} - What kind of mission is this? 
+    /// </summary>
     public static Dictionary<uint, GatheringInfo> GatherMissionInfo = new Dictionary<uint, GatheringInfo>()
     {
 

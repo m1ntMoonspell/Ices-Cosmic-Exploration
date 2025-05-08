@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using System.Collections.Generic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
@@ -23,6 +24,13 @@ namespace ICE.Scheduler.Tasks
         */
 
         private static ExcelSheet<Item>? ItemSheet;
+
+        public static void TryEnqueueGathering()
+        {
+            EnsureInit();
+            if (CosmicHelper.CurrentLunarMission != 0)
+                MakeGatheringTask();
+        }
 
         // Ensures that the sheets are loaded properly
         private static void EnsureInit()
@@ -59,8 +67,15 @@ namespace ICE.Scheduler.Tasks
                 return;
             }
 
+            if (!P.TaskManager.IsBusy)
+            {
+                CosmicHelper.OpenStellaMission();
+
+            }
+
             if (!Svc.Condition[ConditionFlag.ExecutingGatheringAction]) // Makes sure that you're not mid swing of a gathering action
             {
+
 
             }
         }
