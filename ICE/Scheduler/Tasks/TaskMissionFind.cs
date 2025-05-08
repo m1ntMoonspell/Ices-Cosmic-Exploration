@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ECommons.GameHelpers;
 using ICE.Utilities.Cosmic;
+using Dalamud.Game.ClientState.Conditions;
 
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ECommons.GenericHelpers;
@@ -30,8 +31,12 @@ namespace ICE.Scheduler.Tasks
         private static bool HasD => C.Missions.Where(x => x.JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Any(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 1 && x.Enabled);
 
         public static void EnqueueResumeCheck()
-        {
-            if (CosmicHelper.CurrentLunarMission != 0)
+        {   
+            if (SchedulerMain.AnimationLockAbandonState || (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+            }
+            else if (CosmicHelper.CurrentLunarMission != 0)
             {
                 if (!ModeChangeCheck(isGatherer))
                 {
@@ -46,6 +51,11 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
+            if (SchedulerMain.AnimationLockAbandonState)
+            {
+                SchedulerMain.State = IceState.AnimationLock;
+                return;
+            }
             if (C.StopOnceHitCosmoCredits)
             {
                 if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)

@@ -24,7 +24,8 @@ internal class DebugWindow : Window
         P.windowSystem.AddWindow(this);
     }
 
-    public void Dispose() { 
+    public void Dispose()
+    {
         P.windowSystem.RemoveWindow(this);
     }
 
@@ -69,14 +70,14 @@ internal class DebugWindow : Window
                 }
 
                 ImGui.SameLine();
-                
+
                 if (ImGui.Button("Steller"))
                 {
                     HudAddon.Steller();
                 }
-                
+
                 ImGui.SameLine();
-                
+
                 if (ImGui.Button("Infrastructor"))
                 {
                     HudAddon.Infrastructor();
@@ -297,7 +298,7 @@ internal class DebugWindow : Window
                     x.HQItemInput();
                 }
                 ImGui.SameLine();
-                
+
                 if (ImGui.Button("Fill Both"))
                 {
                     x.NQItemInput();
@@ -375,6 +376,10 @@ internal class DebugWindow : Window
             if (ImGui.Button("Artisan Craft"))
             {
                 P.Artisan.CraftItem(36176, 1);
+            }
+            if (ImGui.Button("RecipeNote"))
+            {
+                AddonHelper.OpenRecipeNote();
             }
 
             ImGui.TreePop();
@@ -612,7 +617,7 @@ internal class DebugWindow : Window
                 }
 
                 ImGui.TableSetColumnIndex(5);
-                foreach(var main in entry.Value.MainCraftsDict)
+                foreach (var main in entry.Value.MainCraftsDict)
                 {
                     ImGui.TableNextColumn();
                     ImGui.Text($"Recipe: {main.Key} | Amount: {main.Value}");
