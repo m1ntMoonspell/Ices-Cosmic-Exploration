@@ -29,6 +29,8 @@ namespace ICE
         public bool OnlyGrabMission { get; set; } = false;
         public bool StopOnceHitCosmoCredits { get; set; } = false;
         public bool StopOnceHitLunarCredits { get; set; } = false;
+        public int CosmoCreditsCap { get; set; } = 30000;
+        public int LunarCreditsCap { get; set; } = 10000;
         public byte SequenceMissionPriority { get; set; } = 1;
         public byte WeatherMissionPriority { get; set; } = 2;
         public byte TimedMissionPriority { get; set; } = 3;
