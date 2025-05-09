@@ -228,7 +228,7 @@ public sealed partial class ICE
                 if (todoRow.Unknown4 != 0) // First item in the gathering list. Shouldn't be 0...
                 {
                     var minAmount = todoRow.Unknown7.ToInt();
-                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown3).Item;
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown4).Item;
                     if (!GatherItems.ContainsKey(itemInfoId))
                     {
                         GatherItems.Add(itemInfoId, minAmount);
@@ -237,7 +237,7 @@ public sealed partial class ICE
                 if (todoRow.Unknown5 != 0) // First item in the gathering list. Shouldn't be 0...
                 {
                     var minAmount = todoRow.Unknown8.ToInt();
-                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown3).Item;
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown5).Item;
                     if (!GatherItems.ContainsKey(itemInfoId))
                     {
                         GatherItems.Add(itemInfoId, minAmount);

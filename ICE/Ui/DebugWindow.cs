@@ -39,6 +39,9 @@ internal class DebugWindow : Window
     public override unsafe void Draw()
     {
         var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
+        var MissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
+        var TodoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
+        var EvalSheet = Svc.Data.GetSubrowExcelSheet<WKSMissionToDoEvalutionItem>();
 
         if (ImGui.TreeNode("Player Info"))
         {
@@ -343,6 +346,17 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Gathering Table"))
         {
+            uint missionId = 418;
+            var Todo = MissionSheet.GetRow(missionId).Unknown7;
+            var PotentionalValue = TodoSheet.GetRow(Todo).Unknown10;
+            var EvaluationItem = EvalSheet.GetSubrowAt(PotentionalValue, 0);
+
+
+            ImGui.Text($"Mission: 418 | Todo Spot: {Todo}");
+            ImGui.Text($"Todo Row: {Todo} | Unknown 10 Value: {PotentionalValue}");
+            ImGui.Text($"Evaluation SubRowID: {EvaluationItem.SubrowId}");
+            ImGui.Text($"Evaluation Item: {EvaluationItem.Item}");
+
             Table3();
 
             ImGui.TreePop();
@@ -658,7 +672,6 @@ internal class DebugWindow : Window
                 ImGui.TableSetColumnIndex(0);
                 ImGui.Text($"{entry.Key}");
 
-                ImGui.TableNextColumn();
                 foreach (var item in entry.Value.MinGatherItems)
                 {
                     ImGui.TableNextColumn();
