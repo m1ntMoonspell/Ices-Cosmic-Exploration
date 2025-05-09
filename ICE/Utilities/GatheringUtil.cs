@@ -647,4 +647,31 @@ public static unsafe class GatheringUtil
 
         #endregion
     };
+
+    public class VislandInfo
+    {
+        public Vector3 MapCords { get; set; }
+        public Vector3 StartPosition { get; set; }
+        public string VBase64 { get; set; }
+    }
+
+    public static Dictionary<uint, VislandInfo> VislandDict = new()
+    {
+        {1, new VislandInfo
+        {
+
+        } },
+        {2, new VislandInfo
+        {
+            MapCords = new Vector3 (224, 82, 100),
+            StartPosition = new Vector3 (222, 19.5f, 9.5f),
+            VBase64 = "H4sIAAAAAAAACu2WUW+bMBDHv0p0z56FbYyN37qsrbIpWdZEypppD25xAxLYGZhOVZTvPhlI12x7zMuiPPnuMHd/3/1k2MFMVwYU3LnWmxEdvRu9X84AwW3t2i0oWBS2bUZXdebqtgIEN85loCIEU21bXXbmUtcb42+1z0098abqgiv9snWF9Q2obzuYu6bwhbOgdvAVFKUMx0zGCO5B0QhTnhCBYA1K4pgSLtkewdpZM/kAilAmENzprGgbUBSH4u7ZVMb6rtJc+/ypsBkoX7cGwcR6U+tHvyp8/jkkYJzw9Dg+nLpsm3z0bDbG66ButNX+MYfjrX9Ij0L9+2Fdd+seQZO7n4eXCmcbUE+6bN6I6RIQBNeV892pIgShV4N51e0YnC+tafxbe2F+9D13D0N44d127Gw2KIsQfCrKcuzaoSfdOIdDAoJxrv3YVZUOXQqBoHelC/9baPBuXH2cNASXRWWmzZF7vfy7GXsEk2aea+td9Zo0jAaUbcsSwcyYrJn2CofHPTKF3SxftgYUCylmLjOHSQb7o3sARcQe/ROiVApxgIiRKDhrUIRjyeI4OTFESZjZBaLzgkhyTFORdgqIxFJwNkAUSUzi6OQQBYEXiM4MogQzxpMeohRHVKS8h4jEOBGEnxqi+ALR2UEUCZzI6PUmSinlw00UcxwnND41RPQC0blBRGSCKQvfmP4m4kLQwz8RxTRJ5akhIheI3H8N0ff9LxqewCwFDgAA"
+        } },
+        {3, new VislandInfo
+        {
+            MapCords = new Vector3 (231, -50, 100),
+            StartPosition = new Vector3 (223.1f, 19.3f, 1),
+            VBase64 = "H4sIAAAAAAAACu2XTU/cMBCG/8pqzsaKPxLHvtEtoG3FlsJKFKoeDDEkUmJvE4cKof3vyImhUK65dJWTxxNn/HrmUcZ5grVuDCg4d703C7Y4WHzarAHBSev6LSi4qGzfLQ7bwrV9AwiOnStAJQhOte11PZgb3d4bf6J9adqVN83gvNSPW1dZ34H6+QRnrqt85SyoJ/gBilKCJSEMwRUommDCGYJrUARTShKZ7hBcO2tWn0ERygSCc11UfQeK4rC1ezCNsX7Y50z78q6yBSjf9gbBynrT6lt/WfnyWwjAUhIivPXHM9d9Vy4ezL3xOmhbbLW/LeH90n+EJ2H/qzheD+MOQVe6Py8vVc52oO503b0RMwQgCI4a54dTJQhCpqJ5OKyIk++96fxb+8L8HjPubqL7wrvt0tkiKksQfK3qeun6mJOhmPGQgGBZar90TaNDloIj6L3Ulf8rNMyOXfs+aHBuqsacdu+mR5uPydghWHVnpbbeNa9BQ2lA2b6uEayNKbrTUWF8PAJT2fvN49aAYiHE2hXmpZLB/uJuQBGxQx8RIhwzIrIXhBJBmBxqciAxoYwKMjVF2UzR/lFEMSd5OiggOc4pS9KRIsowpyxhE1PEyUzR3lHECBYsy0eKJM5lNvazAyqwoGzqfsZDyWaG9oshznHK83glIphmgsUvEZOY80yKqfuZnCnaO4pSgvNUkpEiirnMMjFSlHJMhUiyqSnKZ4r2jiKWYxYZIphTzvnIUMaxJLngU/czOjO0dwzRFGcJf/0/EzSTsZ/lDCcpzyfvZ+lMkfuvKfq1ewZ86qJBkBIAAA=="
+        } },
+    };
 }
