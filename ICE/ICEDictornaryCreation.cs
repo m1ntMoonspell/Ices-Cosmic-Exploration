@@ -25,6 +25,7 @@ public sealed partial class ICE
             List<(int Type, int Amount)> Exp = [];
             Dictionary<ushort, int> MainItems = [];
             Dictionary<ushort, int> PreCrafts = [];
+            Dictionary<uint, int> GatherItems = [];
             uint keyId = item.RowId;
             string LeveName = item.Item.ToString();
             LeveName = LeveName.Replace("<nbsp>", " ");
@@ -209,6 +210,47 @@ public sealed partial class ICE
                     };
                 }
 
+            }
+
+            if (GatheringJobList.Contains(JobId))
+            {
+                var todoRow = ToDoSheet.GetRow(toDoValue);
+
+                if (todoRow.Unknown3 != 0) // First item in the gathering list. Shouldn't be 0...
+                {
+                    var minAmount = todoRow.Unknown6.ToInt();
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown3).Item;
+                    if (!GatherItems.ContainsKey(itemInfoId))
+                    {
+                        GatherItems.Add(itemInfoId, minAmount);
+                    }
+                }
+                if (todoRow.Unknown4 != 0) // First item in the gathering list. Shouldn't be 0...
+                {
+                    var minAmount = todoRow.Unknown7.ToInt();
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown4).Item;
+                    if (!GatherItems.ContainsKey(itemInfoId))
+                    {
+                        GatherItems.Add(itemInfoId, minAmount);
+                    }
+                }
+                if (todoRow.Unknown5 != 0) // First item in the gathering list. Shouldn't be 0...
+                {
+                    var minAmount = todoRow.Unknown8.ToInt();
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown5).Item;
+                    if (!GatherItems.ContainsKey(itemInfoId))
+                    {
+                        GatherItems.Add(itemInfoId, minAmount);
+                    }
+                }
+
+                if (!GatheringInfoDict.ContainsKey(keyId))
+                {
+                    GatheringInfoDict[keyId] = new GatheringInfo()
+                    {
+                        MinGatherItems = GatherItems
+                    };
+                }
             }
 
             // Col 3 -> Cosmocredits - Unknown 0
