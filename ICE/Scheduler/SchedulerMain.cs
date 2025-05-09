@@ -76,17 +76,20 @@ namespace ICE.Scheduler
 
     internal enum IceState
     {
-        Idle,
-        AnimationLock,
-        GrabMission,
-        GrabbingMission,
-        StartCraft,
-        CraftInProcess,
         AbortInProgress,
+        AnimationLock,
         CheckScoreAndTurnIn,
-        WaitForCrafts,
+        CraftInProcess,
+        GatherCollectable,
+        GatherNormal,
+        GatherReduce,
+        GrabbingMission,
+        GrabMission,
+        Idle,
         ManualMode,
         ResumeChecker,
+        StartCraft,
+        WaitForCrafts,
         WaitForNonStandard
     }
 }

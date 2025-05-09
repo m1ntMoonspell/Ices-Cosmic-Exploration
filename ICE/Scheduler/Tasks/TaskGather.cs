@@ -38,6 +38,11 @@ namespace ICE.Scheduler.Tasks
             ItemSheet ??= Svc.Data.GetExcelSheet<Item>(); // Only need to grab once
         }
 
+        // Dummy values that way I can figure this out
+        private static uint missionA = 1;
+        private static uint missionB = 2;
+
+
         internal static void MakeGatheringTask()
         {
             EnsureInit();
@@ -70,6 +75,37 @@ namespace ICE.Scheduler.Tasks
             if (!P.TaskManager.IsBusy)
             {
                 CosmicHelper.OpenStellaMission();
+
+                if (!P.Visland.IsRouteRunning())
+                {
+                    if (EzThrottler.Throttle("Starting Visland Route"))
+                    {
+                        P.Visland.StartRoute("Test", false); // Need to replace this with the route finder based on MissionID
+                    }
+                }
+
+                if (Svc.Condition[ConditionFlag.Gathering])
+                {
+                    if (GenericHelpers.TryGetAddonMaster<Gathering>("Gathering", out var gather) && gather.IsAddonReady)
+                    {
+                        if (missionA == 1) // Timed gather x amount of items
+                        {
+                            // Pull up status configs for Mission Type A
+                            foreach (var item in gather.GatheredItems)
+                            {
+                                if (item.ItemID != 0)
+                                {
+                                    P.TaskManager.Enqueue(() => item.Gather());
+                                    P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.ExecutingGatheringAction] == true);
+                                    P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.ExecutingGatheringAction] == false);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // need to add a P.Taskmanager thing here post to make sure once you finish the gathering route, then check the score... 
+
 
             }
 
