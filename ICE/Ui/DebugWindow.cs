@@ -341,13 +341,6 @@ internal class DebugWindow : Window
             ImGui.TreePop();
         }
 
-        if (ImGui.TreeNode("Gathering Table"))
-        {
-            Table3();
-
-            ImGui.TreePop();
-        }
-
         if (ImGui.TreeNode("Test Buttons"))
         {
             ImGui.Text($"Current Mission: {CosmicHelper.CurrentLunarMission}");
@@ -628,51 +621,6 @@ internal class DebugWindow : Window
                 {
                     ImGui.TableNextColumn();
                     ImGui.Text($"Recipe: {main.Key} | Amount: {main.Value}");
-                }
-            }
-
-            ImGui.EndTable();
-        }
-    }
-
-    private void Table3()
-    {
-        var itemName = Svc.Data.GetExcelSheet<Item>();
-
-        if (ImGui.BeginTable("Gathering Mission Dictionary", 7, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
-        {
-            ImGui.TableSetupColumn("MissionId");
-            ImGui.TableSetupColumn("Item 1");
-            ImGui.TableSetupColumn("Item Amount###Item1Amount");
-            ImGui.TableSetupColumn("Item 2");
-            ImGui.TableSetupColumn("Item Amount###Item2Amount");
-            ImGui.TableSetupColumn("Item 3");
-            ImGui.TableSetupColumn("Item Amount###Item3Amount");
-
-            ImGui.TableHeadersRow();
-
-            foreach (var entry in GatheringInfoDict)
-            {
-                ImGui.TableNextRow();
-
-                ImGui.TableSetColumnIndex(0);
-                ImGui.Text($"{entry.Key}");
-
-                ImGui.TableNextColumn();
-                foreach (var item in entry.Value.MinGatherItems)
-                {
-                    ImGui.TableNextColumn();
-                    string name = itemName.GetRow(item.Key).Name.ToString();
-                    ImGui.Text(name);
-                    if (ImGui.IsItemHovered())
-                    {
-                        ImGui.BeginTooltip();
-                        ImGui.Text($"{item.Key}");
-                        ImGui.EndTooltip();
-                    }
-
-                    ImGui.TableNextColumn();
-                    ImGui.Text($"{item.Value}");
                 }
             }
 

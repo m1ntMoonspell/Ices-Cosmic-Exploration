@@ -11,7 +11,6 @@ public static unsafe partial class CosmicHelper
     public static readonly HashSet<uint> ARankIds = [4, 5, 6];
 
     public static readonly HashSet<int> CrafterJobList = [8, 9, 10, 11, 12, 13, 14, 15];
-    public static readonly HashSet<int> GatheringJobList = [16, 17, 18];
 
     public static readonly HashSet<int> WeatherMissionList = [30, 31, 32,];
     public static readonly HashSet<int> TimedMissionList = [40, 43,];
@@ -63,13 +62,6 @@ public static unsafe partial class CosmicHelper
     }
 
     public static Dictionary<uint, MoonRecipieInfo> MoonRecipies = [];
-
-    public class GatheringInfo
-    {
-        public Dictionary<uint, int> MinGatherItems = [];
-    }
-
-    public static Dictionary<uint, GatheringInfo> GatheringInfoDict = new();
 
     #endregion
 }
