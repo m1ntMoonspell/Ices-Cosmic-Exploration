@@ -39,6 +39,9 @@ internal class DebugWindow : Window
     public override unsafe void Draw()
     {
         var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
+        var MissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
+        var TodoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
+        var EvalSheet = Svc.Data.GetSubrowExcelSheet<WKSMissionToDoEvalutionItem>();
 
         if (ImGui.TreeNode("Player Info"))
         {
@@ -341,6 +344,24 @@ internal class DebugWindow : Window
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNode("Gathering Table"))
+        {
+            uint missionId = 418;
+            var Todo = MissionSheet.GetRow(missionId).Unknown7;
+            var PotentionalValue = TodoSheet.GetRow(Todo).Unknown10;
+            var EvaluationItem = EvalSheet.GetSubrowAt(PotentionalValue, 0);
+
+
+            ImGui.Text($"Mission: 418 | Todo Spot: {Todo}");
+            ImGui.Text($"Todo Row: {Todo} | Unknown 10 Value: {PotentionalValue}");
+            ImGui.Text($"Evaluation SubRowID: {EvaluationItem.SubrowId}");
+            ImGui.Text($"Evaluation Item: {EvaluationItem.Item}");
+
+            Table3();
+
+            ImGui.TreePop();
+        }
+
         if (ImGui.TreeNode("Test Buttons"))
         {
             ImGui.Text($"Current Mission: {CosmicHelper.CurrentLunarMission}");
@@ -621,6 +642,50 @@ internal class DebugWindow : Window
                 {
                     ImGui.TableNextColumn();
                     ImGui.Text($"Recipe: {main.Key} | Amount: {main.Value}");
+                }
+            }
+
+            ImGui.EndTable();
+        }
+    }
+
+    private void Table3()
+    {
+        var itemName = Svc.Data.GetExcelSheet<Item>();
+
+        if (ImGui.BeginTable("Gathering Mission Dictionary", 7, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
+        {
+            ImGui.TableSetupColumn("MissionId");
+            ImGui.TableSetupColumn("Item 1");
+            ImGui.TableSetupColumn("Item Amount###Item1Amount");
+            ImGui.TableSetupColumn("Item 2");
+            ImGui.TableSetupColumn("Item Amount###Item2Amount");
+            ImGui.TableSetupColumn("Item 3");
+            ImGui.TableSetupColumn("Item Amount###Item3Amount");
+
+            ImGui.TableHeadersRow();
+
+            foreach (var entry in GatheringInfoDict)
+            {
+                ImGui.TableNextRow();
+
+                ImGui.TableSetColumnIndex(0);
+                ImGui.Text($"{entry.Key}");
+
+                foreach (var item in entry.Value.MinGatherItems)
+                {
+                    ImGui.TableNextColumn();
+                    string name = itemName.GetRow(item.Key).Name.ToString();
+                    ImGui.Text(name);
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.Text($"{item.Key}");
+                        ImGui.EndTooltip();
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"{item.Value}");
                 }
             }
 
