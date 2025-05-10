@@ -1,5 +1,6 @@
 ﻿using ECommons.GameHelpers;
 using ICE.Enums;
+using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 
 namespace ICE.Utilities;
@@ -16,6 +17,15 @@ public static unsafe partial class CosmicHelper
     public static readonly HashSet<int> WeatherMissionList = [30, 31, 32,];
     public static readonly HashSet<int> TimedMissionList = [40, 43,];
     public static readonly HashSet<int> CriticalMissions = [512, 513, 514,];
+
+    public static readonly HashSet<int> LimitQuantityMission = [362, 361, 368, 374];
+    public static readonly HashSet<int> QuantityMission = [366, 365, 376, ];
+    public static readonly HashSet<int> TimedMissions = [364, 363, 369, 375, ];
+    public static readonly HashSet<int> ChainedMissions = [370, 377, ];
+    public static readonly HashSet<int> BoonMissions = [371, 378, ];
+    public static readonly HashSet<int> ChainBoonMissions = [372, 379, ];
+    public static readonly HashSet<int> CollectableMissions = [373, 380, ];
+    public static readonly HashSet<int> ReductionMissions = [381, ];
 
     public static readonly int MinimumLevel = 10;
     public static readonly int MaximumLevel = Player.MaxLevel;

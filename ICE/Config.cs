@@ -101,7 +101,7 @@ namespace ICE
         public int YieldIGp { get; set; } = 400;
         public bool BonusIntegrity { get; set; } = false;
         public int BonusIntegrityGp { get; set; } = 300;
-        public bool IntegrityBool { get; set; } = false;
+        public bool IntegrityBool { get; set; } = true;
     }
 
     public class GatherBuffProfile

@@ -903,6 +903,27 @@ namespace ICE.Ui
                         C.Save();
                     }
                 );
+
+                // Bonus Integrity (+1 integrity)
+                DrawBuffSetting(
+                    label: "Increase Integrity",
+                    uniqueId: $"Incrase Intregity{entry.Id}",
+                    currentEnabled: entry.Buffs.BonusIntegrity,
+                    currentMinGp: entry.Buffs.BonusIntegrityGp,
+                    minGpLimit: 300,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.BonusIntegrity = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.BonusIntegrityGp = newVal;
+                        C.Save();
+                    }
+                );
             }
             else
             {
