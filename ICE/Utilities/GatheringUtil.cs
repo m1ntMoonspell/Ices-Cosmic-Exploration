@@ -76,7 +76,7 @@ public static unsafe class GatheringUtil
             StatusName = "Gatherer's Bounty",
             RequiredGp = 200,
         }},
-        { "Yield1", new GatheringActions
+        { "YieldI", new GatheringActions
         {
             ActionName = "Blessed Harvest",
             BtnName = "",
@@ -87,7 +87,7 @@ public static unsafe class GatheringUtil
             StatusName = "Gathering Yield Up",
             RequiredGp = 400,
         }},
-        { "Yield2", new GatheringActions
+        { "YieldII", new GatheringActions
         {
             ActionName = "Blessed Harvest II",
             BtnName = "",

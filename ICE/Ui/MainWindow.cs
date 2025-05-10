@@ -566,6 +566,8 @@ namespace ICE.Ui
             }
         }
 
+        private static string newProfileName = ""; // This should be outside the function and persist
+
         public static void DrawConfigTab()
         {
             var tab = ImRaii.TabItem("Config");
@@ -714,6 +716,199 @@ namespace ICE.Ui
                     }
                 }
             }
+
+            void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, Action<bool> onEnabledChange, Action<int> onMinGpChange)
+            {
+                bool enabled = currentEnabled;
+                if (ImGui.Checkbox($"{label}###Enable{uniqueId}", ref enabled))
+                {
+                    if (enabled != currentEnabled)
+                        onEnabledChange(enabled);
+                }
+
+                if (enabled)
+                {
+                    if (ImGui.TreeNode($"{label} Settings###Tree{uniqueId}{entryName}"))
+                    {
+                        int minGp = currentMinGp;
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.Text("Minimum GP");
+                        ImGui.SameLine();
+                        ImGui.SetNextItemWidth(200);
+                        if (ImGui.SliderInt($"###Slider{uniqueId}{entryName}", ref minGp, minGpLimit, maxGpLimit))
+                        {
+                            if (minGp != currentMinGp)
+                                onMinGpChange(minGp);
+                        }
+
+                        ImGui.TreePop();
+                    }
+                }
+            }
+
+#if DEBUG
+            var headerColor = new Vector4(0.2f, 0.5f, 0.7f, 1.0f); // Light blue
+
+            ImGui.PushStyleColor(ImGuiCol.Header, headerColor);
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, headerColor * 1.2f);
+            ImGui.PushStyleColor(ImGuiCol.HeaderActive, headerColor * 1.5f);
+
+            if (ImGui.CollapsingHeader("Gathering Settings"))
+            {
+                ImGui.PopStyleColor(3);
+                int maxGp = 1200;
+
+                ImGui.InputText("New Profile Name", ref newProfileName, 64);
+                if (ImGui.Button("Add Profile") && !string.IsNullOrWhiteSpace(newProfileName))
+                {
+                    if (!C.GatherSettings.Any(x => x.Name == newProfileName))
+                    {
+                        int newId = C.GatherSettings.Max(x => x.Id) + 1;
+                        C.GatherSettings.Add(new GatherBuffProfile { Id = newId, Name = newProfileName });
+                        C.Save();
+                        newProfileName = ""; // Reset input
+                    }
+                }
+
+                ImGui.Text("Gather Profiles");
+
+                ImGui.BeginChild("GatherProfileChild", new Vector2(300, ImGui.GetTextLineHeightWithSpacing() * 5 + 10), true);
+                for (int i = 0; i < C.GatherSettings.Count; i++)
+                {
+                    bool isSelected = (i == C.SelectedGatherIndex);
+
+                    if (ImGui.Selectable(C.GatherSettings[i].Name, isSelected))
+                    {
+                        C.SelectedGatherIndex = i;
+                        C.Save();
+                    }
+
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+                ImGui.EndChild();
+
+
+                if (ImGui.Button("Delete Selected Profile") && C.GatherSettings.Count > 1)
+                {
+                    C.GatherSettings.RemoveAt(C.SelectedGatherIndex);
+                    C.SelectedGatherIndex = Math.Clamp(C.SelectedGatherIndex, 0, C.GatherSettings.Count - 1);
+                    C.Save();
+                }
+
+                GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
+
+
+                // Boon Increase 2 (+30% Increase)
+                DrawBuffSetting(
+                    label: "Boon Increase 2",
+                    uniqueId: $"Boon2Inc{entry.Id}",
+                    currentEnabled: entry.Buffs.BoonIncrease2,
+                    currentMinGp: entry.Buffs.BoonIncrease2Gp,
+                    minGpLimit: 100,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease2 = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease2Gp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Boon Increase 1 (+10% Increase)
+                DrawBuffSetting(
+                    label: "Boon Increase 1",
+                    uniqueId: $"Boon1Inc{entry.Id}",
+                    currentEnabled: entry.Buffs.BoonIncrease1,
+                    currentMinGp: entry.Buffs.BoonIncrease1Gp,
+                    minGpLimit: 50,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease1 = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease1Gp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Tidings (+2 to boon instead of +1)
+                DrawBuffSetting(
+                    label: "Tidings Buff",
+                    uniqueId: $"TidingsBuff{entry.Id}",
+                    currentEnabled: entry.Buffs.TidingsBool,
+                    currentMinGp: entry.Buffs.TidingsGp,
+                    minGpLimit: 200,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.TidingsBool = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.TidingsGp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Yield II (+2 to all items on node)
+                DrawBuffSetting(
+                    label: "Blessed/Kings Yield II",
+                    uniqueId: $"Blessed/KingsYieldIIBuff{entry.Id}",
+                    currentEnabled: entry.Buffs.YieldII,
+                    currentMinGp: entry.Buffs.YieldIIGp,
+                    minGpLimit: 500,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.YieldII = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.YieldIIGp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Yield I (+1 to all items on node)
+                DrawBuffSetting(
+                    label: "Blessed/Kings Yield I",
+                    uniqueId: $"Blessed/KingsYieldIBuff{entry.Id}",
+                    currentEnabled: entry.Buffs.YieldI,
+                    currentMinGp: entry.Buffs.YieldIGp,
+                    minGpLimit: 400,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.YieldI = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.YieldIGp = newVal;
+                        C.Save();
+                    }
+                );
+            }
+            else
+            {
+                ImGui.PopStyleColor(3);
+            }
+#endif
 
             if (ImGui.CollapsingHeader("Overlay Settings"))
             {
