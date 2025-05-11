@@ -104,14 +104,14 @@ namespace ICE.Scheduler.Tasks
                         {
                             var DictEntry = GatheringItemDict[currentMission].MinGatherItems;
                             bool hasAllItems = true;
-                            int itemToGather = 0;
+                            uint itemToGather = 0;
 
                             foreach (var item in DictEntry)
                             {
                                 if (PlayerHelper.GetItemCount((int)item.Key, out int count) && count < item.Value)
                                 {
                                     hasAllItems = false;
-                                    itemToGather = count;
+                                    itemToGather = item.Key;
                                 }
                             }
 
