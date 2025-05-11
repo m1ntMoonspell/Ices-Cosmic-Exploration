@@ -399,6 +399,14 @@ namespace ICE.Ui
 
                         if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18) || entry.Value.IsCriticalMission)
                             unsupported = true;
+
+#if DEBUG
+                        if (!UnsupportedMissions.Ids.Contains(entry.Key))
+                        {
+                            unsupported = false;
+                        }
+#endif
+
                         if (unsupported && hideUnsupported)
                             continue;
 

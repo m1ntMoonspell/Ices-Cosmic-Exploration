@@ -79,7 +79,7 @@ public static unsafe partial class CosmicHelper
         public Dictionary<uint, int> MinGatherItems = [];
     }
 
-    public static Dictionary<uint, GatheringInfo> GatheringInfoDict = new();
+    public static Dictionary<uint, GatheringInfo> GatheringItemDict = new();
 
     #endregion
 }

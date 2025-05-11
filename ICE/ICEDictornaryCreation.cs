@@ -244,9 +244,9 @@ public sealed partial class ICE
                     }
                 }
 
-                if (!GatheringInfoDict.ContainsKey(keyId))
+                if (!GatheringItemDict.ContainsKey(keyId))
                 {
-                    GatheringInfoDict[keyId] = new GatheringInfo()
+                    GatheringItemDict[keyId] = new GatheringInfo()
                     {
                         MinGatherItems = GatherItems
                     };

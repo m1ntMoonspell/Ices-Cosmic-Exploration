@@ -665,7 +665,7 @@ internal class DebugWindow : Window
 
             ImGui.TableHeadersRow();
 
-            foreach (var entry in GatheringInfoDict)
+            foreach (var entry in GatheringItemDict)
             {
                 ImGui.TableNextRow();
 

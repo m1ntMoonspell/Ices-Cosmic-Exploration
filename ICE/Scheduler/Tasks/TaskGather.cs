@@ -2,7 +2,9 @@
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
+using System.Threading;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
+using static ICE.Utilities.CosmicHelper;
 
 namespace ICE.Scheduler.Tasks
 {
@@ -75,12 +77,20 @@ namespace ICE.Scheduler.Tasks
             if (!P.TaskManager.IsBusy)
             {
                 CosmicHelper.OpenStellaMission();
+                var currentMission = CosmicHelper.CurrentLunarMission;
 
                 if (!P.Visland.IsRouteRunning())
                 {
+                    IceLogging.Info("Visland route is currently not running, setting it to run");
                     if (EzThrottler.Throttle("Starting Visland Route"))
                     {
-                        P.Visland.StartRoute("Test", false); // Need to replace this with the route finder based on MissionID
+                        var nodeSet = GatheringUtil.GatherMissionInfo[currentMission].NodeSet;
+                        var base64 = GatheringUtil.VislandDict[nodeSet].VBase64;
+
+                        IceLogging.Info($"Nodeset: {nodeSet} found, starting visland route");
+
+                        P.Visland.StartRoute(base64, false);
+                        P.Visland.SetRoutePaused(false);
                     }
                 }
 
@@ -88,16 +98,50 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (GenericHelpers.TryGetAddonMaster<Gathering>("Gathering", out var gather) && gather.IsAddonReady)
                     {
-                        if (missionA == 1) // Timed gather x amount of items
+                        var missionType = GatheringUtil.GatherMissionInfo[currentMission].Type;
+
+                        if (missionType == 2) // Quantity Style Mission (Gather x amount of each item, gather more to get score)
                         {
-                            // Pull up status configs for Mission Type A
-                            foreach (var item in gather.GatheredItems)
+                            var DictEntry = GatheringItemDict[currentMission].MinGatherItems;
+                            bool hasAllItems = true;
+                            int itemToGather = 0;
+
+                            foreach (var item in DictEntry)
                             {
-                                if (item.ItemID != 0)
+                                if (PlayerHelper.GetItemCount((int)item.Key, out int count) && count < item.Value)
                                 {
-                                    P.TaskManager.Enqueue(() => item.Gather());
-                                    P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.ExecutingGatheringAction] == true);
-                                    P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.ExecutingGatheringAction] == false);
+                                    hasAllItems = false;
+                                    itemToGather = count;
+                                }
+                            }
+
+                            // Pull up status configs for Mission Type A
+                            if (!Svc.Condition[ConditionFlag.ExecutingGatheringAction])
+                            {
+                                foreach (var item in gather.GatheredItems)
+                                {
+                                    if (hasAllItems && item.ItemID != 0)
+                                    {
+                                        IceLogging.Info($"HasAllItems: {hasAllItems} \n" +
+                                                        $"Found Item: {item.ItemID} | {item.ItemName}");
+                                        if (EzThrottler.Throttle($"Gathering: {item.ItemName}"))
+                                        {
+                                            IceLogging.Info($"Telling it to gather: {item.ItemName}");
+                                            item.Gather();
+                                        }
+                                        break;
+                                    }
+                                    else if (!hasAllItems && item.ItemID == itemToGather)
+                                    {
+                                        IceLogging.Info($"HasAllItems: {hasAllItems} \n" +
+                                                        $"Found Item: {item.ItemID} | {item.ItemName}");
+                                        if (EzThrottler.Throttle($"Gathering: {item.ItemName}"))
+                                        {
+                                            IceLogging.Info($"Telling it to gather: {item.ItemName}");
+                                            item.Gather();
+                                        }
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -105,14 +149,6 @@ namespace ICE.Scheduler.Tasks
                 }
 
                 // need to add a P.Taskmanager thing here post to make sure once you finish the gathering route, then check the score... 
-
-
-            }
-
-            if (!Svc.Condition[ConditionFlag.ExecutingGatheringAction]) // Makes sure that you're not mid swing of a gathering action
-            {
-
-
             }
         }
 

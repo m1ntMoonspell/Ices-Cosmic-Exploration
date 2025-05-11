@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using System.Collections.Generic;
+using static FFXIVClientStructs.FFXIV.Client.Game.UI.AutoAttackState.Delegates;
+using System.Threading.Channels;
 
 namespace ICE.Utilities;
 
@@ -120,6 +123,16 @@ public static unsafe class GatheringUtil
         }},
     };
 
+   /* First things first, there's several types of missions for gathering
+    * 1 Quantity Limited(Gather x amount on limited amount of nodes)
+    * 2 Quantity(Gather x amount, gather more for increased score)
+    * 3 Timed(Gather x amount in the time limit)
+    * 4 Chain(Increase score based on chain)
+    * 5 Gatherer's Boon (Increase score by hitting boon % chance)
+    * 6 Chain + Boon(Get score from chain nodes + boon % chance)
+    * 7 Collectables(This is going to be annoying)
+    * 8 Time Steller Reduction(???) (Assuming Collectables -> Reducing for score...fuck)
+    */
     public class GatheringInfo
     {
         public uint NodeSet { get; set; } // which nodeset does this belong to
@@ -133,7 +146,17 @@ public static unsafe class GatheringUtil
     /// </summary>
     public static Dictionary<uint, GatheringInfo> GatherMissionInfo = new Dictionary<uint, GatheringInfo>()
     {
+        // Btn Missions
+        
+        // D Rank
+        { 406, new GatheringInfo { NodeSet = 3, Type = 1} },
+        { 407, new GatheringInfo { NodeSet = 3, Type = 1} },
+        { 408, new GatheringInfo { NodeSet = 2, Type = 3} },
+        { 409, new GatheringInfo { NodeSet = 1, Type = 3} },
+        { 410, new GatheringInfo { NodeSet = 2, Type = 2} },
+        { 411, new GatheringInfo { NodeSet = 1, Type = 2} },
 
+        // C Rank
     };
 
     public class GathNodeInfo
@@ -161,7 +184,7 @@ public static unsafe class GatheringUtil
 
         #region D Rank Missions
 
-        #region (224, 82, 100)
+        #region (224, 82, 100) 1
 
         new GathNodeInfo
         {
@@ -225,7 +248,7 @@ public static unsafe class GatheringUtil
 
         #endregion
 
-        #region (231, -50, 100)
+        #region (231, -50, 100) 2
 
         new GathNodeInfo
         {
@@ -302,7 +325,7 @@ public static unsafe class GatheringUtil
 
         #endregion
 
-        #region (-278 -13 100)
+        #region (-278 -13 100) 3
 
         new GathNodeInfo
         {

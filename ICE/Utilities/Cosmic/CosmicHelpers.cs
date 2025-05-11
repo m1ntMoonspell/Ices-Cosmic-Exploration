@@ -12,6 +12,9 @@ public static partial class CosmicHelper
 
     public static MissionListInfo CurrentMissionInfo => MissionInfoDict[CurrentLunarMission];
     public static MoonRecipieInfo CurrentMoonRecipe => MoonRecipies[CurrentLunarMission];
+    /// <summary>
+    /// Gives the current mission that is active
+    /// </summary>
     public static unsafe uint CurrentLunarMission => WKSManager.Instance()->CurrentMissionUnitRowId;
     public static unsafe uint CurrentLunarDevelopment => DevGrade.GetRow(WKSManager.Instance()->DevGrade).Unknown6;
     public static Dictionary<int, string> ExpDictionary = new()

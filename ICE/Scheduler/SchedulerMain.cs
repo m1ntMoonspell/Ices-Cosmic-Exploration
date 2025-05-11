@@ -67,6 +67,9 @@ namespace ICE.Scheduler
                     case IceState.ResumeChecker:
                         TaskMissionFind.EnqueueResumeCheck();
                         break;
+                    case IceState.GatherNormal:
+                        TaskGather.TryEnqueueGathering();
+                        break;
                     default:
                         throw new Exception("Invalid state");
                 }
