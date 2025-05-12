@@ -416,10 +416,10 @@ namespace ICE.Ui
                             unsupported = true;
                             
                         uint gatherMissionType = 0;
-                        try {
-                            gatherMissionType = GatheringUtil.GatherMissionInfo[entry.Key].Type;
+                        if (GatheringUtil.GatherMissionInfo.TryGetValue(entry.Key, out var missionInfo))
+                        {
+                            gatherMissionType = missionInfo.Type;
                         }
-                        catch {}
                         if (gatherMissionType != 0)
                             unsupported = false;
 
