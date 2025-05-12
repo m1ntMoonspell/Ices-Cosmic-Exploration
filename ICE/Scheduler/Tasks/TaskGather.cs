@@ -73,7 +73,7 @@ namespace ICE.Scheduler.Tasks
             if (currentScore >= goldScore)
             {
                 IceLogging.Error("[TaskGathering | Current Score] We shouldn't be here, stopping and progressing");
-                SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
+                SchedulerMain.State = IceState.GatherScoreandTurnIn;
                 return;
             }
 
@@ -214,7 +214,7 @@ namespace ICE.Scheduler.Tasks
 
                     var missionType = GatheringUtil.GatherMissionInfo[currentMission].Type;
 
-                    if (missionType is 1 or 2 or 3) // Quantity Style Mission (Gather x amount of each item, gather more to get score)
+                    if (missionType <= 6)
                     {
                         var DictEntry = GatheringItemDict[currentMission].MinGatherItems;
                         bool hasAllItems = true;

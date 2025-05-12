@@ -45,6 +45,9 @@ namespace ICE.Scheduler
                     case IceState.AnimationLock:
                         TaskAnimationLock.Enqueue();
                         break;
+                    case IceState.RepairMode:
+                        TaskRepair.GatherCheck();
+                        break;
                     case IceState.WaitForCrafts:
                     case IceState.CraftInProcess:
                         TaskCrafting.WaitTillActuallyDone();
@@ -98,6 +101,7 @@ namespace ICE.Scheduler
         Idle,
         ManualMode,
         ResumeChecker,
+        RepairMode,
         StartCraft,
         WaitForCrafts,
         WaitForNonStandard

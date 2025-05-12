@@ -61,7 +61,7 @@ namespace ICE.Scheduler.Tasks
             }
             else
             {
-                SchedulerMain.State = IceState.GrabMission;
+                SchedulerMain.State = IceState.RepairMode;
             }
         }
 

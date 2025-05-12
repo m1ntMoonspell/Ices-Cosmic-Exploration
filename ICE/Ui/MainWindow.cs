@@ -126,6 +126,8 @@ namespace ICE.Ui
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
         private static bool showCredits = C.ShowCreditsColumn;
+        private static bool SelfRepairGather = C.SelfRepairGather;
+        private static float SelfRepairPercent = C.RepairPercent;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -825,6 +827,31 @@ namespace ICE.Ui
                 ImGui.PopStyleColor(3);
                 int maxGp = 1200;
 
+                if (ImGui.Checkbox("Self Repair on Gather", ref SelfRepairGather))
+                {
+                    if (C.SelfRepairGather != SelfRepairGather)
+                    {
+                        C.SelfRepairGather = SelfRepairGather;
+                        C.Save();
+                    }
+                }
+                if (SelfRepairGather)
+                {
+                    ImGui.Text("Repair at");
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(150);
+                    if (ImGui.SliderFloat("###Repair %", ref SelfRepairPercent, 0f, 99f, "%.0f%%"))
+                    {
+                        if (C.RepairPercent != SelfRepairPercent)
+                        {
+                            C.RepairPercent = (int)SelfRepairPercent;
+                            C.Save();
+                        }
+                    }
+                }
+
+                ImGui.Dummy(new(0, 5));
+
                 ImGui.InputText("New Profile Name", ref newProfileName, 64);
                 if (ImGui.Button("Add Profile") && !string.IsNullOrWhiteSpace(newProfileName))
                 {
@@ -885,7 +912,6 @@ namespace ICE.Ui
 
 
                 GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
-
 
                 // Boon Increase 2 (+30% Increase)
                 DrawBuffSetting(

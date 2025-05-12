@@ -35,7 +35,7 @@ namespace ICE.Scheduler.Tasks
                 var (currentScore, silverScore, goldScore) = TaskGather.GetCurrentScores();
                 var missionType = GatheringUtil.GatherMissionInfo[CosmicHelper.CurrentLunarMission].Type;
 
-                if (currentScore != 0 && missionType is 1 or 2) // Base ones that have item counters
+                if (currentScore != 0 && missionType is 1 or 2 or 4 or 5 or 6) // Base ones that have item counters
                 {
                     if (IceLogging.ShouldLog())
                     {
