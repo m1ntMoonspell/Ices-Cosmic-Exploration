@@ -414,13 +414,14 @@ namespace ICE.Ui
 
                         if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18) || entry.Value.IsCriticalMission)
                             unsupported = true;
-
-#if DEBUG
-                        if (!UnsupportedMissions.Ids.Contains(entry.Key))
-                        {
-                            unsupported = false;
+                            
+                        uint gatherMissionType = 0;
+                        try {
+                            gatherMissionType = GatheringUtil.GatherMissionInfo[entry.Key].Type;
                         }
-#endif
+                        catch {}
+                        if (gatherMissionType != 0)
+                            unsupported = false;
 
                         if (unsupported && hideUnsupported)
                             continue;
@@ -524,26 +525,13 @@ namespace ICE.Ui
                             modes = ["Manual"];
                             mission.ManualMode = true;
                         }
-                        else if (GatheringJobList.Contains((int)entry.Value.JobId))
+                        else if (GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3)
                         {
-                            if (GatheringUtil.GatherMissionInfo[entry.Key].Type == 3)
-                            {
-                                modes = ["ASAP", "Manual"];
-                                if (mission.TurnInASAP)
-                                    currentModeIndex = 0;
-                                if (mission.ManualMode)
-                                    currentModeIndex = 1;
-                            }
-                            else
-                            {
-                                modes = ["Gold", "Silver", "ASAP", "Manual"];
-                                if (mission.TurnInSilver)
-                                    currentModeIndex = 1;
-                                if (mission.TurnInASAP)
-                                    currentModeIndex = 2;
-                                if (mission.ManualMode)
-                                    currentModeIndex = 3;
-                            }
+                            modes = ["ASAP", "Manual"];
+                            if (mission.TurnInASAP)
+                                currentModeIndex = 0;
+                            if (mission.ManualMode)
+                                currentModeIndex = 1;
                         }
                         else
                         {
@@ -575,30 +563,27 @@ namespace ICE.Ui
 
                             C.Save();
                         }
-
                         if (showGatherConfig)
-                            ImGui.TableNextColumn();
-                        if (GatheringJobList.Contains((int)entry.Value.JobId) || GatheringJobList.Contains((int)entry.Value.JobId2))
                         {
-                            ImGui.SetNextItemWidth(-1);
-                            if (ImGui.BeginCombo($"###GatherProfile{entry.Value.Name}_{entry.Key}", mission.GatherSetting.Name))
+                            ImGui.TableNextColumn();
+                            if (GatheringJobList.Contains((int)entry.Value.JobId) || GatheringJobList.Contains((int)entry.Value.JobId2))
                             {
-                                foreach (var profile in C.GatherSettings)
+                                ImGui.SetNextItemWidth(-1);
+                                if (ImGui.BeginCombo($"###GatherProfile{entry.Value.Name}_{entry.Key}", mission.GatherSetting.Name))
                                 {
-                                    bool isSelected = mission.GatherSettingId == profile.Id;
-
-                                    if (ImGui.Selectable(profile.Name, isSelected))
+                                    foreach (var profile in C.GatherSettings)
                                     {
-                                        mission.GatherSettingId = profile.Id;
+                                        bool isSelected = mission.GatherSettingId == profile.Id;
+                                        if (ImGui.Selectable(profile.Name, isSelected))
+                                        {
+                                            mission.GatherSettingId = profile.Id;
+                                        }
+                                        if (isSelected)
+                                            ImGui.SetItemDefaultFocus();
                                     }
-
-                                    if (isSelected)
-                                        ImGui.SetItemDefaultFocus();
+                                    ImGui.EndCombo();
                                 }
-
-                                ImGui.EndCombo();
                             }
-
                         }
 
                         // debug
