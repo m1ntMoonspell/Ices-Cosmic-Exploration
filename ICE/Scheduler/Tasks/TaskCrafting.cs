@@ -49,7 +49,7 @@ namespace ICE.Scheduler.Tasks
             if (currentScore >= goldScore)
             {
                 IceLogging.Debug("[Crafting] We reached gold, switching to Score Check.", true);
-                SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
                 return;
             }
 
@@ -209,7 +209,7 @@ namespace ICE.Scheduler.Tasks
                 P.TaskManager.Enqueue(() =>
                 {
                     IceLogging.Debug("Check score and turn in cause crafting is done.", true);
-                    SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                    SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
                 }, "Check score and turn in if complete");
 
                 P.TaskManager.EnqueueStack();

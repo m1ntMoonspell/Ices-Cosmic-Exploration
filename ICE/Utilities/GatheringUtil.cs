@@ -184,17 +184,77 @@ public static unsafe class GatheringUtil
 
         #region D Rank Missions
 
-        #region (224, 82, 100) 1
+        #region (-278 -13 100) (Set #1)
+
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35168,
+            Position = new Vector3 (-228.04f, 17.31f, -13.59f),
+            LandZone = new Vector3 (-228.84f, 16.82f, -13.53f),
+            GatheringType = 3,
+            NodeSet = 1
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35167,
+            Position = new Vector3 (-238.16f, 17.82f, -33.92f),
+            LandZone = new Vector3 (-237.94f, 17.22f, -33.02f),
+            GatheringType = 3,
+            NodeSet = 1
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35166,
+            Position = new Vector3 (-325.44f, 28.14f, -51.83f),
+            LandZone = new Vector3 (-324.69f, 27.81f, -51.55f),
+            GatheringType = 3,
+            NodeSet = 1
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35165,
+            Position = new Vector3 (-330.45f, 29.18f, -28.82f),
+            LandZone = new Vector3 (-330.08f, 28.69f, -29.41f),
+            GatheringType = 3,
+            NodeSet = 1
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35169,
+            Position = new Vector3 (-288.95f, 25.49f, 44.38f),
+            LandZone = new Vector3 (-288.93f, 25.07f, 43.86f),
+            GatheringType = 3,
+            NodeSet = 1
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35170,
+            Position = new Vector3 (-273.81f, 23.78f, 44.75f),
+            LandZone = new Vector3 (-274.15f, 23.28f, 44.57f),
+            GatheringType = 3,
+            NodeSet = 1
+        },
+
+        #endregion
+
+        #region (224, 82, 100) (Set #2)
 
         new GathNodeInfo
         {
             ZoneId = 1237,
             NodeId = 35159,
             Position = new Vector3 (223.44f, 20.26f, 8.42f),
-            LandZone = new Vector3 (222.75f, 19.4f, 8.04f),
+            LandZone = new Vector3 (223.04f, 19.41f, 8.25f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 2
         },
+
 
         new GathNodeInfo
         {
@@ -203,7 +263,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (223.99f, 20.31f, 15.83f),
             LandZone = new Vector3 (224.33f, 19.39f, 15.45f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 2
         },
 
         new GathNodeInfo
@@ -213,7 +273,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (285.3f, 18.88f, 108.14f),
             LandZone = new Vector3 (285.2f, 17.89f, 108.78f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 2
         },
 
         new GathNodeInfo
@@ -223,7 +283,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (286.34f, 19.03f, 114.67f),
             LandZone = new Vector3 (286.04f, 18.02f, 114.53f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 2
         },
 
         new GathNodeInfo
@@ -233,7 +293,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (207.68f, 18.92f, 145.46f),
             LandZone = new Vector3 (207.74f, 17.93f, 145.63f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 2
         },
 
         new GathNodeInfo
@@ -243,12 +303,12 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (186.24f, 19.58f, 152.27f),
             LandZone = new Vector3 (186.34f, 18.68f, 152.56f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 2
         },
 
         #endregion
 
-        #region (231, -50, 100) 2
+        #region (231, -50, 100) (Set #3)
 
         new GathNodeInfo
         {
@@ -257,7 +317,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (221.91f, 20.14f, 1.22f),
             LandZone = new Vector3 (221.63f, 19.27f, 1.76f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 3
         },
         new GathNodeInfo
         {
@@ -266,7 +326,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (214.32f, 20.07f, -9.12f),
             LandZone = new Vector3 (214.58f, 19.17f, -9.09f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 3
         },
         new GathNodeInfo
         {
@@ -275,7 +335,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (212.42f, 18.82f, -23.42f),
             LandZone = new Vector3 (212.86f, 18.07f, -22.78f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 3
         },
         new GathNodeInfo
         {
@@ -284,7 +344,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (231.74f, 19.9f, -27.72f),
             LandZone = new Vector3 (231.49f, 18.96f, -27.89f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 3
         },
         new GathNodeInfo
         {
@@ -293,7 +353,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (244.55f, 21.27f, -39.45f),
             LandZone = new Vector3 (244.63f, 20.4f, -39.56f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 3
         },
         new GathNodeInfo
         {
@@ -302,7 +362,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (251.86f, 22.5f, -54.28f),
             LandZone = new Vector3 (252.26f, 21.65f, -54.21f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 3
         },
         new GathNodeInfo
         {
@@ -311,7 +371,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (238.31f, 21.42f, -64.92f),
             LandZone = new Vector3 (238.52f, 20.47f, -65.07f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 3
         },
         new GathNodeInfo
         {
@@ -319,65 +379,6 @@ public static unsafe class GatheringUtil
             NodeId = 35135,
             Position = new Vector3 (225.6f, 20.73f, -83.05f),
             LandZone = new Vector3 (225.59f, 19.73f, -82.86f),
-            GatheringType = 3,
-            NodeSet = 2
-        },
-
-        #endregion
-
-        #region (-278 -13 100) 3
-
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = 35168,
-            Position = new Vector3 (-228.04f, 17.31f, -13.59f),
-            LandZone = new Vector3 (-228.84f, 16.82f, -13.53f),
-            GatheringType = 3,
-            NodeSet = 3
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = 35167,
-            Position = new Vector3 (-238.16f, 17.82f, -33.92f),
-            LandZone = new Vector3 (-237.94f, 17.22f, -33.02f),
-            GatheringType = 3,
-            NodeSet = 3
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = 35166,
-            Position = new Vector3 (-325.44f, 28.14f, -51.83f),
-            LandZone = new Vector3 (-324.69f, 27.81f, -51.55f),
-            GatheringType = 3,
-            NodeSet = 3
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = 35165,
-            Position = new Vector3 (-330.45f, 29.18f, -28.82f),
-            LandZone = new Vector3 (-330.08f, 28.69f, -29.41f),
-            GatheringType = 3,
-            NodeSet = 3
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = 35169,
-            Position = new Vector3 (-288.95f, 25.49f, 44.38f),
-            LandZone = new Vector3 (-288.93f, 25.07f, 43.86f),
-            GatheringType = 3,
-            NodeSet = 3
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = 35170,
-            Position = new Vector3 (-273.81f, 23.78f, 44.75f),
-            LandZone = new Vector3 (-274.15f, 23.28f, 44.57f),
             GatheringType = 3,
             NodeSet = 3
         },

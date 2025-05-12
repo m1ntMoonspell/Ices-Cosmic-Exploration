@@ -52,7 +52,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (!ModeChangeCheck(isGatherer))
                 {
-                    SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                    SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
                 }
             }
             else
@@ -543,6 +543,7 @@ namespace ICE.Scheduler.Tasks
 #if DEBUG
             if (gatherer)
             {
+                SchedulerMain.currentIndex = 0;
                 SchedulerMain.State = IceState.GatherNormal;
                 return true;
             }

@@ -250,30 +250,34 @@ namespace ICE.Ui
             .Where(m => m.Value.JobId == selectedJobId - 1)
             .Where(m => m.Value.IsCriticalMission);
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
-            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", criticalMissions);
+            bool criticalGather = criticalMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", criticalMissions, criticalGather);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
+            bool weatherGather = weatherRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.Time != 0);
+            bool timeGather = timeRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
             timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.PreviousMissionID != 0);
+            bool sequentialGather = sequentialMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
 
-            void DrawWeatherMissions() => DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions);
-            void DrawTimedMissions() => DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
-            void DrawSequentialMissions() => DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
+            void DrawWeatherMissions() => DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions, weatherGather);
+            void DrawTimedMissions() => DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions, timeGather);
+            void DrawSequentialMissions() => DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions, sequentialGather);
 
             var missionList = new List<(int prio, Action action)>
                 {
@@ -298,13 +302,14 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
-                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", missions);
+                bool missionGather = missions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", missions, missionGather);
             }
 
             ImGui.EndTabItem();
         }
 
-        public void DrawMissionsDropDown(string tabName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions)
+        public void DrawMissionsDropDown(string tabName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions, bool showGatherConfig = false)
         {
             var tabId = tabName.Split('-')[0];
             if (ImGui.CollapsingHeader(string.Format("{0}###{1}", tabName, tabId)))
@@ -317,6 +322,8 @@ namespace ICE.Ui
                     columnAmount += 2;
                 if (showExp)
                     columnAmount += 4;
+                if (showGatherConfig)
+                    columnAmount += 1;
 
                 if (ImGui.BeginTable($"MissionList###{tabId}", columnAmount, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
                 {
@@ -364,6 +371,12 @@ namespace ICE.Ui
 
                     // Settings column
                     ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
+
+                    if (showGatherConfig)
+                    {
+                        float columnWidth = ImGui.CalcTextSize("Gather Config").X + 5;
+                        ImGui.TableSetupColumn("Gather Config", ImGuiTableColumnFlags.WidthFixed, columnWidth);
+                    }
 
                     // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
@@ -538,6 +551,31 @@ namespace ICE.Ui
                             }
 
                             C.Save();
+                        }
+
+                        if (showGatherConfig)
+                            ImGui.TableNextColumn();
+                        if (GatheringJobList.Contains((int)entry.Value.JobId) || GatheringJobList.Contains((int)entry.Value.JobId2))
+                        {
+                            ImGui.SetNextItemWidth(-1);
+                            if (ImGui.BeginCombo($"###GatherProfile{entry.Value.Name}_{entry.Key}", mission.GatherSetting.Name))
+                            {
+                                foreach (var profile in C.GatherSettings)
+                                {
+                                    bool isSelected = mission.GatherSettingId == profile.Id;
+
+                                    if (ImGui.Selectable(profile.Name, isSelected))
+                                    {
+                                        mission.GatherSettingId = profile.Id;
+                                    }
+
+                                    if (isSelected)
+                                        ImGui.SetItemDefaultFocus();
+                                }
+
+                                ImGui.EndCombo();
+                            }
+
                         }
 
                         // debug
@@ -797,12 +835,33 @@ namespace ICE.Ui
                 ImGui.EndChild();
 
 
-                if (ImGui.Button("Delete Selected Profile") && C.GatherSettings.Count > 1)
+                bool canDelete = C.GatherSettings.Count > 1 && C.SelectedGatherIndex != 0;
+                using (ImRaii.Disabled(!canDelete))
                 {
-                    C.GatherSettings.RemoveAt(C.SelectedGatherIndex);
-                    C.SelectedGatherIndex = Math.Clamp(C.SelectedGatherIndex, 0, C.GatherSettings.Count - 1);
-                    C.Save();
+                    if (ImGui.Button("Delete Selected Profile"))
+                    {
+                        var deletedProfile = C.GatherSettings[C.SelectedGatherIndex];
+                        int deletedId = deletedProfile.Id;
+
+                        // Remove the profile
+                        C.GatherSettings.RemoveAt(C.SelectedGatherIndex);
+
+                        // Update all missions using this GatherSettingId
+                        foreach (var mission in C.Missions)
+                        {
+                            if (mission.GatherSettingId == deletedId)
+                            {
+                                mission.GatherSettingId = C.GatherSettings[0].Id; // fallback to default
+                            }
+                        }
+
+                        // Clamp the selected index and save
+                        C.SelectedGatherIndex = Math.Clamp(C.SelectedGatherIndex, 0, C.GatherSettings.Count - 1);
+                        C.Save();
+                    }
                 }
+
+
 
                 GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
 

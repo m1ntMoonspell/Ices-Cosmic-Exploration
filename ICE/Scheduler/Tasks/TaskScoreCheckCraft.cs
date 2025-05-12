@@ -3,7 +3,7 @@ using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
 {
-    internal static class TaskScoreCheck
+    internal static class TaskScoreCheckCraft
     {
         public static void TryCheckScore()
         {

@@ -53,6 +53,7 @@ namespace ICE
         public int SelectedGatherIndex { get; set; } = 0;
         public List<GatherBuffProfile> GatherSettings { get; set; } = new()
         {
+            new GatherBuffProfile { Id = 0, Name = "Default"},
             new GatherBuffProfile { Id = 1, Name = "Limited Nodes"},
             new GatherBuffProfile { Id = 2, Name = "Quantity"},
             new GatherBuffProfile { Id = 3, Name = "Time Attack"},
@@ -84,6 +85,10 @@ namespace ICE
         public bool TurnInSilver { get; set; } = false;
         public bool TurnInASAP { get; set; } = false;
         public bool ManualMode { get; set; } = false;
+        public int GatherSettingId { get; set; } = 0;
+        [JsonIgnore]
+        public GatherBuffProfile GatherSetting => C.GatherSettings.FirstOrDefault(x => x.Id == GatherSettingId)
+                                          ?? C.GatherSettings[0]; // fallback to default
         public string TurnInMode;
     }
 

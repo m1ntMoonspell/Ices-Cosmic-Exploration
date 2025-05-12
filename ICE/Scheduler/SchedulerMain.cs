@@ -14,6 +14,8 @@ namespace ICE.Scheduler
             P.TaskManager.Abort();
             StopBeforeGrab = false;
             State = IceState.Idle;
+            if (P.Navmesh.IsRunning())
+                P.Navmesh.Stop();
             return true;
         }
 
@@ -23,7 +25,8 @@ namespace ICE.Scheduler
         internal static bool AnimationLockAbandonState = false;
         internal static int PossiblyStuck = 0;
         internal static bool StopBeforeGrab = false;
-        #if DEBUG
+        internal static int currentIndex = 0;
+#if DEBUG
         // Debug only settings
         internal static bool DebugOOMMain = false;
         internal static bool DebugOOMSub = false;
@@ -58,8 +61,11 @@ namespace ICE.Scheduler
                         TaskCrafting.TryEnqueueCrafts();
                         break;
                     case IceState.AbortInProgress:
-                    case IceState.CheckScoreAndTurnIn:
-                        TaskScoreCheck.TryCheckScore();
+                    case IceState.CraftCheckScoreAndTurnIn:
+                        TaskScoreCheckCraft.TryCheckScore();
+                        break;
+                    case IceState.GatherScoreandTurnIn:
+                        TaskScoreCheckGather.TryCheckScore();
                         break;
                     case IceState.ManualMode:
                         TaskManualMode.ZenMode();
@@ -81,9 +87,10 @@ namespace ICE.Scheduler
     {
         AbortInProgress,
         AnimationLock,
-        CheckScoreAndTurnIn,
+        CraftCheckScoreAndTurnIn,
         CraftInProcess,
         GatherCollectable,
+        GatherScoreandTurnIn,
         GatherNormal,
         GatherReduce,
         GrabbingMission,
