@@ -522,6 +522,27 @@ namespace ICE.Ui
                             modes = ["Manual"];
                             mission.ManualMode = true;
                         }
+                        else if (GatheringJobList.Contains((int)entry.Value.JobId))
+                        {
+                            if (GatheringUtil.GatherMissionInfo[entry.Key].Type == 3)
+                            {
+                                modes = ["ASAP", "Manual"];
+                                if (mission.TurnInASAP)
+                                    currentModeIndex = 0;
+                                if (mission.ManualMode)
+                                    currentModeIndex = 1;
+                            }
+                            else
+                            {
+                                modes = ["Gold", "Silver", "ASAP", "Manual"];
+                                if (mission.TurnInSilver)
+                                    currentModeIndex = 1;
+                                if (mission.TurnInASAP)
+                                    currentModeIndex = 2;
+                                if (mission.ManualMode)
+                                    currentModeIndex = 3;
+                            }
+                        }
                         else
                         {
                             modes = ["Gold", "Silver", "ASAP", "Manual"];

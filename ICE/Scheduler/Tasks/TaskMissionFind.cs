@@ -54,6 +54,10 @@ namespace ICE.Scheduler.Tasks
                 {
                     SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
                 }
+                else
+                {
+                    SchedulerMain.State = IceState.GatherScoreandTurnIn;
+                }
             }
             else
             {
@@ -540,15 +544,6 @@ namespace ICE.Scheduler.Tasks
 
         private static bool ModeChangeCheck(bool gatherer)
         {
-#if DEBUG
-            if (gatherer)
-            {
-                SchedulerMain.currentIndex = 0;
-                SchedulerMain.State = IceState.GatherNormal;
-                return true;
-            }
-#endif
-
             if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0 || C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode) // Manual Mode for Only Grab Mission / Dual Class Mission
             {
                 SchedulerMain.State = IceState.ManualMode;
@@ -557,7 +552,8 @@ namespace ICE.Scheduler.Tasks
             else if (gatherer)
             {
                 //Change to GathererMode Later
-                SchedulerMain.State = IceState.ManualMode;
+                SchedulerMain.State = IceState.GatherNormal;
+                SchedulerMain.currentIndex = 0;
 
                 return true;
             }

@@ -234,15 +234,7 @@ namespace ICE.Scheduler.Tasks
                         {
                             var profileId = C.Missions.Where(x => x.Id == currentMission).FirstOrDefault().GatherSettingId;
                             var gBuffs = C.GatherSettings.Where(g => g.Id == profileId).FirstOrDefault();
-                            IceLogging.Debug($"[Gathering] Profile ID: {profileId}", true);
-                            IceLogging.Debug($"[Gathering] Boon Increase II: {gBuffs.Buffs.BoonIncrease2}", true);
-                            IceLogging.Debug($"[Gathering] Boon Increase I: {gBuffs.Buffs.BoonIncrease1}", true);
-                            IceLogging.Debug($"[Gathering] Tidings: {gBuffs.Buffs.TidingsBool}", true);
-                            IceLogging.Debug($"[Gathering] Yield II: {gBuffs.Buffs.YieldII}", true);
-                            IceLogging.Debug($"[Gathering] Yield I: {gBuffs.Buffs.YieldI}", true);
-                            IceLogging.Debug($"[Gathering] Bonus Integrity: {gBuffs.Buffs.IntegrityBool}", true);
                             bool missingDur = gather.CurrentIntegrity < gather.TotalIntegrity;
-                            IceLogging.Debug($"[Gathering] Missing Durability? {missingDur}", true);
                             bool useAction = false;
 
                             foreach (var item in gather.GatheredItems)
@@ -361,17 +353,17 @@ namespace ICE.Scheduler.Tasks
                                             ActionManager.Instance()->UseAction(ActionType.Action, Tidings);
                                         }
                                     }
-                                    else if (Yield2Bool(gBuffs))
+                                    else if (Yield2Bool(gBuffs) && !missingDur)
                                     {
                                         useAction = true;
-                                        if (EzThrottler.Throttle("Using Yield2 Action Usage") && !missingDur)
+                                        if (EzThrottler.Throttle("Using Yield2 Action Usage"))
                                         {
                                             IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                             ActionManager.Instance()->UseAction(ActionType.Action, Yield2);
                                         }
 
                                     }
-                                    else if (Yield1Bool(gBuffs))
+                                    else if (Yield1Bool(gBuffs) && !missingDur)
                                     {
                                         useAction = true;
                                         if (EzThrottler.Throttle("Using Yield1 Action Usage") && !missingDur)
