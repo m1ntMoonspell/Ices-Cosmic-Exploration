@@ -377,11 +377,6 @@ namespace ICE.Ui
                     if (showGatherConfig)
                     {
                         float columnWidth = ImGui.CalcTextSize("Gather Config").X + 5;
-                        foreach (var name in C.GatherSettings)
-                        {
-                            columnWidth = Math.Max(columnWidth, ImGui.CalcTextSize(name.Name).X + 10);
-                        }
-                        columnWidth += 25;
                         ImGui.TableSetupColumn("Gather Config", ImGuiTableColumnFlags.WidthFixed, columnWidth);
                     }
 
@@ -417,8 +412,15 @@ namespace ICE.Ui
 
                         bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
 
-                        if (entry.Value.JobId2 != 0 || entry.Value.JobId == 18 || entry.Value.IsCriticalMission)
+                        if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18) || entry.Value.IsCriticalMission)
                             unsupported = true;
+
+#if DEBUG
+                        if (!UnsupportedMissions.Ids.Contains(entry.Key))
+                        {
+                            unsupported = false;
+                        }
+#endif
 
                         if (unsupported && hideUnsupported)
                             continue;
