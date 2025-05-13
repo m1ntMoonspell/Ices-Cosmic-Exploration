@@ -9,6 +9,7 @@ using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.Threading;
+using static Dalamud.Interface.Utility.Raii.ImRaii;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Delegates;
 using static FFXIVClientStructs.FFXIV.Client.Graphics.Render.Skeleton;
@@ -48,6 +49,7 @@ namespace ICE.Scheduler.Tasks
             ItemSheet ??= Svc.Data.GetExcelSheet<Item>(); // Only need to grab once
         }
 
+        /* Making this a comment for now. Re-writing this section to be improved/using this as a reference still
         internal static void MakeGatheringTask()
         {
             EnsureInit();
@@ -107,9 +109,108 @@ namespace ICE.Scheduler.Tasks
                 P.TaskManager.Enqueue(() => GatheringAddonReady(), "Making sure gathering addon is ready");
                 P.TaskManager.Enqueue(() => NormalGathering(currentMission), "Starting Gathering");
                 P.TaskManager.Enqueue(() => UpdateIndex(MissionNodes), "Updating index value");
-                P.TaskManager.Enqueue(() => SchedulerMain.State = IceState.GatherScoreandTurnIn);
 
                 P.TaskManager.EnqueueStack();
+            }
+        } */
+
+        // Version 2 of the gathering task. Trying to improve on it all...
+        internal static void MakeGatheringTask()
+        {
+            EnsureInit();
+            var (currentScore, silverScore, goldScore) = GetCurrentScores();
+
+            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+            {
+                IceLogging.Error("Failed to get scores on first attempt retrying");
+                (currentScore, silverScore, goldScore) = GetCurrentScores();
+                if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+                {
+                    IceLogging.Error("Failed to get scores on second attempt retrying");
+                    (currentScore, silverScore, goldScore) = GetCurrentScores();
+                    if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+                    {
+                        IceLogging.Error("Failed to get scores on third attempt aborting");
+                        SchedulerMain.State = IceState.Idle;
+                        return;
+                    }
+                }
+            }
+
+            if (currentScore >= goldScore)
+            {
+                IceLogging.Error("[TaskGathering | Current Score] We shouldn't be here, stopping and progressing");
+                SchedulerMain.State = IceState.GatherScoreandTurnIn;
+                return;
+            }
+
+            if (!P.TaskManager.IsBusy)
+            {
+                int currentIndex = SchedulerMain.currentIndex;
+
+                CosmicHelper.OpenStellaMission();
+                var currentMission = CosmicHelper.CurrentLunarMission;
+
+                List<uint> MissionNodes = new List<uint>();
+                foreach (var entry in GatheringUtil.MoonNodeInfoList)
+                {
+                    if (GatheringUtil.GatherMissionInfo[currentMission].NodeSet == entry.NodeSet)
+                    {
+                        MissionNodes.Add(entry.NodeId);
+                    }
+                }
+                uint nodeId = MissionNodes[currentIndex];
+
+                // Checking to make sure that you're not currently gathering
+                if (!Svc.Condition[ConditionFlag.Gathering])
+                {
+
+                    Vector3 nodeLoc = GatheringUtil.MoonNodeInfoList.Where(x => x.NodeId == nodeId).FirstOrDefault().LandZone;
+                    if (PlayerHelper.GetDistanceToPlayer(nodeLoc) > 2)
+                    {
+                        // Seen that the distance between you and the node is greater than 2, pathfinding
+                        P.TaskManager.Enqueue(() => PathToNode(nodeLoc), "Pathing to node");
+                        return;
+                    }
+                    else
+                    {
+                        IGameObject? gameObject = null;
+                        Utils.TryGetObjectByDataId(nodeId, out gameObject);
+                        if (gameObject != null)
+                        {
+                            // Game object has been found. Now time to check stuff on it.
+                            if (gameObject.IsTargetable)
+                            {
+                                P.TaskManager.Enqueue(() => Utils.TargetgameObject(gameObject));
+                                P.TaskManager.Enqueue(() => Utils.TargetgameObject(gameObject), "Targeting gameObject");
+                                P.TaskManager.Enqueue(() => InteractGather(gameObject), "Interacting with Object");
+                                P.TaskManager.Enqueue(() => GatheringAddonReady(), "Making sure gathering addon is ready");
+                                return;
+                            }
+                            else
+                            {
+                                // Game Object is not targetable... which shouldn't be possible. 
+                                // Need to just kick it to score checker, try and turnin initially, then if that fails then just abandon
+                            }
+                        }
+                    }
+                }
+                else if (Svc.Condition[ConditionFlag.Gathering])
+                {
+                    // Probably not necessary to check, but also helps me keep track of what this should be
+
+                    // Check for addon to make sure it's visible (master)
+                    // Check to see if buffs need applied
+                    //   -> If yes, then run a task to apply said buff (might be best to just make this a generic task to save some sanity...
+                    //      ->  Make sure to return post this so it doesn't try and continue to run 
+                    //   -> If no, continue on
+                    // Make a task to gather an item, make it return true when you enter the gatheringaction state
+                    // Wait for you to exit gatherActionState
+                }
+
+                // Check the score
+                P.TaskManager.Enqueue(() => SchedulerMain.State = IceState.GatherScoreandTurnIn);
+                //   -> Sub feature, need to increase the index by 1 if the score is not met
             }
         }
 
@@ -117,10 +218,8 @@ namespace ICE.Scheduler.Tasks
         /// Checks to see distance to the node. If you're to far away, will pathfind to it.
         /// </summary>
         /// <param name="id"></param>
-        internal static bool? PathToNode(uint id)
+        internal static bool? PathToNode(Vector3 nodeLoc)
         {
-            Vector3 nodeLoc = GatheringUtil.MoonNodeInfoList.Where(x => x.NodeId == id).FirstOrDefault().LandZone;
-
             if (PlayerHelper.GetDistanceToPlayer(nodeLoc) > 2 && !P.Navmesh.IsRunning())
             {
                 if (EzThrottler.Throttle("Throttling pathfind"))
