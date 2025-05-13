@@ -41,6 +41,7 @@ public static unsafe partial class CosmicHelper
     /// <b>- Row 4: 3rd Required job???</b><br></br>
     /// <b>- Row 5: Bool -> Is it a critical mission?</b><br></br>
     /// <b>- Row 6: Rank -> D = 1 | C = 2 | B = 3 | 4 = A-1 | 5 = A-2 | 6 = A-3</b>
+    /// <b>- Row 7: Mission time limit (seconds)
     /// <b>- Row 18: Recipe # -> Corresponds to the recipeID that is in </b>
     /// </summary>
     public class MissionListInfo
@@ -52,6 +53,7 @@ public static unsafe partial class CosmicHelper
         public uint ToDoSlot { get; set; }
         public uint Rank { get; set; }
         public bool IsCriticalMission { get; set; }
+        public uint TimeLimit { get; set; }
         public uint Time { get; set; }
         public CosmicWeather Weather { get; set; }
         public uint RecipeId { get; set; } = 0;

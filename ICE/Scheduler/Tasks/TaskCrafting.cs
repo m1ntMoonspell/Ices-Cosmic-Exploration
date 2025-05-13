@@ -225,7 +225,7 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
             P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
             {
-                TimeLimitMS = 240000, // 4 minute limit per craft
+                TimeLimitMS = CosmicHelper.CurrentMissionInfo.TimeLimit == 0 ? 240000 : (int?)CosmicHelper.CurrentMissionInfo.TimeLimit * 1000, // Limit to mission time limit (If no limit - 4 minute limit per craft)
             });
         }
 

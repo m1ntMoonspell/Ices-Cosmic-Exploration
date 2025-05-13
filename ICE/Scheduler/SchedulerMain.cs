@@ -48,10 +48,6 @@ namespace ICE.Scheduler
                     case IceState.RepairMode:
                         TaskRepair.GatherCheck();
                         break;
-                    case IceState.WaitForCrafts:
-                    case IceState.CraftInProcess:
-                        TaskCrafting.WaitTillActuallyDone();
-                        break;
                     case IceState.GrabbingMission:
                         break;
                     case IceState.WaitForNonStandard:
@@ -64,6 +60,8 @@ namespace ICE.Scheduler
                         TaskCrafting.TryEnqueueCrafts();
                         break;
                     case IceState.AbortInProgress:
+                    case IceState.WaitForCrafts:
+                    case IceState.CraftInProcess:
                     case IceState.CraftCheckScoreAndTurnIn:
                         TaskScoreCheckCraft.TryCheckScore();
                         break;
