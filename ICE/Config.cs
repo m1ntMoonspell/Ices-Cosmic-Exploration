@@ -66,6 +66,13 @@ namespace ICE
             new GatherBuffProfile { Id = 8, Name = "Steller Reduction"},
             new GatherBuffProfile { Id = 9, Name = "Dual Class"},
         };
+        
+        // Gamba settings
+        public List<Gamba>GambaItemWeights { get; set; } = new();
+        public bool GambaEnabled { get; set; } = false;
+        public bool GambaPreferSmallerWheel { get; set; } = false;
+        public int GambaCreditsMinimum { get; set; } = 0;
+        public int GambaDelay { get; set; } = 250;
 
         // Misc settings
         public bool EnableAutoSprint { get; set; } = true;
@@ -92,6 +99,13 @@ namespace ICE
         public GatherBuffProfile GatherSetting => C.GatherSettings.FirstOrDefault(x => x.Id == GatherSettingId)
                                           ?? C.GatherSettings[0]; // fallback to default
         public string TurnInMode;
+    }
+
+    public class Gamba
+    {
+        public uint ItemId { get; set; }
+        public int Weight { get; set; } = 0;
+        public GambaType Type { get; set; }
     }
 
     public class GatherBuffs
@@ -125,5 +139,18 @@ namespace ICE
         Weather = 2,
         Timed = 3,
         Critical = 4
-    }//
+    }
+
+    public enum GambaType
+    {
+        Mount = 0,
+        Emote = 1,
+        Minion = 2,
+        Outfit = 3,
+        Accessory = 4,
+        Orchestrion = 5,
+        Housing = 6,
+        Dye = 7,
+        Other = 8
+    }
 }

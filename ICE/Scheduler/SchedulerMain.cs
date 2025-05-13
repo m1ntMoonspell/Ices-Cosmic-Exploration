@@ -42,6 +42,9 @@ namespace ICE.Scheduler
                 {
                     case IceState.Idle:
                         break;
+                    case IceState.Gamba:
+                        TaskGamba.TryHandleGamba();
+                        break;
                     case IceState.AnimationLock:
                         TaskAnimationLock.Enqueue();
                         break;
@@ -92,6 +95,7 @@ namespace ICE.Scheduler
         AnimationLock,
         CraftCheckScoreAndTurnIn,
         CraftInProcess,
+        Gamba,
         GatherCollectable,
         GatherScoreandTurnIn,
         GatherNormal,

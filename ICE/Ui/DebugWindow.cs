@@ -5,6 +5,7 @@ using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ICE.Utilities.CosmicHelper;
 
@@ -259,13 +260,24 @@ internal class DebugWindow : Window
 
                 if (ImGui.Button($"Left wheel select"))
                 {
-                    lotto.SelectWheelLeft();
+                    TaskGamba.SelectWheelLeft(lotto);
                 }
                 ImGui.SameLine();
 
-                if (ImGui.Button($"Right wheel select DOES NOT WORK"))
+                if (ImGui.Button($"Right wheel select"))
                 {
-                    // lotto.SelectWheelRight();
+                    TaskGamba.SelectWheelRight(lotto);
+                }
+
+                ImGui.SameLine();
+                if (ImGui.Button($"Confirm"))
+                {
+                    lotto.ConfirmButton();
+                }
+
+                if (ImGui.Button($"Auto Gamba (Once)"))
+                {
+                    TaskGamba.TryHandleGamba();
                 }
 
                 ImGui.Text($"Items in left wheel");
