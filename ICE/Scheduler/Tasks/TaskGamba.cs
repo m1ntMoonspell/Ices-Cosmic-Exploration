@@ -54,7 +54,7 @@ namespace ICE.Scheduler.Tasks
                 EnsureGambaWeightsInitialized();
                 if (GenericHelpers.TryGetAddonMaster<WKSLottery>("WKSLottery", out var gamba) && gamba.IsAddonReady)
                 {
-                    if (PlayerHelper.GetItemCount(45691, out var credits) || AddonHelper.IsAddonActive("WKSLottery"))
+                    if (PlayerHelper.GetItemCount(45691, out var credits))
                     {
                         bool confirmEnabled, leftWheelEnabled, rightWheelEnabled;
                         unsafe
@@ -105,9 +105,9 @@ namespace ICE.Scheduler.Tasks
                         }
                     }
                 }
+                else
+                    SchedulerMain.DisablePlugin();
             }
-            else
-                SchedulerMain.DisablePlugin();
         }
 
         public static unsafe void SelectWheelLeft(WKSLottery gamba)
