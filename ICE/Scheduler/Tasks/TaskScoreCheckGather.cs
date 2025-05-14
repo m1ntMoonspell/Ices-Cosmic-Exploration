@@ -92,7 +92,7 @@ namespace ICE.Scheduler.Tasks
                     }
                 }
 
-                if (PlayerHelper.IsPlayerNotBusy())
+                if (PlayerHelper.IsPlayerNotBusy() || Svc.Condition[ConditionFlag.Gathering])
                 {
                     IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore}", true);
                     IceLogging.Debug($"[Score Checker] Player has not hit the score requirements, going back to the gathering mines", true);
