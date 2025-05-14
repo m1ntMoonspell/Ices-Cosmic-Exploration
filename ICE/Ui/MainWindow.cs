@@ -501,7 +501,7 @@ namespace ICE.Ui
                             ImGui.Text(FontAwesomeIcon.Flag.ToIconString());
                             ImGui.PopFont();
                             if (ImGui.IsItemClicked())
-                                Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.X, info.Y, info.Radius);
+                                Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.X, info.Y, info.Radius, info.Name);
                         }
 
                         col2Width = Math.Max(ImGui.CalcTextSize(MissionName).X + 10, col2Width);

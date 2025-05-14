@@ -71,8 +71,9 @@ public sealed partial class ICE
             var todo = ToDoSheet.GetRow((uint)(item.Unknown7 + *((byte*)wk + 0xC62)));
             var marker = MarkerSheet.GetRow(todo.Unknown13);
 
-            Vector2 Pos = new Vector2(marker.Unknown1 - 1024, marker.Unknown2 - 1024);
-            ushort Radius = marker.Unknown3;
+            int _x = marker.Unknown1 - 1024;
+            int _y = marker.Unknown2 - 1024;
+            int radius = marker.Unknown3;
 
             if (CrafterJobList.Contains(JobId))
             {
@@ -309,9 +310,9 @@ public sealed partial class ICE
                     ExperienceRewards = Exp,
                     PreviousMissionID = previousMissionId,
                     MarkerId = marker.RowId,
-                    X = Pos.X,
-                    Y = Pos.X,
-                    Radius = Radius,
+                    X = _x,
+                    Y = _y,
+                    Radius = radius,
                 };
             }
         }

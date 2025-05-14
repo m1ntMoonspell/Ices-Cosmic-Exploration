@@ -36,6 +36,9 @@ internal class DebugWindow : Window
     private int XLoc = 0;
     private int YLoc = 0;
     private int TableRow = 1;
+    private int posX = 0;
+    private int posY = 0;
+    private int posRadius = 0;
 
     public override unsafe void Draw()
     {
@@ -507,14 +510,33 @@ internal class DebugWindow : Window
 
             var MapInfo = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
 
-            int x = MapInfo.GetRow((uint)TableRow).Unknown1.ToInt() / 2;
-            int y = MapInfo.GetRow((uint)TableRow).Unknown2.ToInt() / 2;
-
             if (ImGui.Button($"Test Radius"))
             {
                 var agent = AgentMap.Instance();
 
-                Utils.SetGatheringRing(agent->CurrentTerritoryId, x, y, 100);
+                int _x = MapInfo.GetRow((uint)TableRow).Unknown1.ToInt() - 1024;
+                int _y = MapInfo.GetRow((uint)TableRow).Unknown2.ToInt() - 1024;
+                int _radius = MapInfo.GetRow((uint)TableRow).Unknown3.ToInt();
+                PluginLog.Debug($"X: {_x} Y: {_y} Radius: {_radius}");
+
+                Utils.SetGatheringRing(agent->CurrentTerritoryId, _x, _y, _radius);
+            }
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Map X (Sheet)", ref posX);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Map Y (Sheet)", ref posY);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Map Radius", ref posRadius);
+            if (ImGui.Button($"Test Map Marker from coords"))
+            {
+                var agent = AgentMap.Instance();
+                int _x = posX - 1024;
+                int _y = posY - 1024;
+                PluginLog.Debug($"X: {_x} Y: {_y}");
+
+                Utils.SetGatheringRing(agent->CurrentTerritoryId, _x, _y, posRadius);
             }
         }
     }
