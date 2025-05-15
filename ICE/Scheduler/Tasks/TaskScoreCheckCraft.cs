@@ -23,17 +23,15 @@ namespace ICE.Scheduler.Tasks
 
             IceLogging.Debug($"[Score Checker] Current Scoring Mission Id: {CosmicHelper.CurrentLunarMission}", true);
             var currentMission = C.Missions.Single(x => x.Id == CosmicHelper.CurrentLunarMission);
-
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                if (SchedulerMain.State == IceState.AbortInProgress || (SchedulerMain.AnimationLockAbandonState && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
+                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+                if (SchedulerMain.AnimationLockAbandonState && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
                 {
                     IceLogging.Error("[Score Checker] Aborting mission");
                     MissionHandler.TurnIn(z, true);
                     return;
                 }
-
-                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
 
                 var enoughMain = MissionHandler.HaveEnoughMain();
                 if (enoughMain == null)
@@ -43,46 +41,49 @@ namespace ICE.Scheduler.Tasks
                     return;
                 }
 
-                if (enoughMain.Value)
+                if (enoughMain.Value || SchedulerMain.State == IceState.AbortInProgress)
                 {
-                    if (IceLogging.ShouldLog())
-                    {
-                        IceLogging.Debug("[Score Checker] Score != 0", true);
-                        IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal : {silverScore} | Gold Goal: {goldScore}", true);
-                        IceLogging.Debug($"[Score Checker] Is Turnin Asap Enabled?: {currentMission.TurnInASAP}", true);
-                    }
+                    uint targetLevel = 0;
+                    if (currentMission.TurnInGold)
+                        targetLevel = 3;
+                    else if (currentMission.TurnInSilver)
+                        targetLevel = 2;
+                    else if (currentMission.TurnInASAP)
+                        targetLevel = 1;
+                    IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore} | Target Level: {targetLevel}", true);
 
-                    if (currentMission.TurnInASAP)
+                    if (targetLevel == 3)
                     {
-                        IceLogging.Info("$[Score Checker] Turnin Asap was enabled, and true. Firing off", true);
+                        if (currentScore >= goldScore ||
+                        (SchedulerMain.State == IceState.AbortInProgress && currentMission.TurnInSilver && currentScore > silverScore) ||
+                        (SchedulerMain.State == IceState.AbortInProgress && currentMission.TurnInASAP))
+                        {
+                            MissionHandler.TurnIn(z);
+                            return;
+                        }
+                    }
+                    else if (targetLevel == 2)
+                    {
+                        if (currentScore >= silverScore ||
+                        (SchedulerMain.State == IceState.AbortInProgress && currentMission.TurnInASAP))
+                        {
+                            MissionHandler.TurnIn(z);
+                            return;
+                        }
+                    }
+                    else if (targetLevel <= 1)
+                    {
                         MissionHandler.TurnIn(z);
                         return;
                     }
-
-                    IceLogging.Debug($"[Score Checker] Checking current score:  {currentScore} is >= Silver Score: {silverScore} && {enoughMain.Value} && if TurninSilver is true: {currentMission.TurnInSilver}", true);
-
-                    if (currentScore >= silverScore && currentMission.TurnInSilver)
+                    else if (SchedulerMain.State == IceState.AbortInProgress)
                     {
-                        IceLogging.Info($"[Score Checker] Silver was enabled, and you also meet silver threshold.", true);
-                        MissionHandler.TurnIn(z);
-                        return;
-                    }
-
-                    IceLogging.Debug($"[Score Checker] Seeing if Player not busy: {PlayerHelper.IsPlayerNotBusy()} && is not Preparing to craft: {Svc.Condition[ConditionFlag.PreparingToCraft]}", true);
-                    if (currentScore >= goldScore)
-                    {
-                        IceLogging.Info($"[Score Checker] Conditions for gold was met. Turning in", true);
-                        MissionHandler.TurnIn(z);
+                        MissionHandler.TurnIn(z, true);
                         return;
                     }
                 }
-
-                IceLogging.Debug($"[Score Checker] Player is in state: {string.Join(',', Svc.Condition.AsReadOnlySet().Select(x => x.ToString()))}", true);
-                IceLogging.Debug($"[Score Checker] Artisan is busy?: {P.Artisan.IsBusy()}", true);
                 if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
                 {
-                    IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore}", true);
-                    IceLogging.Debug("[Score Checker] Player is not busy but hasnt hit score, resetting state to try craft", true);
                     SchedulerMain.State = IceState.StartCraft;
                 }
             }

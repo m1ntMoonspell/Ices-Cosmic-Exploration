@@ -2,3 +2,7 @@
 
 # CS8602: Dereference of a possibly null reference.
 dotnet_diagnostic.CS8602.severity = silent
+
+# Ignore all diagnostics for ECommons
+[ECommons/**/*.cs]
+dotnet_analyzer_diagnostic.severity = none

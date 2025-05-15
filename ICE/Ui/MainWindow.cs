@@ -536,48 +536,62 @@ namespace ICE.Ui
 
                         ImGui.TableNextColumn();
                         string[] modes;
-                        int currentModeIndex = 0;
+                        bool[] selectedModes;
                         if (unsupported)
                         {
                             modes = ["Manual"];
-                            mission.ManualMode = true;
+                            selectedModes = [mission.ManualMode];
                         }
                         else if (GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3)
                         {
                             modes = ["ASAP", "Manual"];
-                            if (mission.TurnInASAP)
-                                currentModeIndex = 0;
-                            if (mission.ManualMode)
-                                currentModeIndex = 1;
+                            selectedModes = [mission.TurnInASAP, mission.ManualMode];
                         }
                         else
                         {
-                            modes = ["Gold", "Silver", "ASAP", "Manual"];
-                            if (mission.TurnInSilver)
-                                currentModeIndex = 1;
-                            if (mission.TurnInASAP)
-                                currentModeIndex = 2;
-                            if (mission.ManualMode)
-                                currentModeIndex = 3;
+                            modes = ["Gold", "Silver", "Bronze", "Manual"];
+                            selectedModes =
+                            [
+                                mission.TurnInGold,
+                                mission.TurnInSilver,
+                                mission.TurnInASAP,
+                                mission.ManualMode
+                            ];
                         }
 
                         ImGui.SetNextItemWidth(-1);
-                        if (ImGui.Combo($"###{entry.Value.Name}_{entry.Key}_turninMode", ref currentModeIndex, modes, modes.Length))
+                        bool changed = false;
+                        if (ImGui.BeginCombo($"###{entry.Value.Name}_{entry.Key}_turninMode", string.Join(", ", modes.Where((m, i) => selectedModes[i]))))
                         {
-                            mission.TurnInSilver = mission.TurnInASAP = mission.ManualMode = false;
-                            switch (modes[currentModeIndex])
+                            for (int i = 0; i < modes.Length; i++)
                             {
-                                case "Silver":
-                                    mission.TurnInSilver = true;
-                                    break;
-                                case "ASAP":
-                                    mission.TurnInASAP = true;
-                                    break;
-                                case "Manual":
-                                    mission.ManualMode = true;
-                                    break;
+                                bool selected = selectedModes[i];
+                                if (ImGui.Selectable(modes[i], selected, ImGuiSelectableFlags.DontClosePopups))
+                                {
+                                    selectedModes[i] = !selected;
+                                    changed = true;
+                                }
                             }
-
+                            ImGui.EndCombo();
+                        }
+                        if (changed)
+                        {
+                            if (unsupported)
+                            {
+                                mission.ManualMode = selectedModes[0];
+                            }
+                            else if (GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3)
+                            {
+                                mission.TurnInASAP = selectedModes[0];
+                                mission.ManualMode = selectedModes[1];
+                            }
+                            else
+                            {
+                                mission.TurnInGold = selectedModes[0];
+                                mission.TurnInSilver = selectedModes[1];
+                                mission.TurnInASAP = selectedModes[2];
+                                mission.ManualMode = selectedModes[3];
+                            }
                             C.Save();
                         }
                         if (showGatherConfig)
@@ -657,14 +671,13 @@ namespace ICE.Ui
                 }
                 ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
 
-                if (ImGui.Checkbox("Stop on Out of Materials", ref stopOnAbort))
+                if (ImGui.Checkbox("Stop on Errors", ref stopOnAbort))
                 {
                     C.StopOnAbort = stopOnAbort;
                     C.Save();
                 }
                 ImGuiEx.HelpMarker(
-                    "Warning! This is a safety feature to avoid wasting time on broken crafts!\n" +
-                    "If you abort, you need to fix your ICE/Artisan settings or gear!\n" +
+                    "Warning! This is a safety feature to stop if something goes wrong!\n" +
                     "You have been warned. Disable at your own risk."
                 );
 
