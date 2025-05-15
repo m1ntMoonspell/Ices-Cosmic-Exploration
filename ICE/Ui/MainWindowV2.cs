@@ -112,6 +112,8 @@ namespace ICE.Ui
             }
 
             ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+
+
         }
     }
 }

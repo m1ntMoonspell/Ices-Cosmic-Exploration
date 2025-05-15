@@ -788,7 +788,7 @@ namespace ICE.Ui
                 }
             }
 
-            void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, Action<bool> onEnabledChange, Action<int> onMinGpChange)
+            void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, string ActionInfo, Action<bool> onEnabledChange, Action<int> onMinGpChange)
             {
                 bool enabled = currentEnabled;
                 if (ImGui.Checkbox($"{label}###Enable{uniqueId}", ref enabled))
@@ -796,6 +796,7 @@ namespace ICE.Ui
                     if (enabled != currentEnabled)
                         onEnabledChange(enabled);
                 }
+                ImGuiEx.HelpMarker(ActionInfo);
 
                 if (enabled)
                 {
@@ -917,13 +918,14 @@ namespace ICE.Ui
 
                 // Boon Increase 2 (+30% Increase)
                 DrawBuffSetting(
-                    label: "Boon Increase 2",
+                    label: "Pioneer's / Mountaineer's Gift II",
                     uniqueId: $"Boon2Inc{entry.Id}",
                     currentEnabled: entry.Buffs.BoonIncrease2,
                     currentMinGp: entry.Buffs.BoonIncrease2Gp,
                     minGpLimit: 100,
                     maxGpLimit: maxGp,
                     entryName: entry.Name,
+                    ActionInfo: "Apply a 30% buff to your boon chance.",
                     onEnabledChange: newVal =>
                     {
                         entry.Buffs.BoonIncrease2 = newVal;
@@ -938,13 +940,14 @@ namespace ICE.Ui
 
                 // Boon Increase 1 (+10% Increase)
                 DrawBuffSetting(
-                    label: "Boon Increase 1",
+                    label: "Pioneer's / Mountaineer's Gift I",
                     uniqueId: $"Boon1Inc{entry.Id}",
                     currentEnabled: entry.Buffs.BoonIncrease1,
                     currentMinGp: entry.Buffs.BoonIncrease1Gp,
                     minGpLimit: 50,
                     maxGpLimit: maxGp,
                     entryName: entry.Name,
+                    ActionInfo: "Apply a 10% buff to your boon chance.",
                     onEnabledChange: newVal =>
                     {
                         entry.Buffs.BoonIncrease1 = newVal;
@@ -959,13 +962,14 @@ namespace ICE.Ui
 
                 // Tidings (+2 to boon instead of +1)
                 DrawBuffSetting(
-                    label: "Tidings Buff",
+                    label: "Nophica's / Nald'thal's Tidings Buff",
                     uniqueId: $"TidingsBuff{entry.Id}",
                     currentEnabled: entry.Buffs.TidingsBool,
                     currentMinGp: entry.Buffs.TidingsGp,
                     minGpLimit: 200,
                     maxGpLimit: maxGp,
                     entryName: entry.Name,
+                    ActionInfo: "Increases item yield from Gatherer's Boon by 1",
                     onEnabledChange: newVal =>
                     {
                         entry.Buffs.TidingsBool = newVal;
@@ -980,13 +984,14 @@ namespace ICE.Ui
 
                 // Yield II (+2 to all items on node)
                 DrawBuffSetting(
-                    label: "Blessed/Kings Yield II",
+                    label: "Blessed / Kings Yield II",
                     uniqueId: $"Blessed/KingsYieldIIBuff{entry.Id}",
                     currentEnabled: entry.Buffs.YieldII,
                     currentMinGp: entry.Buffs.YieldIIGp,
                     minGpLimit: 500,
                     maxGpLimit: maxGp,
                     entryName: entry.Name,
+                    ActionInfo: "Increases the number of items obtained when gathering by 2",
                     onEnabledChange: newVal =>
                     {
                         entry.Buffs.YieldII = newVal;
@@ -1001,13 +1006,14 @@ namespace ICE.Ui
 
                 // Yield I (+1 to all items on node)
                 DrawBuffSetting(
-                    label: "Blessed/Kings Yield I",
+                    label: "Blessed / Kings Yield I",
                     uniqueId: $"Blessed/KingsYieldIBuff{entry.Id}",
                     currentEnabled: entry.Buffs.YieldI,
                     currentMinGp: entry.Buffs.YieldIGp,
                     minGpLimit: 400,
                     maxGpLimit: maxGp,
                     entryName: entry.Name,
+                    ActionInfo: "Increases the number of items obtained when gathering by 1",
                     onEnabledChange: newVal =>
                     {
                         entry.Buffs.YieldI = newVal;
@@ -1022,13 +1028,15 @@ namespace ICE.Ui
 
                 // Bonus Integrity (+1 integrity)
                 DrawBuffSetting(
-                    label: "Increase Integrity",
+                    label: "Ageless Words / Solid Reason",
                     uniqueId: $"Incrase Intregity{entry.Id}",
                     currentEnabled: entry.Buffs.BonusIntegrity,
                     currentMinGp: entry.Buffs.BonusIntegrityGp,
                     minGpLimit: 300,
                     maxGpLimit: maxGp,
                     entryName: entry.Name,
+                    ActionInfo: "Increase the Integrity by 1\n" +
+                                "50% chance to grant Eureka Moment",
                     onEnabledChange: newVal =>
                     {
                         entry.Buffs.BonusIntegrity = newVal;
