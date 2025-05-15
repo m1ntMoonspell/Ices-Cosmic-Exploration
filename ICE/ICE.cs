@@ -59,9 +59,13 @@ public sealed partial class ICE : IDalamudPlugin
 
         EzCmd.Add("/icecosmic", OnCommand, """
             Open plugin interface
-            - start -> starts the loops
-            - stop -> stops the loops
-            - clear -> clears all
+            /ice clear - Removes all missions
+            /ice stop - Stops ICE
+            /ice start - Starts ICE
+            /ice add | remove | toggle | only 
+            	(Ex. /ice add 405 406 410)
+            /ice flag [id] - Opens the map and marks where the area of gathering is.
+                (Ex. /ice flag 301)
             """);
         EzCmd.Add("/ice", OnCommand);
         EzCmd.Add("/IceCosmic", OnCommand);
@@ -198,6 +202,8 @@ public sealed partial class ICE : IDalamudPlugin
             int missionId = int.Parse(subcommands[1]);
             var info = MissionInfoDict.FirstOrDefault(mission => mission.Key == missionId);
             if (info.Value == default) return;
+
+            if (info.Value.X == 0 && info.Value.Y == 0) return;
 
             Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.Value.X, info.Value.Y, info.Value.Radius, info.Value.Name);
         }
