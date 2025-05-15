@@ -56,6 +56,12 @@ namespace ICE.Scheduler.Tasks
                 }
                 else
                 {
+                    var missionNode = GatheringUtil.GatherMissionInfo[CosmicHelper.CurrentLunarMission].NodeSet;
+                    if (missionNode != SchedulerMain.PreviousNodeSet)
+                    {
+                        SchedulerMain.PreviousNodeSet = missionNode;
+                        SchedulerMain.currentIndex = 0;
+                    }
                     SchedulerMain.State = IceState.GatherScoreandTurnIn;
                 }
             }
@@ -555,9 +561,17 @@ namespace ICE.Scheduler.Tasks
             }
             else if (gatherer)
             {
-                //Change to GathererMode Later
                 SchedulerMain.State = IceState.GatherNormal;
-                SchedulerMain.currentIndex = 0;
+                var currentMission = CosmicHelper.CurrentLunarMission;
+                if (currentMission != 0)
+                {
+                    var missionNode = GatheringUtil.GatherMissionInfo[currentMission].NodeSet;
+                    if (missionNode != SchedulerMain.PreviousNodeSet)
+                    {
+                        SchedulerMain.PreviousNodeSet = missionNode;
+                        SchedulerMain.currentIndex = 0;
+                    }
+                }
 
                 return true;
             }

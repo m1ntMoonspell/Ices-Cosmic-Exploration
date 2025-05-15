@@ -25,6 +25,7 @@ namespace ICE.Scheduler
         internal static bool AnimationLockAbandonState = false;
         internal static int PossiblyStuck = 0;
         internal static bool StopBeforeGrab = false;
+        internal static uint PreviousNodeSet = 0;
         internal static int currentIndex = 0;
 #if DEBUG
         // Debug only settings
@@ -51,10 +52,6 @@ namespace ICE.Scheduler
                     case IceState.RepairMode:
                         TaskRepair.GatherCheck();
                         break;
-                    case IceState.WaitForCrafts:
-                    case IceState.CraftInProcess:
-                        TaskCrafting.WaitTillActuallyDone();
-                        break;
                     case IceState.GrabbingMission:
                         break;
                     case IceState.WaitForNonStandard:
@@ -67,6 +64,8 @@ namespace ICE.Scheduler
                         TaskCrafting.TryEnqueueCrafts();
                         break;
                     case IceState.AbortInProgress:
+                    case IceState.WaitForCrafts:
+                    case IceState.CraftInProcess:
                     case IceState.CraftCheckScoreAndTurnIn:
                         TaskScoreCheckCraft.TryCheckScore();
                         break;

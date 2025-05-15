@@ -11,6 +11,7 @@ using Dalamud.Interface.Utility;
 using ICE.Scheduler.Handlers;
 using ICE.Scheduler.Tasks;
 using ECommons.ExcelServices;
+using Dalamud.Interface;
 
 namespace ICE.Ui
 {
@@ -497,6 +498,18 @@ namespace ICE.Ui
                         {
                             ImGui.Text($"{MissionName}");
                         }
+
+                        MissionListInfo info = MissionInfoDict[mission.Id];
+                        if (info.MarkerId != 0)
+                        {
+                            ImGui.SameLine();
+                            ImGui.PushFont(UiBuilder.IconFont);
+                            ImGui.Text(FontAwesomeIcon.Flag.ToIconString());
+                            ImGui.PopFont();
+                            if (ImGui.IsItemClicked())
+                                Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.X, info.Y, info.Radius, info.Name);
+                        }
+
                         col2Width = Math.Max(ImGui.CalcTextSize(MissionName).X + 10, col2Width);
 
                         // Column 3: Rewards

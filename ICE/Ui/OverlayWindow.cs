@@ -24,6 +24,10 @@ namespace ICE.Ui
         {
             ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
 
+#if DEBUG
+            ImGui.Text($"Current node: {SchedulerMain.currentIndex}");
+#endif
+
             ImGuiHelpers.ScaledDummy(2);
             ImGui.Separator();
             ImGuiHelpers.ScaledDummy(2);
