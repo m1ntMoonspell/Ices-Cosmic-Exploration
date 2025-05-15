@@ -542,7 +542,7 @@ namespace ICE.Ui
                             modes = ["Manual"];
                             selectedModes = [mission.ManualMode];
                         }
-                        else if (GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3)
+                        else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.IsCriticalMission)
                         {
                             modes = ["ASAP", "Manual"];
                             selectedModes = [mission.TurnInASAP, mission.ManualMode];
@@ -578,11 +578,11 @@ namespace ICE.Ui
                         {
                             if (unsupported)
                             {
-                                mission.ManualMode = selectedModes[0];
+                                mission.ManualMode = true;
                             }
-                            else if (GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3)
+                            else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.IsCriticalMission)
                             {
-                                mission.TurnInASAP = selectedModes[0];
+                                mission.TurnInASAP = true;
                                 mission.ManualMode = selectedModes[1];
                             }
                             else
