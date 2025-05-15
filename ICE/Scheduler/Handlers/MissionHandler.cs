@@ -46,9 +46,18 @@ internal static class MissionHandler
                 }
                 else
                 {
-                    currentScore = z.CurrentScore;
-                    silverScore = z.SilverScore;
-                    goldScore = z.GoldScore;
+                    string _currentScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[2].String.Value).GetText();
+                    string _silverScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[3].String.Value).GetText();
+                    string _goldScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[4].String.Value).GetText();
+
+                    // Remove all non-digit characters before parsing
+                    _currentScore = new string(_currentScore.Where(char.IsDigit).ToArray());
+                    _silverScore = new string(_silverScore.Where(char.IsDigit).ToArray());
+                    _goldScore = new string(_goldScore.Where(char.IsDigit).ToArray());
+
+                    uint.TryParse(_currentScore, out currentScore);
+                    uint.TryParse(_silverScore, out silverScore);
+                    uint.TryParse(_goldScore, out goldScore);
                 }
             }
 
@@ -59,7 +68,7 @@ internal static class MissionHandler
             if (IceLogging.ShouldLog("Turning in item", 250))
             {
                 P.Artisan.SetEnduranceStatus(false);
-                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+                var (currentScore, silverScore, goldScore) = GetCurrentScores();
 
                 if (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
                 {
