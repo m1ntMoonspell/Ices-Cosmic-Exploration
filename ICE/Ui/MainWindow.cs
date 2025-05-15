@@ -9,6 +9,7 @@ using ICE.Utilities.Cosmic;
 using System.Reflection;
 using Dalamud.Interface.Utility;
 using ICE.Scheduler.Handlers;
+using Dalamud.Interface;
 
 namespace ICE.Ui
 {
@@ -126,6 +127,8 @@ namespace ICE.Ui
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
         private static bool showCredits = C.ShowCreditsColumn;
+        private static bool SelfRepairGather = C.SelfRepairGather;
+        private static float SelfRepairPercent = C.RepairPercent;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -250,30 +253,34 @@ namespace ICE.Ui
             .Where(m => m.Value.JobId == selectedJobId - 1)
             .Where(m => m.Value.IsCriticalMission);
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
-            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", criticalMissions);
+            bool criticalGather = criticalMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", criticalMissions, criticalGather);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
+            bool weatherGather = weatherRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.Time != 0);
+            bool timeGather = timeRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
             timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
                         .Where(m => m.Value.PreviousMissionID != 0);
+            bool sequentialGather = sequentialMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
 
-            void DrawWeatherMissions() => DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions);
-            void DrawTimedMissions() => DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
-            void DrawSequentialMissions() => DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
+            void DrawWeatherMissions() => DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", weatherRestrictedMissions, weatherGather);
+            void DrawTimedMissions() => DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions, timeGather);
+            void DrawSequentialMissions() => DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions, sequentialGather);
 
             var missionList = new List<(int prio, Action action)>
                 {
@@ -298,13 +305,14 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
-                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", missions);
+                bool missionGather = missions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", missions, missionGather);
             }
 
             ImGui.EndTabItem();
         }
 
-        public void DrawMissionsDropDown(string tabName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions)
+        public void DrawMissionsDropDown(string tabName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions, bool showGatherConfig = false)
         {
             var tabId = tabName.Split('-')[0];
             if (ImGui.CollapsingHeader(string.Format("{0}###{1}", tabName, tabId)))
@@ -317,6 +325,8 @@ namespace ICE.Ui
                     columnAmount += 2;
                 if (showExp)
                     columnAmount += 4;
+                if (showGatherConfig)
+                    columnAmount += 1;
 
                 if (ImGui.BeginTable($"MissionList###{tabId}", columnAmount, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
                 {
@@ -365,6 +375,12 @@ namespace ICE.Ui
                     // Settings column
                     ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
 
+                    if (showGatherConfig)
+                    {
+                        float columnWidth = ImGui.CalcTextSize("Gather Config").X + 5;
+                        ImGui.TableSetupColumn("Gather Config", ImGuiTableColumnFlags.WidthFixed, columnWidth);
+                    }
+
                     // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
 
@@ -399,6 +415,15 @@ namespace ICE.Ui
 
                         if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18) || entry.Value.IsCriticalMission)
                             unsupported = true;
+                            
+                        uint gatherMissionType = 0;
+                        if (GatheringUtil.GatherMissionInfo.TryGetValue(entry.Key, out var missionInfo))
+                        {
+                            gatherMissionType = missionInfo.Type;
+                        }
+                        if (gatherMissionType != 0)
+                            unsupported = false;
+
                         if (unsupported && hideUnsupported)
                             continue;
 
@@ -467,6 +492,18 @@ namespace ICE.Ui
                         {
                             ImGui.Text($"{MissionName}");
                         }
+
+                        MissionListInfo info = MissionInfoDict[mission.Id];
+                        if (info.MarkerId != 0)
+                        {
+                            ImGui.SameLine();
+                            ImGui.PushFont(UiBuilder.IconFont);
+                            ImGui.Text(FontAwesomeIcon.Flag.ToIconString());
+                            ImGui.PopFont();
+                            if (ImGui.IsItemClicked())
+                                Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.X, info.Y, info.Radius, info.Name);
+                        }
+
                         col2Width = Math.Max(ImGui.CalcTextSize(MissionName).X + 10, col2Width);
 
                         // Column 3: Rewards
@@ -501,6 +538,14 @@ namespace ICE.Ui
                             modes = ["Manual"];
                             mission.ManualMode = true;
                         }
+                        else if (GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3)
+                        {
+                            modes = ["ASAP", "Manual"];
+                            if (mission.TurnInASAP)
+                                currentModeIndex = 0;
+                            if (mission.ManualMode)
+                                currentModeIndex = 1;
+                        }
                         else
                         {
                             modes = ["Gold", "Silver", "ASAP", "Manual"];
@@ -530,6 +575,28 @@ namespace ICE.Ui
                             }
 
                             C.Save();
+                        }
+                        if (showGatherConfig)
+                        {
+                            ImGui.TableNextColumn();
+                            if (GatheringJobList.Contains((int)entry.Value.JobId) || GatheringJobList.Contains((int)entry.Value.JobId2))
+                            {
+                                ImGui.SetNextItemWidth(-1);
+                                if (ImGui.BeginCombo($"###GatherProfile{entry.Value.Name}_{entry.Key}", mission.GatherSetting.Name))
+                                {
+                                    foreach (var profile in C.GatherSettings)
+                                    {
+                                        bool isSelected = mission.GatherSettingId == profile.Id;
+                                        if (ImGui.Selectable(profile.Name, isSelected))
+                                        {
+                                            mission.GatherSettingId = profile.Id;
+                                        }
+                                        if (isSelected)
+                                            ImGui.SetItemDefaultFocus();
+                                    }
+                                    ImGui.EndCombo();
+                                }
+                            }
                         }
 
                         // debug
@@ -565,6 +632,8 @@ namespace ICE.Ui
                 }
             }
         }
+
+        private static string newProfileName = ""; // This should be outside the function and persist
 
         public static void DrawConfigTab()
         {
@@ -714,6 +783,265 @@ namespace ICE.Ui
                     }
                 }
             }
+
+            void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, Action<bool> onEnabledChange, Action<int> onMinGpChange)
+            {
+                bool enabled = currentEnabled;
+                if (ImGui.Checkbox($"{label}###Enable{uniqueId}", ref enabled))
+                {
+                    if (enabled != currentEnabled)
+                        onEnabledChange(enabled);
+                }
+
+                if (enabled)
+                {
+                    if (ImGui.TreeNode($"{label} Settings###Tree{uniqueId}{entryName}"))
+                    {
+                        int minGp = currentMinGp;
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.Text("Minimum GP");
+                        ImGui.SameLine();
+                        ImGui.SetNextItemWidth(200);
+                        if (ImGui.SliderInt($"###Slider{uniqueId}{entryName}", ref minGp, minGpLimit, maxGpLimit))
+                        {
+                            if (minGp != currentMinGp)
+                                onMinGpChange(minGp);
+                        }
+
+                        ImGui.TreePop();
+                    }
+                }
+            }
+
+#if DEBUG
+            var headerColor = new Vector4(0.2f, 0.5f, 0.7f, 1.0f); // Light blue
+
+            ImGui.PushStyleColor(ImGuiCol.Header, headerColor);
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, headerColor * 1.2f);
+            ImGui.PushStyleColor(ImGuiCol.HeaderActive, headerColor * 1.5f);
+
+            if (ImGui.CollapsingHeader("Gathering Settings"))
+            {
+                ImGui.PopStyleColor(3);
+                int maxGp = 1200;
+
+                if (ImGui.Checkbox("Self Repair on Gather", ref SelfRepairGather))
+                {
+                    if (C.SelfRepairGather != SelfRepairGather)
+                    {
+                        C.SelfRepairGather = SelfRepairGather;
+                        C.Save();
+                    }
+                }
+                if (SelfRepairGather)
+                {
+                    ImGui.Text("Repair at");
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(150);
+                    if (ImGui.SliderFloat("###Repair %", ref SelfRepairPercent, 0f, 99f, "%.0f%%"))
+                    {
+                        if (C.RepairPercent != SelfRepairPercent)
+                        {
+                            C.RepairPercent = (int)SelfRepairPercent;
+                            C.Save();
+                        }
+                    }
+                }
+
+                ImGui.Dummy(new(0, 5));
+
+                ImGui.InputText("New Profile Name", ref newProfileName, 64);
+                if (ImGui.Button("Add Profile") && !string.IsNullOrWhiteSpace(newProfileName))
+                {
+                    if (!C.GatherSettings.Any(x => x.Name == newProfileName))
+                    {
+                        int newId = C.GatherSettings.Max(x => x.Id) + 1;
+                        C.GatherSettings.Add(new GatherBuffProfile { Id = newId, Name = newProfileName });
+                        C.Save();
+                        newProfileName = ""; // Reset input
+                    }
+                }
+
+                ImGui.Text("Gather Profiles");
+
+                ImGui.BeginChild("GatherProfileChild", new Vector2(300, ImGui.GetTextLineHeightWithSpacing() * 5 + 10), true);
+                for (int i = 0; i < C.GatherSettings.Count; i++)
+                {
+                    bool isSelected = (i == C.SelectedGatherIndex);
+
+                    if (ImGui.Selectable(C.GatherSettings[i].Name, isSelected))
+                    {
+                        C.SelectedGatherIndex = i;
+                        C.Save();
+                    }
+
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+                ImGui.EndChild();
+
+
+                bool canDelete = C.GatherSettings.Count > 1 && C.SelectedGatherIndex != 0;
+                using (ImRaii.Disabled(!canDelete))
+                {
+                    if (ImGui.Button("Delete Selected Profile"))
+                    {
+                        var deletedProfile = C.GatherSettings[C.SelectedGatherIndex];
+                        int deletedId = deletedProfile.Id;
+
+                        // Remove the profile
+                        C.GatherSettings.RemoveAt(C.SelectedGatherIndex);
+
+                        // Update all missions using this GatherSettingId
+                        foreach (var mission in C.Missions)
+                        {
+                            if (mission.GatherSettingId == deletedId)
+                            {
+                                mission.GatherSettingId = C.GatherSettings[0].Id; // fallback to default
+                            }
+                        }
+
+                        // Clamp the selected index and save
+                        C.SelectedGatherIndex = Math.Clamp(C.SelectedGatherIndex, 0, C.GatherSettings.Count - 1);
+                        C.Save();
+                    }
+                }
+
+
+
+                GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
+
+                // Boon Increase 2 (+30% Increase)
+                DrawBuffSetting(
+                    label: "Boon Increase 2",
+                    uniqueId: $"Boon2Inc{entry.Id}",
+                    currentEnabled: entry.Buffs.BoonIncrease2,
+                    currentMinGp: entry.Buffs.BoonIncrease2Gp,
+                    minGpLimit: 100,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease2 = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease2Gp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Boon Increase 1 (+10% Increase)
+                DrawBuffSetting(
+                    label: "Boon Increase 1",
+                    uniqueId: $"Boon1Inc{entry.Id}",
+                    currentEnabled: entry.Buffs.BoonIncrease1,
+                    currentMinGp: entry.Buffs.BoonIncrease1Gp,
+                    minGpLimit: 50,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease1 = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.BoonIncrease1Gp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Tidings (+2 to boon instead of +1)
+                DrawBuffSetting(
+                    label: "Tidings Buff",
+                    uniqueId: $"TidingsBuff{entry.Id}",
+                    currentEnabled: entry.Buffs.TidingsBool,
+                    currentMinGp: entry.Buffs.TidingsGp,
+                    minGpLimit: 200,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.TidingsBool = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.TidingsGp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Yield II (+2 to all items on node)
+                DrawBuffSetting(
+                    label: "Blessed/Kings Yield II",
+                    uniqueId: $"Blessed/KingsYieldIIBuff{entry.Id}",
+                    currentEnabled: entry.Buffs.YieldII,
+                    currentMinGp: entry.Buffs.YieldIIGp,
+                    minGpLimit: 500,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.YieldII = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.YieldIIGp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Yield I (+1 to all items on node)
+                DrawBuffSetting(
+                    label: "Blessed/Kings Yield I",
+                    uniqueId: $"Blessed/KingsYieldIBuff{entry.Id}",
+                    currentEnabled: entry.Buffs.YieldI,
+                    currentMinGp: entry.Buffs.YieldIGp,
+                    minGpLimit: 400,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.YieldI = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.YieldIGp = newVal;
+                        C.Save();
+                    }
+                );
+
+                // Bonus Integrity (+1 integrity)
+                DrawBuffSetting(
+                    label: "Increase Integrity",
+                    uniqueId: $"Incrase Intregity{entry.Id}",
+                    currentEnabled: entry.Buffs.BonusIntegrity,
+                    currentMinGp: entry.Buffs.BonusIntegrityGp,
+                    minGpLimit: 300,
+                    maxGpLimit: maxGp,
+                    entryName: entry.Name,
+                    onEnabledChange: newVal =>
+                    {
+                        entry.Buffs.BonusIntegrity = newVal;
+                        C.Save();
+                    },
+                    onMinGpChange: newVal =>
+                    {
+                        entry.Buffs.BonusIntegrityGp = newVal;
+                        C.Save();
+                    }
+                );
+            }
+            else
+            {
+                ImGui.PopStyleColor(3);
+            }
+#endif
 
             if (ImGui.CollapsingHeader("Overlay Settings"))
             {

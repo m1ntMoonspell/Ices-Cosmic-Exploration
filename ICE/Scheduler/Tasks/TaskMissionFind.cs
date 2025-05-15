@@ -55,12 +55,22 @@ namespace ICE.Scheduler.Tasks
             {
                 if (!ModeChangeCheck(isGatherer))
                 {
-                    SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                    SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
+                }
+                else
+                {
+                    var missionNode = GatheringUtil.GatherMissionInfo[CosmicHelper.CurrentLunarMission].NodeSet;
+                    if (missionNode != SchedulerMain.PreviousNodeSet)
+                    {
+                        SchedulerMain.PreviousNodeSet = missionNode;
+                        SchedulerMain.currentIndex = 0;
+                    }
+                    SchedulerMain.State = IceState.GatherScoreandTurnIn;
                 }
             }
             else
             {
-                SchedulerMain.State = IceState.GrabMission;
+                SchedulerMain.State = IceState.RepairMode;
             }
         }
 
@@ -178,6 +188,7 @@ namespace ICE.Scheduler.Tasks
                             {
                                 SchedulerMain.State = IceState.StartCraft;
                             }
+
                         }
                     }
                 }
@@ -555,8 +566,17 @@ namespace ICE.Scheduler.Tasks
             }
             else if (gatherer)
             {
-                //Change to GathererMode Later
-                SchedulerMain.State = IceState.ManualMode;
+                SchedulerMain.State = IceState.GatherNormal;
+                var currentMission = CosmicHelper.CurrentLunarMission;
+                if (currentMission != 0)
+                {
+                    var missionNode = GatheringUtil.GatherMissionInfo[currentMission].NodeSet;
+                    if (missionNode != SchedulerMain.PreviousNodeSet)
+                    {
+                        SchedulerMain.PreviousNodeSet = missionNode;
+                        SchedulerMain.currentIndex = 0;
+                    }
+                }
 
                 return true;
             }

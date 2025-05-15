@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using ICE.Enums;
 using Lumina.Excel.Sheets;
 using static ICE.Utilities.CosmicHelper;
@@ -19,12 +20,16 @@ public sealed partial class ICE
         var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
         var ToDoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
         var MoonItemInfo = Svc.Data.GetExcelSheet<WKSItemInfo>();
+        var MarkerSheet = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
+
+        var wk = WKSManager.Instance();
 
         foreach (var item in MoonMissionSheet)
         {
             List<(int Type, int Amount)> Exp = [];
             Dictionary<ushort, int> MainItems = [];
             Dictionary<ushort, int> PreCrafts = [];
+            Dictionary<uint, int> GatherItems = [];
             uint keyId = item.RowId;
             string LeveName = item.Item.ToString();
             LeveName = LeveName.Replace("<nbsp>", " ");
@@ -39,7 +44,7 @@ public sealed partial class ICE
             {
                 Job2 = Job2 - 1;
             }
-
+            uint timeLimit = item.Unknown3;
             uint silver = item.SilverStarRequirement;
             uint gold = item.GoldStarRequirement;
             uint previousMissionId = item.Unknown10;
@@ -62,6 +67,14 @@ public sealed partial class ICE
             uint RecipeId = item.WKSMissionRecipe;
 
             uint toDoValue = item.Unknown7;
+
+            var todo = ToDoSheet.GetRow((uint)(item.Unknown7 + *((byte*)wk + 0xC62)));
+            var marker = MarkerSheet.GetRow(todo.Unknown13);
+
+            int _x = marker.Unknown1 - 1024;
+            int _y = marker.Unknown2 - 1024;
+            int radius = marker.Unknown3;
+
             if (CrafterJobList.Contains(JobId))
             {
                 bool preCraftsbool = false;
@@ -211,6 +224,47 @@ public sealed partial class ICE
 
             }
 
+            if (GatheringJobList.Contains(JobId))
+            {
+                var todoRow = ToDoSheet.GetRow(toDoValue);
+
+                if (todoRow.Unknown3 != 0) // First item in the gathering list. Shouldn't be 0...
+                {
+                    var minAmount = todoRow.Unknown6.ToInt();
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown3).Item;
+                    if (!GatherItems.ContainsKey(itemInfoId))
+                    {
+                        GatherItems.Add(itemInfoId, minAmount);
+                    }
+                }
+                if (todoRow.Unknown4 != 0) // First item in the gathering list. Shouldn't be 0...
+                {
+                    var minAmount = todoRow.Unknown7.ToInt();
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown4).Item;
+                    if (!GatherItems.ContainsKey(itemInfoId))
+                    {
+                        GatherItems.Add(itemInfoId, minAmount);
+                    }
+                }
+                if (todoRow.Unknown5 != 0) // First item in the gathering list. Shouldn't be 0...
+                {
+                    var minAmount = todoRow.Unknown8.ToInt();
+                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown5).Item;
+                    if (!GatherItems.ContainsKey(itemInfoId))
+                    {
+                        GatherItems.Add(itemInfoId, minAmount);
+                    }
+                }
+
+                if (!GatheringItemDict.ContainsKey(keyId))
+                {
+                    GatheringItemDict[keyId] = new GatheringInfo()
+                    {
+                        MinGatherItems = GatherItems
+                    };
+                }
+            }
+
             // Col 3 -> Cosmocredits - Unknown 0
             // Col 4 -> Lunar Credits - Unknown 1
             // Col 7 ->  Lv. 1 Type - Unknown 12
@@ -246,6 +300,7 @@ public sealed partial class ICE
                     ToDoSlot = toDoValue,
                     Rank = rank,
                     IsCriticalMission = isCritical,
+                    TimeLimit = timeLimit,
                     Time = time,
                     Weather = weather,
                     RecipeId = RecipeId,
@@ -254,7 +309,11 @@ public sealed partial class ICE
                     CosmoCredit = Cosmo,
                     LunarCredit = Lunar,
                     ExperienceRewards = Exp,
-                    PreviousMissionID = previousMissionId
+                    PreviousMissionID = previousMissionId,
+                    MarkerId = marker.RowId,
+                    X = _x,
+                    Y = _y,
+                    Radius = radius,
                 };
             }
         }

@@ -30,6 +30,7 @@ public sealed partial class ICE : IDalamudPlugin
     internal NavmeshIPC Navmesh;
     internal PandoraIPC Pandora;
     internal ArtisanIPC Artisan;
+    internal VislandIPC Visland;
 
     public ICE(IDalamudPluginInterface pi)
     {
@@ -45,6 +46,7 @@ public sealed partial class ICE : IDalamudPlugin
         Navmesh = new();
         Pandora = new();
         Artisan = new();
+        Visland = new();
 
         // all the windows
         windowSystem = new();

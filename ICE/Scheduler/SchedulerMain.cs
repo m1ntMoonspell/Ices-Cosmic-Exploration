@@ -14,6 +14,8 @@ namespace ICE.Scheduler
             P.TaskManager.Abort();
             StopBeforeGrab = false;
             State = IceState.Idle;
+            if (P.Navmesh.IsRunning())
+                P.Navmesh.Stop();
             return true;
         }
 
@@ -23,7 +25,9 @@ namespace ICE.Scheduler
         internal static bool AnimationLockAbandonState = false;
         internal static int PossiblyStuck = 0;
         internal static bool StopBeforeGrab = false;
-        #if DEBUG
+        internal static uint PreviousNodeSet = 0;
+        internal static int currentIndex = 0;
+#if DEBUG
         // Debug only settings
         internal static bool DebugOOMMain = false;
         internal static bool DebugOOMSub = false;
@@ -42,9 +46,8 @@ namespace ICE.Scheduler
                     case IceState.AnimationLock:
                         TaskAnimationLock.Enqueue();
                         break;
-                    case IceState.WaitForCrafts:
-                    case IceState.CraftInProcess:
-                        TaskCrafting.WaitTillActuallyDone();
+                    case IceState.RepairMode:
+                        TaskRepair.GatherCheck();
                         break;
                     case IceState.GrabbingMission:
                         break;
@@ -58,14 +61,22 @@ namespace ICE.Scheduler
                         TaskCrafting.TryEnqueueCrafts();
                         break;
                     case IceState.AbortInProgress:
-                    case IceState.CheckScoreAndTurnIn:
-                        TaskScoreCheck.TryCheckScore();
+                    case IceState.WaitForCrafts:
+                    case IceState.CraftInProcess:
+                    case IceState.CraftCheckScoreAndTurnIn:
+                        TaskScoreCheckCraft.TryCheckScore();
+                        break;
+                    case IceState.GatherScoreandTurnIn:
+                        TaskScoreCheckGather.TryCheckScore();
                         break;
                     case IceState.ManualMode:
                         TaskManualMode.ZenMode();
                         break;
                     case IceState.ResumeChecker:
                         TaskMissionFind.EnqueueResumeCheck();
+                        break;
+                    case IceState.GatherNormal:
+                        TaskGather.TryEnqueueGathering();
                         break;
                     default:
                         throw new Exception("Invalid state");
@@ -76,17 +87,22 @@ namespace ICE.Scheduler
 
     internal enum IceState
     {
-        Idle,
-        AnimationLock,
-        GrabMission,
-        GrabbingMission,
-        StartCraft,
-        CraftInProcess,
         AbortInProgress,
-        CheckScoreAndTurnIn,
-        WaitForCrafts,
+        AnimationLock,
+        CraftCheckScoreAndTurnIn,
+        CraftInProcess,
+        GatherCollectable,
+        GatherScoreandTurnIn,
+        GatherNormal,
+        GatherReduce,
+        GrabbingMission,
+        GrabMission,
+        Idle,
         ManualMode,
         ResumeChecker,
+        RepairMode,
+        StartCraft,
+        WaitForCrafts,
         WaitForNonStandard
     }
 }

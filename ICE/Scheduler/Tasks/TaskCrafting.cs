@@ -49,7 +49,7 @@ namespace ICE.Scheduler.Tasks
             if (currentScore >= goldScore)
             {
                 IceLogging.Debug("[Crafting] We reached gold, switching to Score Check.", true);
-                SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
                 return;
             }
 
@@ -209,7 +209,7 @@ namespace ICE.Scheduler.Tasks
                 P.TaskManager.Enqueue(() =>
                 {
                     IceLogging.Debug("Check score and turn in cause crafting is done.", true);
-                    SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                    SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
                 }, "Check score and turn in if complete");
 
                 P.TaskManager.EnqueueStack();
@@ -225,7 +225,7 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
             P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
             {
-                TimeLimitMS = 240000, // 4 minute limit per craft
+                TimeLimitMS = CosmicHelper.CurrentMissionInfo.TimeLimit == 0 ? 240000 : (int?)CosmicHelper.CurrentMissionInfo.TimeLimit * 1000, // Limit to mission time limit (If no limit - 4 minute limit per craft)
             });
         }
 

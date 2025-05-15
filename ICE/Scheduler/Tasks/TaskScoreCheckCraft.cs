@@ -3,7 +3,7 @@ using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
 {
-    internal static class TaskScoreCheck
+    internal static class TaskScoreCheckCraft
     {
         public static void TryCheckScore()
         {
@@ -35,7 +35,15 @@ namespace ICE.Scheduler.Tasks
 
                 var (currentScore, silverScore, goldScore) = TaskCrafting.GetCurrentScores();
 
-                if (currentScore != 0)
+                var enoughMain = TaskCrafting.HaveEnoughMain();
+                if (enoughMain == null)
+                {
+                    IceLogging.Error("[Score Checker] Current mission is 0, aborting");
+                    SchedulerMain.State = IceState.GrabMission;
+                    return;
+                }
+
+                if (enoughMain.Value)
                 {
                     if (IceLogging.ShouldLog())
                     {
@@ -51,17 +59,9 @@ namespace ICE.Scheduler.Tasks
                         return;
                     }
 
-                    var enoughMain = TaskCrafting.HaveEnoughMain();
-                    if (enoughMain == null)
-                    {
-                        IceLogging.Error("[Score Checker] Current mission is 0, aborting");
-                        SchedulerMain.State = IceState.GrabMission;
-                        return;
-                    }
-
                     IceLogging.Debug($"[Score Checker] Checking current score:  {currentScore} is >= Silver Score: {silverScore} && {enoughMain.Value} && if TurninSilver is true: {currentMission.TurnInSilver}", true);
 
-                    if (currentScore >= silverScore && enoughMain.Value && currentMission.TurnInSilver)
+                    if (currentScore >= silverScore && currentMission.TurnInSilver)
                     {
                         IceLogging.Info($"[Score Checker] Silver was enabled, and you also meet silver threshold.", true);
                         TurnIn(z);

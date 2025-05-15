@@ -5,6 +5,7 @@ using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ICE.Utilities.CosmicHelper;
 
@@ -35,10 +36,16 @@ internal class DebugWindow : Window
     private int XLoc = 0;
     private int YLoc = 0;
     private int TableRow = 1;
+    private int posX = 0;
+    private int posY = 0;
+    private int posRadius = 0;
 
     public override unsafe void Draw()
     {
         var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
+        var MissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
+        var TodoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
+        var EvalSheet = Svc.Data.GetSubrowExcelSheet<WKSMissionToDoEvalutionItem>();
 
         if (ImGui.TreeNode("Player Info"))
         {
@@ -341,6 +348,24 @@ internal class DebugWindow : Window
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNode("Gathering Table"))
+        {
+            uint missionId = 418;
+            var Todo = MissionSheet.GetRow(missionId).Unknown7;
+            var PotentionalValue = TodoSheet.GetRow(Todo).Unknown10;
+            var EvaluationItem = EvalSheet.GetSubrowAt(PotentionalValue, 0);
+
+
+            ImGui.Text($"Mission: 418 | Todo Spot: {Todo}");
+            ImGui.Text($"Todo Row: {Todo} | Unknown 10 Value: {PotentionalValue}");
+            ImGui.Text($"Evaluation SubRowID: {EvaluationItem.SubrowId}");
+            ImGui.Text($"Evaluation Item: {EvaluationItem.Item}");
+
+            Table3();
+
+            ImGui.TreePop();
+        }
+
         if (ImGui.TreeNode("Test Buttons"))
         {
             ImGui.Text($"Current Mission: {CosmicHelper.CurrentLunarMission}");
@@ -485,38 +510,72 @@ internal class DebugWindow : Window
 
             var MapInfo = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
 
-            int x = MapInfo.GetRow((uint)TableRow).Unknown1.ToInt() / 2;
-            int y = MapInfo.GetRow((uint)TableRow).Unknown2.ToInt() / 2;
-
             if (ImGui.Button($"Test Radius"))
             {
                 var agent = AgentMap.Instance();
 
-                Utils.SetGatheringRing(agent->CurrentTerritoryId, x, y, 100);
+                int _x = MapInfo.GetRow((uint)TableRow).Unknown1.ToInt() - 1024;
+                int _y = MapInfo.GetRow((uint)TableRow).Unknown2.ToInt() - 1024;
+                int _radius = MapInfo.GetRow((uint)TableRow).Unknown3.ToInt();
+                PluginLog.Debug($"X: {_x} Y: {_y} Radius: {_radius}");
+
+                Utils.SetGatheringRing(agent->CurrentTerritoryId, _x, _y, _radius);
+            }
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Map X (Sheet)", ref posX);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Map Y (Sheet)", ref posY);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(125);
+            ImGui.InputInt("Map Radius", ref posRadius);
+            if (ImGui.Button($"Test Map Marker from coords"))
+            {
+                var agent = AgentMap.Instance();
+                int _x = posX - 1024;
+                int _y = posY - 1024;
+                PluginLog.Debug($"X: {_x} Y: {_y}");
+
+                Utils.SetGatheringRing(agent->CurrentTerritoryId, _x, _y, posRadius);
             }
         }
     }
 
-    private void Table()
+    private unsafe void Table()
     {
         var itemSheet = Svc.Data.GetExcelSheet<Item>();
 
         if (ImGui.BeginTable("Mission Info List", 17, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
         {
-            ImGui.TableSetupColumn("ID");
-            ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, 25);
+            ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed, -1);
+            ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, -1);
             ImGui.TableSetupColumn("Job", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("2nd Job", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Rank", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("ToDo ID", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("RecipeID", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Silver Requirement", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Exp Type 1###MissionExpType1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Exp Amount 1###MissionExpAmount1", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Exp Type 2###MissionExpType2", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Exp Amount 2###MissionExpAmount2", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Exp Type 3###MissionExpType3", ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn("Exp Amount 3###MissionExpAmount3", ImGuiTableColumnFlags.WidthFixed, 100);
+            ImGui.TableSetupColumn("Silver", ImGuiTableColumnFlags.WidthFixed, -1);
+            ImGui.TableSetupColumn("Gold", ImGuiTableColumnFlags.WidthFixed, -1);
+            //ImGui.TableSetupColumn("Exp Type 1###MissionExpType1", ImGuiTableColumnFlags.WidthFixed, 100);
+            //ImGui.TableSetupColumn("Exp Amount 1###MissionExpAmount1", ImGuiTableColumnFlags.WidthFixed, 100);
+            //ImGui.TableSetupColumn("Exp Type 2###MissionExpType2", ImGuiTableColumnFlags.WidthFixed, 100);
+            //ImGui.TableSetupColumn("Exp Amount 2###MissionExpAmount2", ImGuiTableColumnFlags.WidthFixed, 100);
+            //ImGui.TableSetupColumn("Exp Type 3###MissionExpType3", ImGuiTableColumnFlags.WidthFixed, 100);
+            //ImGui.TableSetupColumn("Exp Amount 3###MissionExpAmount3", ImGuiTableColumnFlags.WidthFixed, 100);
+
+            IOrderedEnumerable<KeyValuePair<int, string>> orderedExp = ExpDictionary.ToList().OrderBy(exp => exp.Key);
+            var agent = AgentMap.Instance();
+            var wk = WKSManager.Instance();
+
+            //_gatherCenter = new(marker.Unknown1 - 1024, marker.Unknown2 - 1024);
+            //_gatherRadius = marker.Unknown3;
+
+            foreach (var exp in orderedExp)
+            {
+                ImGui.TableSetupColumn($"{exp.Value}", ImGuiTableColumnFlags.WidthFixed, -1);
+            }
+
+            ImGui.TableSetupColumn("Test Flag", ImGuiTableColumnFlags.WidthFixed, -1);
 
             ImGui.TableHeadersRow();
 
@@ -568,6 +627,32 @@ internal class DebugWindow : Window
                 var RecipeSearch = entry.Value.RecipeId;
                 ImGui.Text($"{RecipeSearch}");
 
+                ImGui.TableNextColumn();
+                ImGui.Text($"{entry.Value.SilverRequirement}");
+                
+                ImGui.TableNextColumn();
+                ImGui.Text($"{entry.Value.GoldRequirement}");
+
+                foreach (var expType in orderedExp)
+                {
+                    var relicXp = entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString();
+                    if (relicXp == "0")
+                    {
+                        relicXp = "-";
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"{relicXp}");
+                }
+
+                ImGui.TableNextColumn();
+                if (entry.Value.MarkerId != 0)
+                {
+                    if (ImGui.Button($"Flag###Flag-{entry.Key}"))
+                    {
+                        Utils.SetGatheringRing(agent->CurrentTerritoryId, entry.Value.X, entry.Value.Y, entry.Value.Radius);
+                    }
+                }
             }
 
             ImGui.EndTable();
@@ -621,6 +706,50 @@ internal class DebugWindow : Window
                 {
                     ImGui.TableNextColumn();
                     ImGui.Text($"Recipe: {main.Key} | Amount: {main.Value}");
+                }
+            }
+
+            ImGui.EndTable();
+        }
+    }
+
+    private void Table3()
+    {
+        var itemName = Svc.Data.GetExcelSheet<Item>();
+
+        if (ImGui.BeginTable("Gathering Mission Dictionary", 7, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
+        {
+            ImGui.TableSetupColumn("MissionId");
+            ImGui.TableSetupColumn("Item 1");
+            ImGui.TableSetupColumn("Item Amount###Item1Amount");
+            ImGui.TableSetupColumn("Item 2");
+            ImGui.TableSetupColumn("Item Amount###Item2Amount");
+            ImGui.TableSetupColumn("Item 3");
+            ImGui.TableSetupColumn("Item Amount###Item3Amount");
+
+            ImGui.TableHeadersRow();
+
+            foreach (var entry in GatheringItemDict)
+            {
+                ImGui.TableNextRow();
+
+                ImGui.TableSetColumnIndex(0);
+                ImGui.Text($"{entry.Key}");
+
+                foreach (var item in entry.Value.MinGatherItems)
+                {
+                    ImGui.TableNextColumn();
+                    string name = itemName.GetRow(item.Key).Name.ToString();
+                    ImGui.Text(name);
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.Text($"{item.Key}");
+                        ImGui.EndTooltip();
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.Text($"{item.Value}");
                 }
             }
 
