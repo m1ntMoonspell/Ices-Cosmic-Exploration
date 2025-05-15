@@ -65,6 +65,10 @@ namespace ICE.Scheduler.Tasks
                     SchedulerMain.State = IceState.GatherScoreandTurnIn;
                 }
             }
+            else if (AddonHelper.IsAddonActive("WKSLottery"))
+            {
+                SchedulerMain.State = IceState.Gamba;
+            }
             else
             {
                 SchedulerMain.State = IceState.RepairMode;
