@@ -4,6 +4,7 @@ using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;
 using ICE.Scheduler.Handlers;
+using System.Collections.Generic;
 
 namespace ICE;
 
@@ -136,6 +137,7 @@ public sealed partial class ICE : IDalamudPlugin
         else if (firstArg.ToLower() == "clear")
         {
             C.Missions.ForEach(x => x.Enabled = false);
+            C.Save();
         }
         else if (firstArg.ToLower() == "stop")
         {
@@ -144,6 +146,48 @@ public sealed partial class ICE : IDalamudPlugin
         else if (firstArg.ToLower() == "start")
         {
             SchedulerMain.EnablePlugin();
+        }
+        else if (firstArg.ToLower() == "add")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.Where(item => idSet.Contains(item.Id))
+                .ToList()
+                .ForEach(item => item.Enabled = true);
+            C.Save();
+        }
+        else if (firstArg.ToLower() == "remove")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.Where(item => idSet.Contains(item.Id))
+                .ToList()
+                .ForEach(item => item.Enabled = false);
+            C.Save();
+        }
+        else if (firstArg.ToLower() == "toggle")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.Where(item => idSet.Contains(item.Id))
+                .ToList()
+                .ForEach(item => item.Enabled = !item.Enabled);
+            C.Save();
+        }
+        else if (firstArg.ToLower() == "only")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.ForEach(item => item.Enabled = idSet.Contains(item.Id));
+            C.Save();
         }
     }
 }
