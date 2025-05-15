@@ -44,7 +44,7 @@ public sealed partial class ICE
             {
                 Job2 = Job2 - 1;
             }
-
+            uint timeLimit = item.Unknown3;
             uint silver = item.SilverStarRequirement;
             uint gold = item.GoldStarRequirement;
             uint previousMissionId = item.Unknown10;
@@ -300,6 +300,7 @@ public sealed partial class ICE
                     ToDoSlot = toDoValue,
                     Rank = rank,
                     IsCriticalMission = isCritical,
+                    TimeLimit = timeLimit,
                     Time = time,
                     Weather = weather,
                     RecipeId = RecipeId,
