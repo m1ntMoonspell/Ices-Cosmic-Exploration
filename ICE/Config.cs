@@ -56,15 +56,6 @@ namespace ICE
         public List<GatherBuffProfile> GatherSettings { get; set; } = new()
         {
             new GatherBuffProfile { Id = 0, Name = "Default"},
-            new GatherBuffProfile { Id = 1, Name = "Limited Nodes"},
-            new GatherBuffProfile { Id = 2, Name = "Quantity"},
-            new GatherBuffProfile { Id = 3, Name = "Time Attack"},
-            new GatherBuffProfile { Id = 4, Name = "Chained"},
-            new GatherBuffProfile { Id = 5, Name = "Gather's Boon"},
-            new GatherBuffProfile { Id = 6, Name = "Chain + Boon"},
-            new GatherBuffProfile { Id = 7, Name = "Collectables"},
-            new GatherBuffProfile { Id = 8, Name = "Steller Reduction"},
-            new GatherBuffProfile { Id = 9, Name = "Dual Class"},
         };
         
         // Gamba settings
