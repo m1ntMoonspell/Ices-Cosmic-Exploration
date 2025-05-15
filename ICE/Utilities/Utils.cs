@@ -82,19 +82,19 @@ public static unsafe class Utils
         }
     }
 
-    public static unsafe void SetGatheringRing(uint teri, int x, int y, int radius)
+    public static unsafe void SetGatheringRing(uint territoryId, int x, int y, int radius, string? tooltip = "Node Location")
     {
-        var agent = AgentMap.Instance();
-        var debugText = "Current teri/map: {currentTeri} {currentMap}" + ", " + agent->CurrentTerritoryId
-                       + ", " + agent->CurrentMapId;
-        IceLogging.Debug(debugText);
-
         var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
-        var mapId = terSheet.GetRow(teri).Map.Value.RowId;
+        var map = terSheet.GetRow(territoryId).Map.Value;
+        var agent = AgentMap.Instance();
+        
+        Vector2 pos = MapToWorld(new Vector2(x, y), map.SizeFactor, map.OffsetX, map.OffsetY);
+        IceLogging.Debug($"Current map: {map.RowId} {territoryId} | {map.PlaceName.Value.Name} | {pos.X} {pos.Y} | {x} {y} | {radius} | {tooltip}");
 
         agent->IsFlagMarkerSet = false;
-        agent->SetFlagMapMarker(teri, mapId, x, y);
-        agent->AddGatheringTempMarker(x, y, radius, tooltip: "Node Location");
-        agent->OpenMap(agent->CurrentMapId, teri, "Node Location", FFXIVClientStructs.FFXIV.Client.UI.Agent.MapType.GatheringLog);
+        agent->SetFlagMapMarker(territoryId, map.RowId, x, y);
+        agent->TempMapMarkerCount = 0;
+        agent->AddGatheringTempMarker(x, y, radius, tooltip: tooltip);
+        agent->OpenMap(map.RowId, territoryId, tooltip, FFXIVClientStructs.FFXIV.Client.UI.Agent.MapType.GatheringLog);
     }
 }
