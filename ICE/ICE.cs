@@ -5,6 +5,7 @@ using ICE.Ui;
 using ICE.IPC;
 using ICE.Scheduler.Handlers;
 using System.Collections.Generic;
+using static ICE.Utilities.CosmicHelper;
 
 namespace ICE;
 
@@ -188,6 +189,17 @@ public sealed partial class ICE : IDalamudPlugin
 
             C.Missions.ForEach(item => item.Enabled = idSet.Contains(item.Id));
             C.Save();
+        }
+        else if (firstArg.ToLower() == "flag")
+        {
+            if (subcommands.Length != 2) return;
+            if (!PlayerHelper.IsInCosmicZone()) return;
+
+            int missionId = int.Parse(subcommands[1]);
+            var info = MissionInfoDict.FirstOrDefault(mission => mission.Key == missionId);
+            if (info.Value == default) return;
+
+            Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.Value.X, info.Value.Y, info.Value.Radius, info.Value.Name);
         }
     }
 }
