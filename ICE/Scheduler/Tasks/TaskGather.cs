@@ -753,7 +753,7 @@ namespace ICE.Scheduler.Tasks
         {
             return gatherBuffs.Buffs.BoonIncrease1
                 && boonChance < 100
-                && PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["BoonIncrease1"].StatusId)
+                && !PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["BoonIncrease1"].StatusId)
                 && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["BoonIncrease1"].RequiredGp
                 && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease1Gp;
         }
