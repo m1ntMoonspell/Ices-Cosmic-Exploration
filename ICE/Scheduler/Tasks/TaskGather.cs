@@ -90,18 +90,20 @@ namespace ICE.Scheduler.Tasks
 
                 // still needs to be implimented. Moreso to seperate BTN/MIN
                 var GatheringType = 0;
-                if (PlayerHelper.GetClassJobId() == 17)
+                if (PlayerHelper.GetClassJobId() == 16)
                 {
-                    GatheringType = 3;
-                }
-                else if (PlayerHelper.GetClassJobId() == 16)
-                {
+                    // Miner Type
                     GatheringType = 2;
+                }
+                else if (PlayerHelper.GetClassJobId() == 17)
+                {
+                    // Botany Type
+                    GatheringType = 3;
                 }
 
                 foreach (var entry in GatheringUtil.MoonNodeInfoList)
                 {
-                    if (GatheringUtil.GatherMissionInfo[currentMission].NodeSet == entry.NodeSet)
+                    if (GatheringUtil.GatherMissionInfo[currentMission].NodeSet == entry.NodeSet && entry.GatheringType == GatheringType)
                     {
                         MissionNodes.Add(entry.NodeId);
                     }
