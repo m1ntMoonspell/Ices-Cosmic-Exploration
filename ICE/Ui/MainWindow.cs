@@ -419,7 +419,7 @@ namespace ICE.Ui
 
                         bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
 
-                        if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18) || entry.Value.IsCriticalMission)
+                        if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18))
                             unsupported = true;
                             
                         uint gatherMissionType = 0;

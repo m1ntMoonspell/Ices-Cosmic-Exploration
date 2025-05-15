@@ -1,10 +1,12 @@
 ﻿using ECommons.GameHelpers;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ICE.Scheduler.Tasks;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Schema;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ICE.Utilities.CosmicHelper;
 
@@ -416,6 +418,30 @@ internal class DebugWindow : Window
             {
                 AddonHelper.OpenRecipeNote();
             }
+            var gameObject = Utils.TryGetObjectNearestEventObject();
+            float gameObjectDistance = 0;
+            if (gameObject is not null)
+                gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
+            if (ImGui.Button("Click Nearest EventObject"))
+            {
+                Utils.TargetgameObject(gameObject);
+                Utils.InteractWithObject(gameObject);
+            }
+            ImGui.SameLine();
+            ImGui.Text($"Distance to nearest: {gameObjectDistance}");
+
+            var collectionPoint = Utils.TryGetObjectCollectionPoint();
+            float collectionPointDistance = 0;
+            if (collectionPoint is not null)
+                collectionPointDistance = PlayerHelper.GetDistanceToPlayer(collectionPoint);
+            if (ImGui.Button("Click Nearest Collection Point"))
+            {
+                Utils.TargetgameObject(collectionPoint);
+                Utils.InteractWithObject(collectionPoint);
+            }
+            ImGui.SameLine();
+            ImGui.Text($"Distance to nearest: {collectionPointDistance}");
+
 
             ImGui.TreePop();
         }

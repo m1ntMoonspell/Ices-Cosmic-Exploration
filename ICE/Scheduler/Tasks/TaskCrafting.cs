@@ -29,7 +29,7 @@ namespace ICE.Scheduler.Tasks
             EnsureInit();
             var (currentScore, silverScore, goldScore) = GetCurrentScores();
 
-            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+            if (currentScore == 0 && silverScore == 0 && goldScore == 0 && C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type != MissionType.Critical)
             {
                 IceLogging.Error("Failed to get scores on first attempt retrying");
                 (currentScore, silverScore, goldScore) = GetCurrentScores();
@@ -203,6 +203,20 @@ namespace ICE.Scheduler.Tasks
                         EnqueueCraft(craft);
                     }
                 }
+
+                if (P.TaskManager.NumQueuedTasks == 1 && C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical)
+                {
+                    P.TaskManager.Enqueue(() =>
+                    {
+                        if (EzThrottler.Throttle("Manual Synthesis"))
+                            if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var recipe) && recipe.IsAddonReady)
+                            {
+                                IceLogging.Debug("[Crafting] Starting manual synthesis of Critical Mission item", true);
+                                recipe.Synthesize();
+                            }
+                    });
+                }
+
                 if (C.DelayCraft)
                     P.TaskManager.EnqueueDelay(C.DelayCraftIncrease); // Post-craft delay between Synthesis and RecipeLog reopening
                 P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]));
@@ -291,6 +305,16 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
+                if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical)
+                {
+                    if (Svc.Condition[ConditionFlag.NormalConditions] && !P.Artisan.IsBusy())
+                    {
+                        IceLogging.Debug("[Crafting] [Wait] We seem to no longer be crafting", true);
+                        return true;
+                    }
+                    else
+                        return false;
+                }
                 var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
                 var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
                 var enoughMain = HaveEnoughMain();

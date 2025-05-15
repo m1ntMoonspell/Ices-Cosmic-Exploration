@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects.Types;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks
@@ -165,17 +166,31 @@ namespace ICE.Scheduler.Tasks
                 return true;
             }
 
+            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical)
+            {
+                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition[ConditionFlag.NormalConditions])
+                {
+                    var gameObject = Utils.TryGetObjectCollectionPoint();
+                    float gameObjectDistance = 100;
+                    if (gameObject is not null)
+                        gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
+                    Utils.TargetgameObject(gameObject);
+                    Utils.InteractWithObject(gameObject);
+                }
+                return false;
+            }
+
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 //IceLogging.Debug("[Score Checker] REPORTING", true);
                 z.Report();
+                return false;
             }
             else 
             {
                 CosmicHelper.OpenStellaMission();
+                return false;
             }
-
-            return false;
         }
     }
 }

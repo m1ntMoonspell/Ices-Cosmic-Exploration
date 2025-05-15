@@ -47,7 +47,7 @@ public static unsafe class Utils
         return objectPosition / scalar - center / scalar;
     }
 
-    internal static bool? TargetgameObject(IGameObject? gameObject)
+    public static bool? TargetgameObject(IGameObject? gameObject)
     {
         var x = gameObject;
         if (Svc.Targets.Target != null && Svc.Targets.Target.DataId == x.DataId)
@@ -67,7 +67,15 @@ public static unsafe class Utils
         return false;
     }
     internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(PlayerHelper.GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId)) != null;
-    internal static unsafe void InteractWithObject(IGameObject? gameObject)
+    public static IGameObject? TryGetObjectNearestEventObject()
+    {
+        return Svc.Objects.OrderBy(PlayerHelper.GetDistanceToPlayer).FirstOrDefault(x => x.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj);
+    }
+    public static IGameObject? TryGetObjectCollectionPoint()
+    {
+        return Svc.Objects.OrderBy(PlayerHelper.GetDistanceToPlayer).FirstOrDefault(x => x.DataId == 2014616 || x.DataId == 2014618);
+    }
+    public static unsafe void InteractWithObject(IGameObject? gameObject)
     {
         try
         {
