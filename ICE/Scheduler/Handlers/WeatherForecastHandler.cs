@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
 namespace ICE.Scheduler.Handlers
@@ -12,17 +11,11 @@ namespace ICE.Scheduler.Handlers
         private const double WeatherPeriod = 23 * Minutes + 20 * Seconds;
         internal static bool AccurateTime = false;
 
-        private static ExcelSheet<Weather>? WeatherSheet;
         internal static List<WeatherForecast> weathers = [];
 
         private static DateTime _lastProcessed = DateTime.MinValue;
         private static TimeSpan _delay = TimeSpan.FromSeconds(300);
         private static uint previousZoneForecast = 0;
-
-        internal static void Init()
-        {
-            WeatherSheet ??= Svc.Data.GetExcelSheet<Weather>();
-        }
 
         internal static unsafe void Tick()
         {
@@ -57,7 +50,7 @@ namespace ICE.Scheduler.Handlers
         {
             WeatherManager* wm = WeatherManager.Instance();
             byte currWeatherId = wm->GetCurrentWeather();
-            return WeatherSheet.GetRow(currWeatherId);
+            return ExcelHelper.WeatherSheet.GetRow(currWeatherId);
         }
 
         internal static unsafe uint GetCurrentWeatherId()
@@ -92,7 +85,7 @@ namespace ICE.Scheduler.Handlers
             for (var i = 1; i <= 24; i++)
             {
                 byte weatherId = wm->GetWeatherForDaytime(Svc.ClientState.TerritoryType, i);
-                var weather = WeatherSheet.GetRow(weatherId)!;
+                var weather = ExcelHelper.WeatherSheet.GetRow(weatherId)!;
                 var time = GetRootTime(i * WeatherPeriod);
 
                 if (lastWeather.RowId != weather.RowId)
@@ -109,7 +102,7 @@ namespace ICE.Scheduler.Handlers
 
             WeatherManager* wm = WeatherManager.Instance();
             byte weatherId = wm->GetWeatherForDaytime(territoryId, 0);
-            Weather currentWeather = WeatherSheet.GetRow(weatherId);
+            Weather currentWeather = ExcelHelper.WeatherSheet.GetRow(weatherId);
             Weather lastWeather = currentWeather;
 
             territoryForecast = [BuildResultObject(currentWeather, GetRootTime(0))];
@@ -117,7 +110,7 @@ namespace ICE.Scheduler.Handlers
             for (var i = 1; i <= 24; i++)
             {
                 weatherId = wm->GetWeatherForDaytime(territoryId, i);
-                var weather = WeatherSheet.GetRow(weatherId)!;
+                var weather = ExcelHelper.WeatherSheet.GetRow(weatherId)!;
                 var time = GetRootTime(i * WeatherPeriod);
 
                 if (lastWeather.RowId != weather.RowId)

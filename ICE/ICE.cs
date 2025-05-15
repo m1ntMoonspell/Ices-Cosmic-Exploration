@@ -3,7 +3,6 @@ using ECommons.Configuration;
 using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;
-using ICE.Scheduler.Handlers;
 
 namespace ICE;
 
@@ -79,10 +78,9 @@ public sealed partial class ICE : IDalamudPlugin
         DictionaryCreation();
     }
 
-    private void Init()
+    private static void Init()
     {
-        CosmicHelper.Init();
-        WeatherForecastHandler.Init();
+        ExcelHelper.Init();
     }
 
     private void Tick(object _)

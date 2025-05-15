@@ -1,6 +1,4 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.WKS;
-
-namespace ICE.Scheduler.Tasks
+﻿namespace ICE.Scheduler.Tasks
 {
     internal class TaskManualMode
     {

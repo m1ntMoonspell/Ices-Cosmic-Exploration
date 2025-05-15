@@ -1,8 +1,6 @@
 using System.Globalization;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using ICE.Scheduler;
-using ICE.Scheduler.Handlers;
 
 namespace ICE.Ui
 {
