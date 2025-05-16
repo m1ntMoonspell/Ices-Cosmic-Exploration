@@ -1,5 +1,4 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
-using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
@@ -8,35 +7,24 @@ namespace ICE.Scheduler.Tasks
 {
     internal static class TaskCrafting
     {
-        private static ExcelSheet<Item>? ItemSheet;
-        private static ExcelSheet<Recipe>? RecipeSheet;
-
         public static void TryEnqueueCrafts()
         {
-            EnsureInit();
             if (CosmicHelper.CurrentLunarMission != 0)
                 MakeCraftingTasks();
         }
 
-        private static void EnsureInit()
-        {
-            ItemSheet ??= Svc.Data.GetExcelSheet<Item>(); // Only need to grab once, it won't change
-            RecipeSheet ??= Svc.Data.GetExcelSheet<Recipe>(); // Only need to grab once, it won't change
-        }
-
         internal static void MakeCraftingTasks()
         {
-            EnsureInit();
-            var (currentScore, silverScore, goldScore) = GetCurrentScores();
+            var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
 
-            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+            if (currentScore == 0 && silverScore == 0 && goldScore == 0 && C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type != MissionType.Critical)
             {
                 IceLogging.Error("Failed to get scores on first attempt retrying");
-                (currentScore, silverScore, goldScore) = GetCurrentScores();
+                (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
                 if (currentScore == 0 && silverScore == 0 && goldScore == 0)
                 {
                     IceLogging.Error("Failed to get scores on second attempt retrying");
-                    (currentScore, silverScore, goldScore) = GetCurrentScores();
+                    (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
                     if (currentScore == 0 && silverScore == 0 && goldScore == 0)
                     {
                         IceLogging.Error("Failed to get scores on third attempt aborting");
@@ -69,7 +57,7 @@ namespace ICE.Scheduler.Tasks
                 var preCrafts = CosmicHelper.CurrentMoonRecipe.PreCraftDict;
 
                 // Calculate if we need to do more than base amount of crafts
-                int craftsDone = mainCrafts.Sum(main => PlayerHelper.GetItemCount((int)RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId, out var count) ? count : 0); // How many mains we made
+                int craftsDone = mainCrafts.Sum(main => PlayerHelper.GetItemCount((int)ExcelHelper.RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId, out var count) ? count : 0); // How many mains we made
                 int craftsNeeded = mainCrafts.Sum(main => main.Value); // How many we need for mission
                 int CraftMultipleMissionItems = (craftsDone / craftsNeeded) + 1; // How many whole sets (+1) of crafts we did
                 IceLogging.Debug($"[Crafting] Loop Number: {CraftMultipleMissionItems} | Items Done: {craftsDone} | Items Needed: {craftsNeeded}");
@@ -79,10 +67,10 @@ namespace ICE.Scheduler.Tasks
 
                 foreach (var main in mainCrafts)
                 {
-                    var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
-                    var subItem = RecipeSheet.GetRow(main.Key).Ingredient[0].Value.RowId; // need to directly reference this in the future
+                    var itemId = ExcelHelper.RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
+                    var subItem = ExcelHelper.RecipeSheet.GetRow(main.Key).Ingredient[0].Value.RowId; // need to directly reference this in the future
                     var mainNeed = main.Value;
-                    var subItemNeed = RecipeSheet.GetRow(main.Key).AmountIngredient[0].ToInt() * main.Value;
+                    var subItemNeed = ExcelHelper.RecipeSheet.GetRow(main.Key).AmountIngredient[0].ToInt() * main.Value;
 
                     if (!PlayerHelper.GetItemCount((int)itemId, out var currentAmount))
                     {
@@ -96,7 +84,7 @@ namespace ICE.Scheduler.Tasks
                         return;
                     }
 
-                    var mainItemName = ItemSheet.GetRow(itemId).Name.ToString();
+                    var mainItemName = ExcelHelper.ItemSheet.GetRow(itemId).Name.ToString();
 
                     IceLogging.Info($"[Crafting] RecipeID: {main.Key}", true);
                     //IceLogging.Info($"[Crafting] ItemID: {itemId}", true);
@@ -146,11 +134,11 @@ namespace ICE.Scheduler.Tasks
                         //IceLogging.Debug($"[Crafting] You need pre-craft items. Starting the process of finding pre-crafts", true);
                         foreach (var pre in preCrafts)
                         {
-                            var itemId = RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
+                            var itemId = ExcelHelper.RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
                             if (PlayerHelper.GetItemCount((int)itemId, out var currentAmount))
                             {
 
-                                var PreCraftItemName = ItemSheet.GetRow(itemId).Name.ToString();
+                                var PreCraftItemName = ExcelHelper.ItemSheet.GetRow(itemId).Name.ToString();
                                 IceLogging.Debug($"[Crafting] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.", true);
                                 IceLogging.Debug($"[Crafting] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}", true);
                                 var goalAmount = pre.Value;
@@ -203,6 +191,20 @@ namespace ICE.Scheduler.Tasks
                         EnqueueCraft(craft);
                     }
                 }
+
+                if (P.TaskManager.NumQueuedTasks == 1 && C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical)
+                {
+                    P.TaskManager.Enqueue(() =>
+                    {
+                        if (EzThrottler.Throttle("Manual Synthesis"))
+                            if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var recipe) && recipe.IsAddonReady)
+                            {
+                                IceLogging.Debug("[Crafting] Starting manual synthesis of Critical Mission item", true);
+                                recipe.Synthesize();
+                            }
+                    });
+                }
+
                 if (C.DelayCraft)
                     P.TaskManager.EnqueueDelay(C.DelayCraftIncrease); // Post-craft delay between Synthesis and RecipeLog reopening
                 P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]));
@@ -218,7 +220,7 @@ namespace ICE.Scheduler.Tasks
 
         private static void EnqueueCraft(KeyValuePair<ushort, Tuple<int, int>> craft)
         {
-            var item = ItemSheet.GetRow(RecipeSheet.GetRow(craft.Key).ItemResult.RowId);
+            var item = ExcelHelper.ItemSheet.GetRow(ExcelHelper.RecipeSheet.GetRow(craft.Key).ItemResult.RowId);
             IceLogging.Debug($"[Crafting] Adding craft {craft} | {item.Name}", true);
             P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
             P.TaskManager.Enqueue(() => Craft(craft.Key, craft.Value.Item1, item), "PreCraft item");
@@ -229,30 +231,6 @@ namespace ICE.Scheduler.Tasks
             });
         }
 
-        internal static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
-        {
-            EnsureInit();
-            if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
-            {
-                var goldScore = CosmicHelper.CurrentMissionInfo.GoldRequirement;
-                var silverScore = CosmicHelper.CurrentMissionInfo.SilverRequirement;
-
-                string currentScoreText = AddonHelper.GetNodeText("WKSMissionInfomation", 27);
-                currentScoreText = currentScoreText.Replace(",", ""); // English client comma's
-                currentScoreText = currentScoreText.Replace(" ", ""); // French client spacing
-                currentScoreText = currentScoreText.Replace(".", ""); // French client spacing
-                if (uint.TryParse(currentScoreText, out uint tempScore))
-                {
-                    return (tempScore, silverScore, goldScore);
-                }
-                else
-                {
-                    return (0, silverScore, goldScore);
-                }
-            }
-
-            return (0, 0, 0);
-        }
 
         internal static void Craft(ushort id, int craftAmount, Item item)
         {
@@ -291,9 +269,19 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
+                if (CosmicHelper.CurrentMissionInfo.IsCriticalMission)
+                {
+                    if ((Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.PreparingToCraft]) && !P.Artisan.IsBusy())
+                    {
+                        IceLogging.Debug("[Crafting] [Wait] We seem to no longer be crafting", true);
+                        return true;
+                    }
+                    else
+                        return false;
+                }
+                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores(); // some scoring checks
                 var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
-                var enoughMain = HaveEnoughMain();
+                var enoughMain = MissionHandler.HaveEnoughMain();
                 if (enoughMain == null || currentMission == null)
                 {
                     IceLogging.Error($"[Crafting] [Wait] Current mission is {CosmicHelper.CurrentLunarMission}, aborting");
@@ -321,32 +309,6 @@ namespace ICE.Scheduler.Tasks
                 }
             }
             return false;
-        }
-
-        internal static bool? HaveEnoughMain()
-        {
-            EnsureInit();
-
-            //IceLogging.Debug($"[Item(s) Check] Checking.");
-
-            if (CosmicHelper.CurrentLunarMission == 0)
-                return null;
-
-            foreach (var main in CosmicHelper.CurrentMoonRecipe.MainCraftsDict)
-            {
-                var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
-                var mainNeed = main.Value;
-                PlayerHelper.GetItemCount((int)itemId, out var currentAmount);
-
-                if (currentAmount < mainNeed)
-                {
-                    //IceLogging.Debug($"[Item(s) Check] You currently don't have the required amount of item: {ItemSheet.GetRow(itemId).Name}.");
-                    return false;
-                }
-            }
-
-            //IceLogging.Debug($"[Item(s) Check] You currently have the required amount of items.");
-            return true;
         }
     }
 }

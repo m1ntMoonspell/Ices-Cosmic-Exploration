@@ -1,10 +1,4 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
-using ICE.Scheduler.Handlers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Scheduler.Tasks

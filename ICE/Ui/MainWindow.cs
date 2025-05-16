@@ -8,8 +8,6 @@ using static ICE.Utilities.CosmicHelper;
 using ICE.Utilities.Cosmic;
 using System.Reflection;
 using Dalamud.Interface.Utility;
-using ICE.Scheduler.Handlers;
-using ICE.Scheduler.Tasks;
 using ECommons.ExcelServices;
 using Dalamud.Interface;
 
@@ -419,7 +417,7 @@ namespace ICE.Ui
 
                         bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
 
-                        if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18) || entry.Value.IsCriticalMission)
+                        if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18))
                             unsupported = true;
                             
                         uint gatherMissionType = 0;

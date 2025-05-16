@@ -85,10 +85,9 @@ public sealed partial class ICE : IDalamudPlugin
         DictionaryCreation();
     }
 
-    private void Init()
+    private static void Init()
     {
-        CosmicHelper.Init();
-        WeatherForecastHandler.Init();
+        ExcelHelper.Init();
     }
 
     private void Tick(object _)

@@ -1,7 +1,4 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using System.Collections.Generic;
-using static FFXIVClientStructs.FFXIV.Client.Game.UI.AutoAttackState.Delegates;
-using System.Threading.Channels;
+﻿using System.Collections.Generic;
 
 namespace ICE.Utilities;
 
