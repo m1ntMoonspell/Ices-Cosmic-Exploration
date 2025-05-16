@@ -800,6 +800,8 @@ namespace ICE.Ui
 
                 if (enabled)
                 {
+                    ImGui.Indent(15);
+
                     if (ImGui.TreeNode($"{label} Settings###Tree{uniqueId}{entryName}"))
                     {
                         int minGp = currentMinGp;
@@ -815,6 +817,7 @@ namespace ICE.Ui
 
                         ImGui.TreePop();
                     }
+                    ImGui.Unindent(15);
                 }
             }
 
@@ -869,23 +872,6 @@ namespace ICE.Ui
 
                 ImGui.Text("Gather Profiles");
 
-                ImGui.BeginChild("GatherProfileChild", new Vector2(300, ImGui.GetTextLineHeightWithSpacing() * 5 + 10), true);
-                for (int i = 0; i < C.GatherSettings.Count; i++)
-                {
-                    bool isSelected = (i == C.SelectedGatherIndex);
-
-                    if (ImGui.Selectable(C.GatherSettings[i].Name, isSelected))
-                    {
-                        C.SelectedGatherIndex = i;
-                        C.Save();
-                    }
-
-                    if (isSelected)
-                        ImGui.SetItemDefaultFocus();
-                }
-                ImGui.EndChild();
-
-
                 bool canDelete = C.GatherSettings.Count > 1 && C.SelectedGatherIndex != 0;
                 using (ImRaii.Disabled(!canDelete))
                 {
@@ -912,142 +898,186 @@ namespace ICE.Ui
                     }
                 }
 
+                ImGui.BeginChild("GatherProfileChild", new Vector2(300, ImGui.GetTextLineHeightWithSpacing() * 5 + 10), true);
+                for (int i = 0; i < C.GatherSettings.Count; i++)
+                {
+                    bool isSelected = (i == C.SelectedGatherIndex);
 
-
-                GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
-
-                // Boon Increase 2 (+30% Increase)
-                DrawBuffSetting(
-                    label: "Pioneer's / Mountaineer's Gift II",
-                    uniqueId: $"Boon2Inc{entry.Id}",
-                    currentEnabled: entry.Buffs.BoonIncrease2,
-                    currentMinGp: entry.Buffs.BoonIncrease2Gp,
-                    minGpLimit: 100,
-                    maxGpLimit: maxGp,
-                    entryName: entry.Name,
-                    ActionInfo: "Apply a 30% buff to your boon chance.",
-                    onEnabledChange: newVal =>
+                    if (ImGui.Selectable(C.GatherSettings[i].Name, isSelected))
                     {
-                        entry.Buffs.BoonIncrease2 = newVal;
-                        C.Save();
-                    },
-                    onMinGpChange: newVal =>
-                    {
-                        entry.Buffs.BoonIncrease2Gp = newVal;
+                        C.SelectedGatherIndex = i;
                         C.Save();
                     }
-                );
 
-                // Boon Increase 1 (+10% Increase)
-                DrawBuffSetting(
-                    label: "Pioneer's / Mountaineer's Gift I",
-                    uniqueId: $"Boon1Inc{entry.Id}",
-                    currentEnabled: entry.Buffs.BoonIncrease1,
-                    currentMinGp: entry.Buffs.BoonIncrease1Gp,
-                    minGpLimit: 50,
-                    maxGpLimit: maxGp,
-                    entryName: entry.Name,
-                    ActionInfo: "Apply a 10% buff to your boon chance.",
-                    onEnabledChange: newVal =>
-                    {
-                        entry.Buffs.BoonIncrease1 = newVal;
-                        C.Save();
-                    },
-                    onMinGpChange: newVal =>
-                    {
-                        entry.Buffs.BoonIncrease1Gp = newVal;
-                        C.Save();
-                    }
-                );
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+                ImGui.EndChild();
 
-                // Tidings (+2 to boon instead of +1)
-                DrawBuffSetting(
-                    label: "Nophica's / Nald'thal's Tidings Buff",
-                    uniqueId: $"TidingsBuff{entry.Id}",
-                    currentEnabled: entry.Buffs.TidingsBool,
-                    currentMinGp: entry.Buffs.TidingsGp,
-                    minGpLimit: 200,
-                    maxGpLimit: maxGp,
-                    entryName: entry.Name,
-                    ActionInfo: "Increases item yield from Gatherer's Boon by 1",
-                    onEnabledChange: newVal =>
-                    {
-                        entry.Buffs.TidingsBool = newVal;
-                        C.Save();
-                    },
-                    onMinGpChange: newVal =>
-                    {
-                        entry.Buffs.TidingsGp = newVal;
-                        C.Save();
-                    }
-                );
+                ImGui.SameLine();
+                if (ImGui.BeginChild("GatherProfileSettings", new Vector2(500, 250)))
+                {
+                    GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
 
-                // Yield II (+2 to all items on node)
-                DrawBuffSetting(
-                    label: "Blessed / Kings Yield II",
-                    uniqueId: $"Blessed/KingsYieldIIBuff{entry.Id}",
-                    currentEnabled: entry.Buffs.YieldII,
-                    currentMinGp: entry.Buffs.YieldIIGp,
-                    minGpLimit: 500,
-                    maxGpLimit: maxGp,
-                    entryName: entry.Name,
-                    ActionInfo: "Increases the number of items obtained when gathering by 2",
-                    onEnabledChange: newVal =>
-                    {
-                        entry.Buffs.YieldII = newVal;
-                        C.Save();
-                    },
-                    onMinGpChange: newVal =>
-                    {
-                        entry.Buffs.YieldIIGp = newVal;
-                        C.Save();
-                    }
-                );
+                    // Boon Increase 2 (+30% Increase)
+                    DrawBuffSetting(
+                        label: "Pioneer's / Mountaineer's Gift II",
+                        uniqueId: $"Boon2Inc{entry.Id}",
+                        currentEnabled: entry.Buffs.BoonIncrease2,
+                        currentMinGp: entry.Buffs.BoonIncrease2Gp,
+                        minGpLimit: 100,
+                        maxGpLimit: maxGp,
+                        entryName: entry.Name,
+                        ActionInfo: "Apply a 30% buff to your boon chance.",
+                        onEnabledChange: newVal =>
+                        {
+                            entry.Buffs.BoonIncrease2 = newVal;
+                            C.Save();
+                        },
+                        onMinGpChange: newVal =>
+                        {
+                            entry.Buffs.BoonIncrease2Gp = newVal;
+                            C.Save();
+                        }
+                    );
 
-                // Yield I (+1 to all items on node)
-                DrawBuffSetting(
-                    label: "Blessed / Kings Yield I",
-                    uniqueId: $"Blessed/KingsYieldIBuff{entry.Id}",
-                    currentEnabled: entry.Buffs.YieldI,
-                    currentMinGp: entry.Buffs.YieldIGp,
-                    minGpLimit: 400,
-                    maxGpLimit: maxGp,
-                    entryName: entry.Name,
-                    ActionInfo: "Increases the number of items obtained when gathering by 1",
-                    onEnabledChange: newVal =>
-                    {
-                        entry.Buffs.YieldI = newVal;
-                        C.Save();
-                    },
-                    onMinGpChange: newVal =>
-                    {
-                        entry.Buffs.YieldIGp = newVal;
-                        C.Save();
-                    }
-                );
+                    // Boon Increase 1 (+10% Increase)
+                    DrawBuffSetting(
+                        label: "Pioneer's / Mountaineer's Gift I",
+                        uniqueId: $"Boon1Inc{entry.Id}",
+                        currentEnabled: entry.Buffs.BoonIncrease1,
+                        currentMinGp: entry.Buffs.BoonIncrease1Gp,
+                        minGpLimit: 50,
+                        maxGpLimit: maxGp,
+                        entryName: entry.Name,
+                        ActionInfo: "Apply a 10% buff to your boon chance.",
+                        onEnabledChange: newVal =>
+                        {
+                            entry.Buffs.BoonIncrease1 = newVal;
+                            C.Save();
+                        },
+                        onMinGpChange: newVal =>
+                        {
+                            entry.Buffs.BoonIncrease1Gp = newVal;
+                            C.Save();
+                        }
+                    );
 
-                // Bonus Integrity (+1 integrity)
-                DrawBuffSetting(
-                    label: "Ageless Words / Solid Reason",
-                    uniqueId: $"Incrase Intregity{entry.Id}",
-                    currentEnabled: entry.Buffs.BonusIntegrity,
-                    currentMinGp: entry.Buffs.BonusIntegrityGp,
-                    minGpLimit: 300,
-                    maxGpLimit: maxGp,
-                    entryName: entry.Name,
-                    ActionInfo: "Increase the Integrity by 1\n" +
-                                "50% chance to grant Eureka Moment",
-                    onEnabledChange: newVal =>
-                    {
-                        entry.Buffs.BonusIntegrity = newVal;
-                        C.Save();
-                    },
-                    onMinGpChange: newVal =>
-                    {
-                        entry.Buffs.BonusIntegrityGp = newVal;
-                        C.Save();
-                    }
-                );
+                    // Tidings (+2 to boon instead of +1)
+                    DrawBuffSetting(
+                        label: "Nophica's / Nald'thal's Tidings Buff",
+                        uniqueId: $"TidingsBuff{entry.Id}",
+                        currentEnabled: entry.Buffs.TidingsBool,
+                        currentMinGp: entry.Buffs.TidingsGp,
+                        minGpLimit: 200,
+                        maxGpLimit: maxGp,
+                        entryName: entry.Name,
+                        ActionInfo: "Increases item yield from Gatherer's Boon by 1",
+                        onEnabledChange: newVal =>
+                        {
+                            entry.Buffs.TidingsBool = newVal;
+                            C.Save();
+                        },
+                        onMinGpChange: newVal =>
+                        {
+                            entry.Buffs.TidingsGp = newVal;
+                            C.Save();
+                        }
+                    );
+
+                    // Yield II (+2 to all items on node)
+                    DrawBuffSetting(
+                        label: "Blessed / Kings Yield II",
+                        uniqueId: $"Blessed/KingsYieldIIBuff{entry.Id}",
+                        currentEnabled: entry.Buffs.YieldII,
+                        currentMinGp: entry.Buffs.YieldIIGp,
+                        minGpLimit: 500,
+                        maxGpLimit: maxGp,
+                        entryName: entry.Name,
+                        ActionInfo: "Increases the number of items obtained when gathering by 2",
+                        onEnabledChange: newVal =>
+                        {
+                            entry.Buffs.YieldII = newVal;
+                            C.Save();
+                        },
+                        onMinGpChange: newVal =>
+                        {
+                            entry.Buffs.YieldIIGp = newVal;
+                            C.Save();
+                        }
+                    );
+
+                    // Yield I (+1 to all items on node)
+                    DrawBuffSetting(
+                        label: "Blessed / Kings Yield I",
+                        uniqueId: $"Blessed/KingsYieldIBuff{entry.Id}",
+                        currentEnabled: entry.Buffs.YieldI,
+                        currentMinGp: entry.Buffs.YieldIGp,
+                        minGpLimit: 400,
+                        maxGpLimit: maxGp,
+                        entryName: entry.Name,
+                        ActionInfo: "Increases the number of items obtained when gathering by 1",
+                        onEnabledChange: newVal =>
+                        {
+                            entry.Buffs.YieldI = newVal;
+                            C.Save();
+                        },
+                        onMinGpChange: newVal =>
+                        {
+                            entry.Buffs.YieldIGp = newVal;
+                            C.Save();
+                        }
+                    );
+
+                    // Bonus Integrity (+1 integrity)
+                    DrawBuffSetting(
+                        label: "Ageless Words / Solid Reason",
+                        uniqueId: $"Incrase Intregity{entry.Id}",
+                        currentEnabled: entry.Buffs.BonusIntegrity,
+                        currentMinGp: entry.Buffs.BonusIntegrityGp,
+                        minGpLimit: 300,
+                        maxGpLimit: maxGp,
+                        entryName: entry.Name,
+                        ActionInfo: "Increase the Integrity by 1\n" +
+                                    "50% chance to grant Eureka Moment",
+                        onEnabledChange: newVal =>
+                        {
+                            entry.Buffs.BonusIntegrity = newVal;
+                            C.Save();
+                        },
+                        onMinGpChange: newVal =>
+                        {
+                            entry.Buffs.BonusIntegrityGp = newVal;
+                            C.Save();
+                        }
+                    );
+
+                    // Bountiful Yield/Harvest II (+Amount based on gathering)
+                    DrawBuffSetting(
+                        label: "Bountiful Yield II / Bountiful Harvest II",
+                        uniqueId: $"Bountiful Yield II {entry.Id}",
+                        currentEnabled: entry.Buffs.BountifulYieldII,
+                        currentMinGp: entry.Buffs.BountifulYieldIIGp,
+                        minGpLimit: 100,
+                        maxGpLimit: maxGp,
+                        entryName: entry.Name,
+                        ActionInfo: "Increase item's gained on next gathering attempt by 1, 2, or 3 \n" +
+                                    "This is based on your gathering rating",
+                        onEnabledChange: newVal =>
+                        {
+                            entry.Buffs.BountifulYieldII = newVal;
+                            C.Save();
+                        },
+                        onMinGpChange: newVal =>
+                        {
+                            entry.Buffs.BountifulYieldIIGp = newVal;
+                            C.Save();
+                        }
+                    );
+
+                    ImGui.EndChild();
+                }
+
             }
             else
             {

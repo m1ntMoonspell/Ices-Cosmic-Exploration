@@ -38,6 +38,9 @@ internal class DebugWindow : Window
     private int posY = 0;
     private int posRadius = 0;
 
+    private string CraftingTableSearchText = "";
+    private string RecipeTableSearchText = "";
+
     public override unsafe void Draw()
     {
         var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
@@ -577,6 +580,8 @@ internal class DebugWindow : Window
     private unsafe void Table()
     {
         var itemSheet = Svc.Data.GetExcelSheet<Item>();
+        ImGui.SetNextItemWidth(250);
+        ImGui.InputText("Search by Name", ref CraftingTableSearchText, 100);
 
         if (ImGui.BeginTable("Mission Info List", 17, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
         {
@@ -612,7 +617,9 @@ internal class DebugWindow : Window
 
             ImGui.TableHeadersRow();
 
-            foreach (var entry in MissionInfoDict)
+            var missionList = MissionInfoDict.Where(mission => mission.Value.Name.ToLower().Contains(CraftingTableSearchText.ToLower()));
+
+            foreach (var entry in missionList)
             {
                 ImGui.TableNextRow();
 
@@ -695,6 +702,8 @@ internal class DebugWindow : Window
     private void Table2()
     {
         var MainMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
+        ImGui.SetNextItemWidth(250);
+        ImGui.InputText("Search by Name", ref RecipeTableSearchText, 100);
 
         if (ImGui.BeginTable("Mission Info List", 9, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable))
         {
@@ -710,7 +719,8 @@ internal class DebugWindow : Window
 
             ImGui.TableHeadersRow();
 
-            foreach (var entry in MoonRecipies)
+            var recipeList = MoonRecipies.Where(recipe => MissionInfoDict.First(x => x.Key == recipe.Key).Value.Name.ToLower().Contains(RecipeTableSearchText.ToLower()));
+            foreach (var entry in recipeList)
             {
                 ImGui.TableNextRow();
                 ImGui.TableSetColumnIndex(0);
