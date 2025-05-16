@@ -111,6 +111,8 @@ namespace ICE
         public int YieldIIGp { get; set; } = 500;
         public bool YieldI { get; set; } = false;
         public int YieldIGp { get; set; } = 400;
+        public bool BountifulYieldII { get; set; } = false;
+        public int BountifulYieldIIGp { get; set; } = 100;
         public bool BonusIntegrity { get; set; } = false;
         public int BonusIntegrityGp { get; set; } = 300;
         public bool IntegrityBool { get; set; } = true;
