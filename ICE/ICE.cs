@@ -202,8 +202,7 @@ public sealed partial class ICE : IDalamudPlugin
             int missionId = int.Parse(subcommands[1]);
             var info = MissionInfoDict.FirstOrDefault(mission => mission.Key == missionId);
             if (info.Value == default) return;
-
-            if (info.Value.X == 0 && info.Value.Y == 0) return;
+            if (info.Value.MarkerId == 0) return;
 
             Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.Value.X, info.Value.Y, info.Value.Radius, info.Value.Name);
         }
