@@ -288,16 +288,29 @@ namespace ICE.Scheduler.Tasks
                     SchedulerMain.State = IceState.GrabMission;
                     return false;
                 }
+                uint targetLevel = 0;
+                if (currentMission.TurnInGold)
+                    targetLevel = 3;
+                else if (currentMission.TurnInSilver)
+                    targetLevel = 2;
+                else if (currentMission.TurnInASAP)
+                    targetLevel = 1;
 
-                if (currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
+                if (currentScore >= goldScore && enoughMain.Value)
+                {
+                    IceLogging.Debug("[Crafting] [Wait] Gold wanted. Gold reached.", true);
+                    P.Artisan.SetEnduranceStatus(false);
+                    return true;
+                }
+                else if (targetLevel == 2 && currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
                 {
                     IceLogging.Debug("[Crafting] [Wait] Silver wanted. Silver reached.", true);
                     P.Artisan.SetEnduranceStatus(false);
                     return true;
                 }
-                else if (currentScore >= goldScore && enoughMain.Value)
+                else if (targetLevel == 1 && enoughMain.Value)
                 {
-                    IceLogging.Debug("[Crafting] [Wait] Gold wanted. Gold reached.", true);
+                    IceLogging.Debug("[Crafting] [Wait] Bronze wanted. Turning in.", true);
                     P.Artisan.SetEnduranceStatus(false);
                     return true;
                 }

@@ -83,6 +83,7 @@ namespace ICE
         public uint PreviousMissionId { get; set; } = 0;
         public uint JobId { get; set; }
         public bool TurnInSilver { get; set; } = false;
+        public bool TurnInGold { get; set; } = false;
         public bool TurnInASAP { get; set; } = false;
         public bool ManualMode { get; set; } = false;
         public int GatherSettingId { get; set; } = 0;
