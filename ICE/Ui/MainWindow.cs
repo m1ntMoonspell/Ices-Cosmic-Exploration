@@ -1319,7 +1319,6 @@ namespace ICE.Ui
 
             ImGui.TextUnformatted(text);
         }
-
         public static void CenterCheckboxInTableCell(string label, ref bool value, ref bool config)
         {
             float cellWidth = ImGui.GetContentRegionAvail().X;

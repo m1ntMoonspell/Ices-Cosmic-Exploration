@@ -1,4 +1,5 @@
-﻿using ECommons.GameHelpers;
+﻿using Dalamud.Interface.Textures;
+using ECommons.GameHelpers;
 using ICE.Enums;
 using System.Collections.Generic;
 
@@ -17,14 +18,7 @@ public static unsafe partial class CosmicHelper
     public static readonly HashSet<int> TimedMissionList = [40, 43,];
     public static readonly HashSet<int> CriticalMissions = [512, 513, 514,];
 
-    public static readonly HashSet<int> LimitQuantityMission = [362, 361, 368, 374];
-    public static readonly HashSet<int> QuantityMission = [366, 365, 376, ];
-    public static readonly HashSet<int> TimedMissions = [364, 363, 369, 375, ];
-    public static readonly HashSet<int> ChainedMissions = [370, 377, ];
-    public static readonly HashSet<int> BoonMissions = [371, 378, ];
-    public static readonly HashSet<int> ChainBoonMissions = [372, 379, ];
-    public static readonly HashSet<int> CollectableMissions = [373, 380, ];
-    public static readonly HashSet<int> ReductionMissions = [381, ];
+    public static List<int> GreyIconList = new List<int>() { 91031, 91032, 91033, 91034, 91035, 91036, 91037, 91038, 91039, 91040, 91041 };
 
     public static readonly int MinimumLevel = 10;
     public static readonly int MaximumLevel = Player.MaxLevel;
@@ -85,6 +79,10 @@ public static unsafe partial class CosmicHelper
     }
 
     public static Dictionary<uint, GatheringInfo> GatheringItemDict = new();
+
+    public static Dictionary<uint, ISharedImmediateTexture> GreyTexture = new Dictionary<uint, ISharedImmediateTexture>();
+
+    public static Dictionary<uint, ISharedImmediateTexture> JobIconDict = new Dictionary<uint, ISharedImmediateTexture>();
 
     #endregion
 }

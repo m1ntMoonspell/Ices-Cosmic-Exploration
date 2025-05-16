@@ -24,6 +24,17 @@ namespace ICE
 #if DEBUG
         public bool FailsafeRecipeSelect = false;
 #endif
+        // Main Window Settings
+        public uint SelectedJob = 8;
+
+        public bool showCritical = true;
+        public bool showSequential = true;
+        public bool showWeather = true;
+        public bool showTimeRestricted = true;
+        public bool showClassA = true;
+        public bool showClassB = true;
+        public bool showClassC = true;
+        public bool showClassD = true;
 
         // Mission settings
         public bool OnlyGrabMission { get; set; } = false;

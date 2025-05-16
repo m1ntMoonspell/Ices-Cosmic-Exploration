@@ -21,6 +21,7 @@ public sealed partial class ICE
         var ToDoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
         var MoonItemInfo = Svc.Data.GetExcelSheet<WKSItemInfo>();
         var MarkerSheet = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
+        var LeveAssignmentSheet = Svc.Data.GetExcelSheet<LeveAssignmentType>(); // using this for icons
 
         var wk = WKSManager.Instance();
 
@@ -310,6 +311,41 @@ public sealed partial class ICE
                     Y = _y,
                     Radius = radius,
                 };
+            }
+        }
+
+        foreach (var Icon in LeveAssignmentSheet)
+        {
+            var iconId = Icon.RowId;
+
+            if (iconId is 2 or 3 or 4)
+            {
+                iconId += 14;
+            }
+            else if (iconId > 4 && iconId < 13)
+            {
+                iconId += 3;
+            }
+            else
+                continue;
+
+            if (Icon.Name != "" && Icon.Icon is { } jobicon)
+            {
+                if (Svc.Texture.TryGetFromGameIcon(jobicon, out var texture))
+                {
+                    JobIconDict.TryAdd(iconId, texture);
+                }
+            }
+        }
+
+        for (int i = 0; i < GreyIconList.Count; i++)
+        {
+            var slot = i + 8;
+            var iconId = GreyIconList[i];
+
+            if (Svc.Texture.TryGetFromGameIcon(iconId, out var texture))
+            {
+                GreyTexture.TryAdd((uint)slot, texture);
             }
         }
 

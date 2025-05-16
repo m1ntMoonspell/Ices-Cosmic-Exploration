@@ -20,6 +20,7 @@ public sealed partial class ICE : IDalamudPlugin
     // Window's that I use, base window to the settings... need these to actually show shit 
     internal WindowSystem windowSystem;
     internal MainWindow mainWindow;
+    internal MainWindowV2 mainWindow2;
     internal SettingsWindow settingWindow;
     internal OverlayWindow overlayWindow;
     internal DebugWindow debugWindow;
@@ -53,6 +54,7 @@ public sealed partial class ICE : IDalamudPlugin
         // all the windows
         windowSystem = new();
         mainWindow = new();
+        mainWindow2 = new();
         settingWindow = new();
         overlayWindow = new();
         debugWindow = new();
@@ -127,6 +129,12 @@ public sealed partial class ICE : IDalamudPlugin
         }
 
         var firstArg = subcommands[0];
+
+        if (firstArg.ToLower() == "2")
+        {
+            mainWindow2.IsOpen = !mainWindow2.IsOpen;
+            return;
+        }
 
         if (firstArg.ToLower() == "d" || firstArg.ToLower() == "debug")
         {

@@ -1,6 +1,14 @@
-﻿using Dalamud.Interface.Utility.Raii;
+﻿using Dalamud.Interface;
+using Dalamud.Interface.Colors;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Utility.Raii;
+using Dalamud.Interface.Utility.Table;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using ICE.Enums;
+using ICE.Utilities.Cosmic;
 using System.Collections.Generic;
 using System.Reflection;
+using static ICE.Utilities.CosmicHelper;
 
 namespace ICE.Ui
 {
@@ -8,7 +16,7 @@ namespace ICE.Ui
     {
         public MainWindowV2() :
 #if DEBUG
-            base($"Ice's Cosmic Exploration {P.GetType().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion} Debug build ###ICEMainWindow")
+            base($"Ice's Cosmic Exploration {P.GetType().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion} Debug build ###ICEMainWindowV2")
 #else
             base($"Ice's Cosmic Exploration {P.GetType().Assembly.GetName().Version} ###ICEMainWindow")
 #endif
@@ -34,51 +42,21 @@ namespace ICE.Ui
             P.windowSystem.RemoveWindow(this);
         }
 
-        public override void Draw()
-        {
-            // Calculate scaling factors based on current font size
-            float fontScale = ImGui.GetIO().FontGlobalScale;
-            float textLineHeight = ImGui.GetTextLineHeight();
-            float scaledSpacing = ImGui.GetStyle().ItemSpacing.Y * fontScale;
-            float headerPadding = textLineHeight * 1.2f;
-
-            float headerHeight = textLineHeight + headerPadding * 2;
-            float contentAreaHeight = ImGui.GetWindowHeight() - headerHeight - 4;
-            float labelHeight = ImGui.GetTextLineHeightWithSpacing();
-            float childHeight = ImGui.GetContentRegionAvail().Y - labelHeight;
-
-            // Setting up the columns to be 3 right here. 
-            float leftPanelWidth = Math.Max(220, textLineHeight * 14);
-            float middlePanelWidth = Math.Max(350, textLineHeight * 22);
-
-            ImGui.Columns(3, "Main Window", true);
-            // ----------------------------
-            //  LEFT PANEL (Start/Stop, Class Selection, Filter Ui)
-            // ----------------------------
-
-            ImGui.SetColumnWidth(0, leftPanelWidth);
-
-            ImGui.BeginChild("###Filter Panel", new Vector2(0, childHeight), true);
-
-            LeftColumn();
-
-            ImGui.EndChild();
-        }
-
         // Available jobs and their IDs.
+        // Matching up to the sheet `ClassJob` vs `ClassJobCategory` for future use (idk why that sheet even exist...)
         public static List<(string Name, uint Id)> jobOptions = new()
         {
-            ("CRP", 9),
-            ("BSM", 10),
-            ("ARM", 11),
-            ("GSM", 12),
-            ("LTW", 13),
-            ("WVR", 14),
-            ("ALC", 15),
-            ("CUL", 16),
-            ("MIN", 17),
-            ("BTN", 18),
-            ("FSH", 19),
+            ("CRP", 8),
+            ("BSM", 9),
+            ("ARM", 10),
+            ("GSM", 11),
+            ("LTW", 12),
+            ("WVR", 13),
+            ("ALC", 14),
+            ("CUL", 15),
+            ("MIN", 16),
+            ("BTN", 17),
+            ("FSH", 18),
         };
 
         // Available mission ranks and their identifiers.
@@ -90,30 +68,726 @@ namespace ICE.Ui
             (4, "A")
         };
 
-        private static uint? currentJobId => PlayerHelper.GetClassJobId();
-        private static bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId + 1);
+        private uint? currentJobId => PlayerHelper.GetClassJobId();
+        private bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId);
+        private uint selectedJob = C.SelectedJob;
 
-        private static void LeftColumn()
+        // Left Column Settings
+        private bool onlyGrabMission = C.OnlyGrabMission;
+        private bool autoPickCurrentJob = C.AutoPickCurrentJob;
+
+        private bool showCritical = C.showCritical;
+        private bool showSequential = C.showSequential;
+        private bool showWeather = C.showWeather;
+        private bool showTimeRestricted = C.showTimeRestricted;
+        private bool showClassA = C.showClassA;
+        private bool showClassB = C.showClassB;
+        private bool showClassC = C.showClassC;
+        private bool showClassD = C.showClassD;
+
+        // Middle Column stuff
+        private Dictionary<string, bool> headerStates = new();
+        private int SortOption = C.TableSortOption;
+        private bool hideUnsupported = C.HideUnsupportedMissions;
+
+        private List<(uint Id, string SortOptionName, Func<IEnumerable<KeyValuePair<uint, MissionListInfo>>, IEnumerable<KeyValuePair<uint, MissionListInfo>>> SortFunc)> sortOptions = new()
         {
-            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !usingSupportedJob))
+            (0, "", missions => missions),
+            (1, "Name", missions => missions.OrderBy(x => x.Value.Name)),
+            (2, "Mission ID", missions => missions),
+            (3, "Cosmocredits", missions => missions.OrderByDescending(x => x.Value.CosmoCredit)),
+            (4, "Lunar Credits", missions => missions.OrderByDescending(x => x.Value.LunarCredit)),
+            (5, "Research I", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount)),
+            (6, "Research II", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount)),
+            (7, "Research III", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount)),
+            (8, "Research IV", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount))
+        };
+
+        // Right Column stuff
+        private uint selectedMission = 0;
+
+        public override void Draw()
+        {
+            // Calculate scaling factors based on current font size
+            float fontScale = ImGui.GetIO().FontGlobalScale;
+            float textLineHeight = ImGui.GetTextLineHeight();
+            float scaledSpacing = ImGui.GetStyle().ItemSpacing.Y * fontScale;
+            float headerPadding = textLineHeight * 1.2f;
+
+            float headerHeight = textLineHeight + headerPadding * 2;
+            float contentAreaHeight = ImGui.GetWindowHeight() - headerHeight - 4;
+            float labelHeight = ImGui.GetTextLineHeightWithSpacing();
+            float childHeight = ImGui.GetContentRegionAvail().Y;
+
+            // Setting up the columns to be 3 right here. 
+            float leftPanelWidth = Math.Max(220, textLineHeight * 14);
+            float middlePanelWidth = Math.Max(750, textLineHeight * 22);
+
+            ImGui.Columns(3, "Main Window", false);
+            // ----------------------------
+            //  LEFT PANEL (Start/Stop, Class Selection, Filter Ui)
+            // ----------------------------
+
+            ImGui.SetColumnWidth(0, leftPanelWidth);
+
+            if (ImGui.BeginChild("###Filter Panel", new Vector2(0, childHeight), true))
             {
-                if (ImGui.Button("Start"))
+                using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !usingSupportedJob))
                 {
-                    SchedulerMain.EnablePlugin();
+                    ImGui.SetNextItemWidth(200);
+                    if (ImGui.Button("Start", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                    {
+                        SchedulerMain.EnablePlugin();
+                    }
+                }
+
+                ImGui.SetNextItemWidth(200);
+                using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle))
+                {
+                    if (ImGui.Button("Stop", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                    {
+                        SchedulerMain.DisablePlugin();
+                    }
+                }
+
+                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+                if (ImGui.Checkbox($"Only grab mission", ref onlyGrabMission))
+                {
+                    C.OnlyGrabMission = onlyGrabMission;
+                    C.Save();
+                }
+
+                ImGui.Spacing();
+
+                ImGui.Separator();
+
+                ImGui.Dummy(new(0, 10));
+                if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
+                {
+                    C.AutoPickCurrentJob = autoPickCurrentJob;
+                    C.Save();
+                }
+
+                if (autoPickCurrentJob && usingSupportedJob)
+                {
+                    if (currentJobId != selectedJob)
+                    {
+                        selectedJob = currentJobId.Value;
+                        C.SelectedJob = selectedJob;
+                        C.Save();
+                    }
+                }
+
+                ImGui.Dummy(new(0, 5));
+
+                float iconSize = 32;
+                float iconSpacing = 8;
+                float availWidth = ImGui.GetContentRegionAvail().X;
+                float startX = (availWidth - (iconSize + iconSpacing) * 4 + iconSpacing) * 0.5f;
+                ImGui.SetCursorPosX(startX);
+
+                // Row 1: CRP, BSM, ARM, GSM
+                DrawJobSelection(8, "CRP");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(9, "BSM");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(10, "ARM");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(11, "GSM");
+
+                // Row 2: LTW, WVR, ALC, CUL
+                ImGui.SetCursorPosX(startX);
+
+                DrawJobSelection(12, "LWT");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(13, "WVR");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(14, "ALC");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(15, "CUL");
+
+                // Row 3: MIN, BTN, FSH
+                ImGui.SetCursorPosX(startX);
+                DrawJobSelection(16, "MIN");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(17, "BTN");
+                ImGui.SameLine(0, iconSpacing);
+                DrawJobSelection(18, "FSH");
+
+                ImGui.Dummy(new Vector2(0, 5));
+
+                ImGui.Separator();
+
+                ImGui.Dummy(new Vector2(0, 5));
+
+                ImGui.Text($"Show following missions");
+
+                if (ImGui.Checkbox($"Critical", ref showCritical))
+                {
+                    C.showCritical = showCritical;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Sequential", ref showSequential))
+                {
+                    C.showSequential = showSequential;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Weather", ref showWeather))
+                {
+                    C.showWeather = showWeather;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Time Restricted", ref showTimeRestricted))
+                {
+                    C.showTimeRestricted = showTimeRestricted;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Class A", ref showClassA))
+                {
+                    C.showClassA = showClassA;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Class B", ref showClassB))
+                {
+                    C.showClassB = showClassB;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Class C", ref showClassC))
+                {
+                    C.showClassC = showClassC;
+                    C.Save();
+                }
+                if (ImGui.Checkbox($"Class D", ref showClassD))
+                {
+                    C.showClassD = showClassD;
+                    C.Save();
+                }
+
+            }
+
+            ImGui.EndChild();
+
+            // ------------------------------------------ 
+            //  MIDDLE PANEL: MISSION LISTING
+            // ------------------------------------------
+            ImGui.NextColumn();
+            ImGui.SetColumnWidth(1, middlePanelWidth);
+
+            if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
+            {
+
+
+                // Mission Dropdown Sorting + Dropdowns themselves
+
+                IEnumerable<KeyValuePair<uint, MissionListInfo>> criticalMissions =
+                    MissionInfoDict
+                .Where(m => m.Value.JobId == selectedJob)
+                .Where(m => m.Value.IsCriticalMission);
+                criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
+                bool criticalGather = criticalMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+
+                IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
+                        MissionInfoDict
+                            .Where(m => m.Value.JobId == selectedJob || m.Value.JobId2 == selectedJob)
+                            .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
+                            .Where(m => !m.Value.IsCriticalMission);
+                bool weatherGather = weatherRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+                weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
+
+                IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
+                        MissionInfoDict
+                            .Where(m => m.Value.JobId == selectedJob)
+                            .Where(m => m.Value.Time != 0);
+                bool timeGather = timeRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+                timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
+
+                IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
+                        MissionInfoDict
+                            .Where(m => m.Value.JobId == selectedJob)
+                            .Where(m => m.Value.PreviousMissionID != 0);
+                bool sequentialGather = sequentialMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+                sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
+
+
+
+                if (showCritical)
+                {
+                    DrawCollapsibleHeader($"Critical Missions", $"Critical Missions - {criticalMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} Enabled");
+                    if (headerStates.TryGetValue("Critical Missions", out var isOpen) && isOpen)
+                    {
+                        MissionInfo("Critical Missions", criticalMissions, criticalGather);
+                    }
+                }
+
+                if (showSequential)
+                {
+                    DrawCollapsibleHeader($"Sequential Missions", $"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} Enabled");
+                    if (headerStates.TryGetValue("Sequential Missions", out var isOpen) && isOpen)
+                    {
+                        MissionInfo("Sequential Missions", sequentialMissions, sequentialGather);
+                    }
+                }
+
+                if (showWeather)
+                {
+                    DrawCollapsibleHeader($"Weather Missions", $"Weather Missions - {weatherRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} Enabled");
+                    if (headerStates.TryGetValue("Weather Missions", out var isOpen) && isOpen)
+                    {
+                        MissionInfo("Weather Missions", weatherRestrictedMissions, weatherGather);
+                    }
+                }
+
+                if (showTimeRestricted)
+                {
+                    DrawCollapsibleHeader($"Time-Restricted Missions", $"Time-Restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} Enabled");
+                    if (headerStates.TryGetValue("Time-Restricted Missions", out var isOpen) && isOpen)
+                    {
+                        MissionInfo("Sequential Missions", timeRestrictedMissions, timeGather);
+                    }
+                }
+
+                foreach (var rank in rankOptions.OrderBy(r => r.RankName))
+                {
+                    IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
+                        MissionInfoDict
+                            .Where(m => m.Value.JobId == selectedJob || m.Value.JobId2 == selectedJob)
+                            .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
+                            .Where(m => !m.Value.IsCriticalMission)
+                            .Where(m => m.Value.Time == 0)
+                            .Where(m => m.Value.PreviousMissionID == 0)
+                            .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
+                    missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
+
+                    bool missionGather = missions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
+                    DrawCollapsibleHeader($"Class {rank.RankName}", $"Class {rank.RankName} - {missions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled");
+                    if (headerStates.TryGetValue($"Class {rank.RankName}", out var isOpen) && isOpen)
+                    {
+                        MissionInfo($"Class {rank.RankName} Missions", missions, missionGather);
+                    }
                 }
             }
 
-            using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle))
+            ImGui.EndChild();
+
+            // ------------------------------------------
+            // RIGHT PANEL: MISSION INFO
+            // ------------------------------------------
+            ImGui.NextColumn();
+
+            if (ImGui.BeginChild("###MissionDetailPanel", new Vector2(0, childHeight), true))
             {
-                if (ImGui.Button("Stop"))
+                if (selectedMission != 0)
                 {
-                    SchedulerMain.DisablePlugin();
+                    ImGui.Text($"Mission Info (More Detailed)");
+                    ImGui.Separator();
+
+                    var mission = MissionInfoDict[selectedMission];
+
+                    var MissionInfo = new List<(string Label, string Value)>
+                    {
+                        ("ID:", $"{selectedMission}"),
+                        ("Mission Name:", mission.Name),
+                        ("Cosmocredits:", mission.CosmoCredit.ToString()),
+                        ("Lunar Credits", mission.LunarCredit.ToString()),
+                        ("Silver Requirements:", mission.SilverRequirement.ToString()),
+                        ("Gold Requirements:", mission.GoldRequirement.ToString())
+                    };
+
+                    float infoSize1 = MissionInfo.Max(row => ImGui.CalcTextSize(row.Label).X) + 10;
+                    float infoSize2 = MissionInfo.Max(row => ImGui.CalcTextSize(row.Value).X) + 10;
+
+                    if (ImGui.BeginTable("###DetailPanelTable", 2))
+                    {
+                        ImGui.TableSetupColumn("###Label", ImGuiTableColumnFlags.WidthFixed, infoSize1);
+                        ImGui.TableSetupColumn("###Value", ImGuiTableColumnFlags.WidthFixed, infoSize2);
+
+                        foreach (var row in MissionInfo)
+                        {
+                            ImGui.TableNextRow();
+
+                            ImGui.TableSetColumnIndex(0);
+                            ImGui.Text(row.Label);
+
+                            ImGui.TableSetColumnIndex(1);
+                            ImGui.Text(row.Value);
+                        }
+
+                        // used as a dummy spacer because don't wanna make a whole new table / CBA
+                        ImGui.TableNextRow();
+
+                        ImGui.TableNextRow();
+                        ImGui.TableSetColumnIndex(0);
+                        ImGui.Text($"Tool XP Reward");
+
+                        for (int i = mission.ExperienceRewards.Count - 1; i >= 0; i--)
+                        {
+                            var row = mission.ExperienceRewards[i];
+                            if (row.Amount != 0)
+                            {
+                                ImGui.TableNextRow();
+
+                                ImGui.TableSetColumnIndex(0);
+                                string type = "";
+                                if (row.Type == 1)
+                                    type = "I";
+                                else if (row.Type == 2)
+                                    type = "II";
+                                else if (row.Type == 3)
+                                    type = "III";
+                                else if (row.Type == 4)
+                                    type = "IV";
+                                ImGui.Text($"Lv {type}:");
+
+                                ImGui.TableSetColumnIndex(1);
+                                ImGui.Text($"{row.Amount}");
+                            }
+                        }
+
+                        ImGui.EndTable();
+
+                        ImGui.Dummy(new Vector2(0, 5));
+                        if (GatheringJobList.Contains((int)mission.JobId) && GatheringUtil.GatherMissionInfo.TryGetValue(selectedMission, out var missionInfo))
+                        {
+                            Dictionary<uint, string> MissionType = new()
+                            {
+                                { 1, "Quantity Limited" },
+                                { 2, "Gather X Amount" },
+                                { 3, "Time Attack" },
+                                { 4, "Chain Scoring" },
+                                { 5, "Gatherer's Boon Scoring" },
+                                { 6, "Chain + Gatherer's Boon Scoring" },
+                                { 7, "Collectables" },
+                                { 8, "Steller Reduction" },
+                                { 9, "Dual Class" },
+                            };
+
+                            var type = missionInfo.Type;
+
+                            ImGui.Text($"Mission Type: {MissionType[type]}");
+                        }
+                    }
+                }
+            }
+            ImGui.EndChild();
+
+        }
+
+        public void DrawJobSelection(uint jobId, string tooltip)
+        {
+            bool state = selectedJob == jobId;
+            ISharedImmediateTexture? icon = state ? CosmicHelper.JobIconDict[jobId] : CosmicHelper.GreyTexture[jobId];
+
+            // Slight padding around the button
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2, 2));
+
+            int styleCount = 1;
+            int colorCount = 0;
+
+            if (state)
+            {
+                // Dalamud theme
+                ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.3f, 0.3f, 0.35f, 0.7f));
+                ImGui.PushStyleColor(ImGuiCol.Border, ImGuiColors.ParsedGold);
+                colorCount = 2;
+
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1.0f);
+                styleCount++;
+            }
+            else
+            {
+                // Disabled job with Dalamud theme
+                ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.2f, 0.2f, 0.2f, 0.1f));
+                ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(0.4f, 0.4f, 0.4f, 0.5f));
+                colorCount = 2;
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0.5f);
+                styleCount++;
+            }
+
+            // Rounded corners
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2.0f);
+            styleCount++;
+
+            Vector2 size = new Vector2(26, 26);
+            float zoomFactor = 0.25f; // 25% zoom-in
+            float cropAmount = zoomFactor / 2; // Crop equally from all sides
+
+            Vector2 uv0 = state ? new Vector2(0, 0) : new Vector2(cropAmount, cropAmount);
+            Vector2 uv1 = state ? new Vector2(1, 1) : new Vector2(1 - cropAmount, 1 - cropAmount);
+
+
+            if (ImGui.ImageButton(icon.GetWrapOrEmpty().ImGuiHandle, size, uv0, uv1))
+            {
+                if (!autoPickCurrentJob)
+                {
+                    C.SelectedJob = jobId;
+                    selectedJob = jobId;
+                    C.Save();
                 }
             }
 
-            ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+            // Pop style variables and colors
+            ImGui.PopStyleVar(styleCount);
+            if (colorCount > 0)
+            {
+                ImGui.PopStyleColor(colorCount);
+            }
+
+            // Show tooltip on hover
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                ImGui.Text($"{tooltip}");
+                ImGui.EndTooltip();
+            }
+        }
+
+        private void DrawCenteredHeader(string label, float spacing = 4f)
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            var cursorPos = ImGui.GetCursorScreenPos();
+            var windowWidth = ImGui.GetContentRegionAvail().X;
+
+            float padding = 6.0f;
+            var textSize = ImGui.CalcTextSize(label);
+            float bgHeight = textSize.Y + padding * 2;
+
+            var headerRectMin = cursorPos;
+            var headerRectMax = new Vector2(cursorPos.X + windowWidth, cursorPos.Y + bgHeight);
+
+            // Background and border
+            drawList.AddRectFilled(headerRectMin, headerRectMax, ImGui.GetColorU32(new Vector4(0.2f, 0.2f, 0.2f, 1f)), 2f);
+            drawList.AddRect(headerRectMin, headerRectMax, ImGui.GetColorU32(ImGuiColors.ParsedGold), 2f);
+
+            // Centered text
+            var textPos = new Vector2(
+                cursorPos.X + (windowWidth - textSize.X) * 0.5f,
+                cursorPos.Y + padding
+            );
+            drawList.AddText(textPos, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f)), label);
+
+            // Advance cursor to next line
+            ImGui.SetCursorScreenPos(new Vector2(cursorPos.X, cursorPos.Y + bgHeight + spacing));
+        }
+
+        private void DrawCollapsibleHeader(string id, string label, float spacing = 4f)
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            var cursorPos = ImGui.GetCursorScreenPos();
+            var windowWidth = ImGui.GetContentRegionAvail().X;
+
+            var padding = 6.0f;
+            var textSize = ImGui.CalcTextSize(label);
+            var bgHeight = textSize.Y + padding * 2;
+
+            if (!headerStates.ContainsKey(id))
+                headerStates[id] = false;
+
+            var headerRectMin = cursorPos;
+            var headerRectMax = new Vector2(cursorPos.X + windowWidth, cursorPos.Y + bgHeight);
+
+            // Draw background
+            drawList.AddRectFilled(headerRectMin, headerRectMax, ImGui.GetColorU32(new Vector4(0.2f, 0.2f, 0.2f, 1f)), 2f);
+            drawList.AddRect(headerRectMin, headerRectMax, ImGui.GetColorU32(ImGuiColors.ParsedGold), 2f);
+
+            // Draw centered label text
+            var textPos = new Vector2(
+                cursorPos.X + (windowWidth - textSize.X) * 0.5f,
+                cursorPos.Y + padding
+            );
+            drawList.AddText(textPos, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f)), label);
+
+            // Register invisible button for interaction using a unique ID
+            ImGui.SetCursorScreenPos(cursorPos);
+            ImGui.PushID(id); // Use internal ID
+            ImGui.InvisibleButton("##header", new Vector2(windowWidth, bgHeight));
+            if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                headerStates[id] = !headerStates[id];
+            ImGui.PopID();
+
+            ImGui.SetCursorScreenPos(new Vector2(cursorPos.X, cursorPos.Y + bgHeight + spacing));
+        }
+
+        private void MissionInfo(string tableName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions, bool showGatherConfig = false)
+        {
+            if (ImGui.BeginTable($"MissionList###{tableName}", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+            {
+                float col1Width = ImGui.CalcTextSize("Enabled").X + 20f;  // Add buffer
+                float col2Width = ImGui.CalcTextSize("ID").X + 20f;       // Add buffer
 
 
+                ImGui.TableSetupColumn("###EnableCheckbox", ImGuiTableColumnFlags.WidthFixed, col1Width);
+                ImGui.TableSetupColumn("###MissionIDs", ImGuiTableColumnFlags.WidthFixed, col2Width);
+                ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, 375);
+
+                // Render the header row (static headers get drawn here)
+                ImGui.TableHeadersRow();
+
+                // Setup to make sure the labels are centered
+                ImGui.TableSetColumnIndex(0);
+                CenterText("Enabled");
+
+                ImGui.TableSetColumnIndex(1);
+                CenterText("ID");
+
+                // Actual table entries now
+                foreach (var entry in missions)
+                {
+                    bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
+
+                    if (entry.Value.JobId2 != 0)
+                    {
+                        unsupported = true;
+                    }
+
+
+                    if (unsupported && hideUnsupported)
+                        continue;
+
+                    ImGui.TableNextRow();
+
+                    var mission = C.Missions.Single(x => x.Id == entry.Key);
+                    var isEnabled = mission.Enabled;
+
+                    // Column 0: Enable checkbox
+                    ImGui.TableSetColumnIndex(0);
+                    // Estimate the width of the checkbox (label is invisible, so the box is all that matters)
+                    float cellWidth = ImGui.GetContentRegionAvail().X;
+                    float checkboxWidth = ImGui.GetFrameHeight(); // Width of the square checkbox only
+                    float offset = (cellWidth - checkboxWidth) * 0.5f;
+
+                    if (offset > 0f)
+                        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+                    // Use an invisible label for the checkbox to avoid text spacing
+                    if (ImGui.Checkbox($"###{entry.Value.Name}_{entry.Key}", ref isEnabled))
+                    {
+                        mission.Enabled = isEnabled;
+                        CosmicMission chain;
+
+                        if (isEnabled)
+                        {
+                            var prevChainList = GetOnlyPreviousMissionsRecursive(mission.Id);
+                            foreach (var missionId in prevChainList)
+                            {
+                                chain = C.Missions.Single(x => x.Id == missionId);
+                                chain.Enabled = isEnabled;
+                            }
+                        }
+                        else
+                        {
+                            var nextChainList = GetOnlyNextMissionsRecursive(mission.Id);
+                            foreach (var missionId in nextChainList)
+                            {
+                                chain = C.Missions.Single(x => x.Id == missionId);
+                                chain.Enabled = isEnabled;
+                            }
+                        }
+
+                        C.Save();
+                    }
+                    if (ImGui.IsItemClicked())
+                    {
+                        selectedMission = entry.Key;
+                    }
+
+                    // Column 1: Mission ID
+                    ImGui.TableNextColumn();
+                    string MissionId = entry.Key.ToString();
+                    col2Width = Math.Max(ImGui.CalcTextSize(MissionId).X + 10, col2Width);
+                    CenterTextInTableCell($"{MissionId}");
+
+                    // Column 2: Mission Name
+                    ImGui.TableNextColumn();
+                    string MissionName = entry.Value.Name;
+                    if (unsupported)
+                    {
+                        ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), MissionName);
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip("Currently can only be done in manual mode");
+                        }
+                    }
+                    else
+                    {
+                        ImGui.Text($"{MissionName}");
+                    }
+                    if (ImGui.IsItemClicked())
+                    {
+                        selectedMission = entry.Key;
+                    }
+
+                    MissionListInfo info = MissionInfoDict[mission.Id];
+                    if (info.MarkerId != 0)
+                    {
+                        ImGui.SameLine();
+                        ImGui.PushFont(UiBuilder.IconFont);
+                        ImGui.Text(FontAwesomeIcon.Flag.ToIconString());
+                        ImGui.PopFont();
+                        if (ImGui.IsItemClicked())
+                            Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.X, info.Y, info.Radius, info.Name);
+                    }
+                }
+
+                ImGui.EndTable();
+            }
+        }
+
+        private void CenterText(string text)
+        {
+            float colWidth = ImGui.GetColumnWidth();
+            Vector2 textSize = ImGui.CalcTextSize(text);
+            float offset = (colWidth - textSize.X) * 0.5f;
+            if (offset > 0)
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+            ImGui.TextUnformatted(text);
+        }
+        private void CenterTextInTableCell(string text)
+        {
+            float cellWidth = ImGui.GetContentRegionAvail().X;
+            float textWidth = ImGui.CalcTextSize(text).X;
+            float offset = (cellWidth - textWidth) * 0.5f;
+
+            if (offset > 0f)
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+            ImGui.TextUnformatted(text);
+        }
+        public void CenterCheckboxInTableCell(string label, ref bool value, ref bool config)
+        {
+            float cellWidth = ImGui.GetContentRegionAvail().X;
+            float checkboxWidth = ImGui.CalcTextSize(label).X + ImGui.GetFrameHeight(); // estimate checkbox width
+            float offset = (cellWidth - checkboxWidth) * 0.5f;
+
+            if (offset > 0f)
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+            if (ImGui.Checkbox(label, ref value))
+            {
+
+            }
+        }
+        private List<uint> GetOnlyPreviousMissionsRecursive(uint missionId)
+        {
+            if (!MissionInfoDict.TryGetValue(missionId, out var missionInfo) || missionInfo.PreviousMissionID == 0)
+                return [];
+
+            var chain = GetOnlyPreviousMissionsRecursive(missionInfo.PreviousMissionID);
+            chain.Add(missionInfo.PreviousMissionID);
+            return chain;
+        }
+        private List<uint> GetOnlyNextMissionsRecursive(uint missionId)
+        {
+            uint? nextMissionId = MissionInfoDict
+                .Where(m => m.Value.PreviousMissionID == missionId)
+                .Select(m => (uint?)m.Key)
+                .FirstOrDefault();
+
+            if (!nextMissionId.HasValue)
+                return [];
+
+            var chain = new List<uint> { nextMissionId.Value };
+            chain.AddRange(GetOnlyNextMissionsRecursive(nextMissionId.Value));
+            return chain;
         }
     }
 }
