@@ -594,6 +594,7 @@ internal class DebugWindow : Window
             ImGui.TableSetupColumn("RecipeID", ImGuiTableColumnFlags.WidthFixed, 100);
             ImGui.TableSetupColumn("Silver", ImGuiTableColumnFlags.WidthFixed, -1);
             ImGui.TableSetupColumn("Gold", ImGuiTableColumnFlags.WidthFixed, -1);
+            ImGui.TableSetupColumn("Attribute Flags", ImGuiTableColumnFlags.WidthFixed, -1);
             //ImGui.TableSetupColumn("Exp Type 1###MissionExpType1", ImGuiTableColumnFlags.WidthFixed, 100);
             //ImGui.TableSetupColumn("Exp Amount 1###MissionExpAmount1", ImGuiTableColumnFlags.WidthFixed, 100);
             //ImGui.TableSetupColumn("Exp Type 2###MissionExpType2", ImGuiTableColumnFlags.WidthFixed, 100);
@@ -672,6 +673,9 @@ internal class DebugWindow : Window
                 
                 ImGui.TableNextColumn();
                 ImGui.Text($"{entry.Value.GoldRequirement}");
+
+                ImGui.TableNextColumn();
+                ImGui.Text($"{entry.Value.Attributes}");
 
                 foreach (var expType in orderedExp)
                 {

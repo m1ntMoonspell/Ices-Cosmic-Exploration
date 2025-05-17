@@ -78,10 +78,10 @@ public sealed partial class ICE
             int _y = marker.Unknown2 - 1024;
             int radius = marker.Unknown3;
 
-            MissionAttributes attributes = missionText switch // 99 to 140 are useful
+            MissionAttributes attributes = missionText switch
             {
-                99 or 101 => MissionAttributes.Craft | MissionAttributes.Limited,
-                100 or 102 => MissionAttributes.Craft | MissionAttributes.Limited | MissionAttributes.Collectables,
+                99 or 101 or 145 => MissionAttributes.Craft | MissionAttributes.Limited,
+                100 or 102 or 146 or 147 or 148 => MissionAttributes.Craft | MissionAttributes.Limited | MissionAttributes.Collectables,
                 103 => MissionAttributes.Gather | MissionAttributes.Limited,
                 104 => MissionAttributes.Gather | MissionAttributes.ScoreTimeRemaining,
                 105 or 139 => MissionAttributes.Gather,
@@ -101,7 +101,7 @@ public sealed partial class ICE
                 122 => MissionAttributes.Fish | MissionAttributes.Collectables,
                 >= 123 and <= 134 => MissionAttributes.Craft | MissionAttributes.Gather, // Dual class
                 >= 135 and <= 138 => MissionAttributes.Craft | MissionAttributes.Fish,  // Dual class
-                140 => MissionAttributes.Craft,
+                140 or 149 => MissionAttributes.Craft,
                 _ => MissionAttributes.None
             };
             attributes |= isCritical ? MissionAttributes.Critical : MissionAttributes.None;
