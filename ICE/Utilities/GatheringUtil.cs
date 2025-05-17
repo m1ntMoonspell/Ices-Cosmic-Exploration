@@ -226,6 +226,29 @@ public static unsafe class GatheringUtil
         // { 405, new GatheringInfo { } } // SW Sector
     };
 
+    public static Dictionary<Vector2, uint> Nodeset = new()
+    {
+        // Botanist Set
+        { new Vector2(-278, -13), 1 },
+        { new Vector2(225, 83), 2 },
+        { new Vector2(232, -50), 3 },
+        { new Vector2(456, 221), 4 },
+        { new Vector2(-121, 368), 5 },
+        { new Vector2(455, 243), 6 },
+
+        // Miner Set
+        { new Vector2(-119, -175), 1 },
+        { new Vector2(-168, -181), 2 },
+        { new Vector2(96, 259), 3 },
+        { new Vector2(65, -431), 4 },
+        { new Vector2(65, -431), 5 },
+        { new Vector2(73, -482), 6 },
+        { new Vector2(-463, -729), 7 },
+        { new Vector2(-690, -752), 8 },
+        { new Vector2(-669, -515), 9 },
+        { new Vector2(-463, -729), 10 },
+    };
+
     public class GathNodeInfo
     {
         public Vector3 Position { get; set; }

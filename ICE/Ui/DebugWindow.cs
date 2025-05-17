@@ -760,9 +760,11 @@ internal class DebugWindow : Window
     {
         var itemName = Svc.Data.GetExcelSheet<Item>();
 
-        if (ImGui.BeginTable("Gathering Mission Dictionary", 7, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
+        if (ImGui.BeginTable("Gathering Mission Dictionary", 9, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
         {
             ImGui.TableSetupColumn("MissionId");
+            ImGui.TableSetupColumn("Mission Name");
+            ImGui.TableSetupColumn("Flag Location");
             ImGui.TableSetupColumn("Item 1");
             ImGui.TableSetupColumn("Item Amount###Item1Amount");
             ImGui.TableSetupColumn("Item 2");
@@ -778,6 +780,17 @@ internal class DebugWindow : Window
 
                 ImGui.TableSetColumnIndex(0);
                 ImGui.Text($"{entry.Key}");
+
+                var mission = MissionInfoDict[entry.Key];
+                ImGui.TableNextColumn();
+                ImGui.Text($"{mission.Name}");
+
+                ImGui.TableNextColumn();
+                ImGui.Text($"{mission.X}, {mission.Y}");
+                if (ImGui.IsItemHovered() && ImGui.IsItemClicked())
+                {
+                    ImGui.SetClipboardText($"new Vector2({mission.X}, {mission.Y}), ");
+                }
 
                 foreach (var item in entry.Value.MinGatherItems)
                 {
