@@ -3,8 +3,6 @@ using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using Lumina.Excel;
-using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ICE.Utilities.CosmicHelper;
@@ -28,25 +26,15 @@ namespace ICE.Scheduler.Tasks
          * 
         */
 
-        private static ExcelSheet<Item>? ItemSheet;
-
         public static void TryEnqueueGathering()
         {
-            EnsureInit();
             if (CosmicHelper.CurrentLunarMission != 0)
                 MakeGatheringTask();
-        }
-
-        // Ensures that the sheets are loaded properly
-        private static void EnsureInit()
-        {
-            ItemSheet ??= Svc.Data.GetExcelSheet<Item>(); // Only need to grab once
         }
 
         // Version 2 of the gathering task. Trying to improve on it all...
         internal static void MakeGatheringTask()
         {
-            EnsureInit();
             var (currentScore, silverScore, goldScore) = GetCurrentScores();
 
             if (currentScore == 0 && silverScore == 0 && goldScore == 0)
@@ -599,8 +587,6 @@ namespace ICE.Scheduler.Tasks
 
         internal static bool? HaveEnoughMain()
         {
-            EnsureInit();
-
             if (CurrentLunarMission == 0)
                 return null;
 
@@ -618,7 +604,6 @@ namespace ICE.Scheduler.Tasks
 
         internal static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
         {
-            EnsureInit();
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 var goldScore = CosmicHelper.CurrentMissionInfo.GoldRequirement;

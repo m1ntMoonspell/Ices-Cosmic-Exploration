@@ -43,11 +43,6 @@ internal class DebugWindow : Window
 
     public override unsafe void Draw()
     {
-        var sheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
-        var MissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
-        var TodoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
-        var EvalSheet = Svc.Data.GetSubrowExcelSheet<WKSMissionToDoEvalutionItem>();
-
         if (ImGui.TreeNode("Player Info"))
         {
             if (ImGui.Button("Copy current POS"))
@@ -346,7 +341,7 @@ internal class DebugWindow : Window
 
         if (ImGui.TreeNode("Crafting Table"))
         {
-            var sheetRow = sheet.GetRow(27);
+            var sheetRow = ExcelHelper.MoonRecipeSheet.GetRow(27);
 
             Table();
 
@@ -363,9 +358,9 @@ internal class DebugWindow : Window
         if (ImGui.TreeNode("Gathering Table"))
         {
             uint missionId = 418;
-            var Todo = MissionSheet.GetRow(missionId).Unknown7;
-            var PotentionalValue = TodoSheet.GetRow(Todo).Unknown10;
-            var EvaluationItem = EvalSheet.GetSubrowAt(PotentionalValue, 0);
+            var Todo = ExcelHelper.MoonMissionSheet.GetRow(missionId).Unknown7;
+            var PotentionalValue = ExcelHelper.ToDoSheet.GetRow(Todo).Unknown10;
+            var EvaluationItem = ExcelHelper.EvalSheet.GetSubrowAt(PotentionalValue, 0);
 
 
             ImGui.Text($"Mission: 418 | Todo Spot: {Todo}");
@@ -383,7 +378,6 @@ internal class DebugWindow : Window
             ImGui.Text($"Current Mission: {CosmicHelper.CurrentLunarMission}");
             ImGui.Text($"Artisan Endurance: {P.Artisan.GetEnduranceStatus()}");
 
-            var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
             //  4 - Col 2  - Unknown 7
             //  8 - Col 3  - Unknown 0
             // 10 - Col 4  - Unknown 1
@@ -454,8 +448,7 @@ internal class DebugWindow : Window
 
             }
 
-            var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
-            var moonRow = MoonMissionSheet.GetRow(26);
+            var moonRow = ExcelHelper.MoonMissionSheet.GetRow(26);
             ImGui.Text($"{moonRow.Unknown1} \n" +
                        $"{moonRow.Unknown2} \n" +
                        $"{moonRow.Unknown3} \n" +
@@ -477,8 +470,7 @@ internal class DebugWindow : Window
                        $"{moonRow.Unknown19} \n" +
                        $"{moonRow.Unknown20} \n");
 
-            var toDoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
-            var toDoRow = toDoSheet.GetRow(168);
+            var toDoRow = ExcelHelper.ToDoSheet.GetRow(168);
 
             ImGui.Text($"     TODO         \n" +
                        $"{toDoRow.Unknown0}\n" +
@@ -502,8 +494,7 @@ internal class DebugWindow : Window
                        $"{toDoRow.Unknown18}\n");
 
             ImGui.Spacing();
-            var moonItemSheet = Svc.Data.GetExcelSheet<WKSItemInfo>();
-            var moonItemRow = moonItemSheet.GetRow(523);
+            var moonItemRow = ExcelHelper.MoonItemInfoSheet.GetRow(523);
 
             ImGui.Text($"  WKS Item Info\n" +
                        $"{moonItemRow.Item}\n" +
@@ -544,7 +535,7 @@ internal class DebugWindow : Window
         {
             ImGui.InputInt("TableId", ref TableRow);
 
-            var MapInfo = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
+            var MapInfo = ExcelHelper.MarkerSheet;
 
             if (ImGui.Button($"Test Radius"))
             {
@@ -579,7 +570,7 @@ internal class DebugWindow : Window
 
     private unsafe void Table()
     {
-        var itemSheet = Svc.Data.GetExcelSheet<Item>();
+        var itemSheet = ExcelHelper.ItemSheet;
         ImGui.SetNextItemWidth(250);
         ImGui.InputText("Search by Name", ref CraftingTableSearchText, 100);
 
@@ -705,7 +696,6 @@ internal class DebugWindow : Window
 
     private void Table2()
     {
-        var MainMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
         ImGui.SetNextItemWidth(250);
         ImGui.InputText("Search by Name", ref RecipeTableSearchText, 100);
 
@@ -762,7 +752,7 @@ internal class DebugWindow : Window
 
     private void Table3()
     {
-        var itemName = Svc.Data.GetExcelSheet<Item>();
+        var itemName = ExcelHelper.ItemSheet;
 
         if (ImGui.BeginTable("Gathering Mission Dictionary", 7, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
         {
