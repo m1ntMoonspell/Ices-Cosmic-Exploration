@@ -269,7 +269,7 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("WaitTillActuallyDone", 1000))
             {
-                if (CosmicHelper.CurrentMissionInfo.IsCriticalMission)
+                if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
                 {
                     if ((Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.PreparingToCraft]) && !P.Artisan.IsBusy())
                     {

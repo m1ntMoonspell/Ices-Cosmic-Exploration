@@ -70,11 +70,43 @@ public sealed partial class ICE
             uint toDoValue = item.Unknown7;
 
             var todo = ToDoSheet.GetRow((uint)(item.Unknown7 + *((byte*)wk + 0xC62)));
+            uint missionText = todo.Unknown19;
             var marker = MarkerSheet.GetRow(todo.Unknown13);
+            uint territoryId = 1237; // TODO: Make this set the correct territoryId once new planets are added and we figure out where it is.
 
             int _x = marker.Unknown1 - 1024;
             int _y = marker.Unknown2 - 1024;
             int radius = marker.Unknown3;
+
+            MissionAttributes attributes = missionText switch // 99 to 140 are useful
+            {
+                99 or 101 => MissionAttributes.Craft | MissionAttributes.Limited,
+                100 or 102 => MissionAttributes.Craft | MissionAttributes.Limited | MissionAttributes.Collectables,
+                103 => MissionAttributes.Gather | MissionAttributes.Limited,
+                104 => MissionAttributes.Gather | MissionAttributes.ScoreTimeRemaining,
+                105 or 139 => MissionAttributes.Gather,
+                106 => MissionAttributes.Gather | MissionAttributes.ScoreChains,
+                107 => MissionAttributes.Gather | MissionAttributes.ScoreGatherersBoon,
+                108 => MissionAttributes.Gather | MissionAttributes.ScoreChains | MissionAttributes.ScoreGatherersBoon,
+                109 or 111 => MissionAttributes.Gather | MissionAttributes.Collectables,
+                110 => MissionAttributes.Gather | MissionAttributes.ReducedItems | MissionAttributes.ScoreTimeRemaining,
+                112 => MissionAttributes.Gather | MissionAttributes.ReducedItems,
+                113 => MissionAttributes.Fish | MissionAttributes.ScoreVariety | MissionAttributes.ScoreTimeRemaining,
+                114 or 115 => MissionAttributes.Fish | MissionAttributes.ScoreTimeRemaining,
+                116 => MissionAttributes.Fish | MissionAttributes.Limited | MissionAttributes.ScoreVariety,
+                117 => MissionAttributes.Fish | MissionAttributes.Limited | MissionAttributes.ScoreLargestSize,
+                118 => MissionAttributes.Fish | MissionAttributes.Limited | MissionAttributes.Collectables,
+                119 or 121 => MissionAttributes.Fish,
+                120 => MissionAttributes.Fish | MissionAttributes.ScoreLargestSize,
+                122 => MissionAttributes.Fish | MissionAttributes.Collectables,
+                >= 123 and <= 134 => MissionAttributes.Craft | MissionAttributes.Gather, // Dual class
+                140 => MissionAttributes.Craft,
+                _ => MissionAttributes.None
+            };
+            attributes |= isCritical ? MissionAttributes.Critical : MissionAttributes.None;
+            attributes |= weather != CosmicWeather.FairSkies ? MissionAttributes.ProvisionalWeather : MissionAttributes.None;
+            attributes |= time != 0 ? MissionAttributes.ProvisionalTimed : MissionAttributes.None;
+            attributes |= previousMissionId != 0 ? MissionAttributes.ProvisionalSequential : MissionAttributes.None;
 
             if (CrafterJobList.Contains(JobId))
             {
@@ -295,7 +327,7 @@ public sealed partial class ICE
                     JobId2 = ((uint)Job2),
                     ToDoSlot = toDoValue,
                     Rank = rank,
-                    IsCriticalMission = isCritical,
+                    Attributes = attributes,
                     TimeLimit = timeLimit,
                     Time = time,
                     Weather = weather,
@@ -307,6 +339,7 @@ public sealed partial class ICE
                     ExperienceRewards = Exp,
                     PreviousMissionID = previousMissionId,
                     MarkerId = marker.RowId,
+                    TerritoryId = territoryId,
                     X = _x,
                     Y = _y,
                     Radius = radius,
@@ -382,19 +415,19 @@ public sealed partial class ICE
     }
     private static MissionType GetMissionType(MissionListInfo mission)
     {
-        if (mission.IsCriticalMission)
+        if (mission.Attributes.HasFlag(MissionAttributes.Critical))
         {
             return MissionType.Critical;
         }
-        else if (mission.Time != 0)
+        else if (mission.Attributes.HasFlag(MissionAttributes.ProvisionalTimed))
         {
             return MissionType.Timed;
         }
-        else if (mission.Weather != CosmicWeather.FairSkies)
+        else if (mission.Attributes.HasFlag(MissionAttributes.ProvisionalWeather))
         {
             return MissionType.Weather;
         }
-        else if (mission.PreviousMissionID != 0)
+        else if (mission.Attributes.HasFlag(MissionAttributes.ProvisionalSequential))
         {
             return MissionType.Sequential;
         }

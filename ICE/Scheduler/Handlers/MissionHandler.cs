@@ -8,7 +8,7 @@ internal static class MissionHandler
         {
             if (CosmicHelper.CurrentLunarMission == 0)
                 return null;
-            if (CosmicHelper.CurrentMissionInfo.IsCriticalMission)
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
             {
                 var (currentScore, _, _) = GetCurrentScores();
                 if (currentScore == 0)
@@ -35,7 +35,7 @@ internal static class MissionHandler
             uint currentScore = 0, silverScore = 0, goldScore = 0;
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
                 {
-                if (CosmicHelper.CurrentMissionInfo.IsCriticalMission)
+                if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
                 {
                     
                     string _stages = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[5].String.Value).GetText(); // Returns Current/Max - "0/2"

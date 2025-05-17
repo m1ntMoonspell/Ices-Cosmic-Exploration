@@ -555,7 +555,7 @@ internal class DebugWindow : Window
                 int _radius = MapInfo.GetRow((uint)TableRow).Unknown3.ToInt();
                 PluginLog.Debug($"X: {_x} Y: {_y} Radius: {_radius}");
 
-                Utils.SetGatheringRing(agent->CurrentTerritoryId, _x, _y, _radius);
+                Utils.SetGatheringRing(1237, _x, _y, _radius);
             }
             ImGui.SetNextItemWidth(125);
             ImGui.InputInt("Map X (Sheet)", ref posX);
@@ -690,7 +690,7 @@ internal class DebugWindow : Window
                 {
                     if (ImGui.Button($"Flag###Flag-{entry.Key}"))
                     {
-                        Utils.SetGatheringRing(agent->CurrentTerritoryId, entry.Value.X, entry.Value.Y, entry.Value.Radius);
+                        Utils.SetGatheringRing(entry.Value.TerritoryId, entry.Value.X, entry.Value.Y, entry.Value.Radius);
                     }
                 }
             }

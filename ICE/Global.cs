@@ -10,6 +10,7 @@ global using System.Linq;
 global using System.Numerics;
 global using System;
 global using ICE;
+global using ICE.Enums;
 global using ICE.Utilities;
 global using ICE.Scheduler;
 global using ICE.Scheduler.Handlers;
