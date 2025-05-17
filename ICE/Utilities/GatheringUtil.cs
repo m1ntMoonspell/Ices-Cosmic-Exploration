@@ -228,14 +228,6 @@ public static unsafe class GatheringUtil
 
     public static Dictionary<Vector2, uint> Nodeset = new()
     {
-        // Botanist Set
-        { new Vector2(-278, -13), 1 },
-        { new Vector2(225, 83), 2 },
-        { new Vector2(232, -50), 3 },
-        { new Vector2(456, 221), 4 },
-        { new Vector2(-121, 368), 5 },
-        { new Vector2(455, 243), 6 },
-
         // Miner Set
         { new Vector2(-119, -175), 1 },
         { new Vector2(-168, -181), 2 },
@@ -247,6 +239,14 @@ public static unsafe class GatheringUtil
         { new Vector2(-690, -752), 8 },
         { new Vector2(-669, -515), 9 },
         { new Vector2(-463, -729), 10 },
+
+        // Botanist Set
+        { new Vector2(-278, -13), 11 },
+        { new Vector2(225, 83), 12 },
+        { new Vector2(232, -50), 13 },
+        { new Vector2(456, 221), 14 },
+        { new Vector2(-121, 368), 15 },
+        { new Vector2(455, 243), 16 },
     };
 
     public class GathNodeInfo
@@ -276,7 +276,7 @@ public static unsafe class GatheringUtil
 
         // Botanist
 
-        #region (-278 -13 100) (Set #1)
+        #region (Set #11)
 
         new GathNodeInfo
         {
@@ -294,7 +294,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-238.16f, 17.82f, -33.92f),
             LandZone = new Vector3 (-237.94f, 17.22f, -33.02f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 11
         },
         new GathNodeInfo
         {
@@ -303,7 +303,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-325.44f, 28.14f, -51.83f),
             LandZone = new Vector3 (-324.69f, 27.81f, -51.55f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 11
         },
         new GathNodeInfo
         {
@@ -312,7 +312,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-330.45f, 29.18f, -28.82f),
             LandZone = new Vector3 (-330.08f, 28.69f, -29.41f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 11
         },
         new GathNodeInfo
         {
@@ -321,7 +321,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-288.95f, 25.49f, 44.38f),
             LandZone = new Vector3 (-288.93f, 25.07f, 43.86f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 11
         },
         new GathNodeInfo
         {
@@ -330,12 +330,12 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-273.81f, 23.78f, 44.75f),
             LandZone = new Vector3 (-274.15f, 23.28f, 44.57f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 11
         },
 
         #endregion
 
-        #region (224, 82, 100) (Set #2)
+        #region (Set #12)
 
         new GathNodeInfo
         {
@@ -344,10 +344,8 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (223.44f, 20.26f, 8.42f),
             LandZone = new Vector3 (223.04f, 19.41f, 8.25f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 12
         },
-
-
         new GathNodeInfo
         {
             ZoneId = 1237,
@@ -355,9 +353,8 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (223.99f, 20.31f, 15.83f),
             LandZone = new Vector3 (224.33f, 19.39f, 15.45f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 12
         },
-
         new GathNodeInfo
         {
             ZoneId = 1237,
@@ -365,9 +362,8 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (285.3f, 18.88f, 108.14f),
             LandZone = new Vector3 (285.2f, 17.89f, 108.78f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 12
         },
-
         new GathNodeInfo
         {
             ZoneId = 1237,
@@ -375,9 +371,8 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (286.34f, 19.03f, 114.67f),
             LandZone = new Vector3 (286.04f, 18.02f, 114.53f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 12
         },
-
         new GathNodeInfo
         {
             ZoneId = 1237,
@@ -385,9 +380,8 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (207.68f, 18.92f, 145.46f),
             LandZone = new Vector3 (207.74f, 17.93f, 145.63f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 12
         },
-
         new GathNodeInfo
         {
             ZoneId = 1237,
@@ -395,12 +389,12 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (186.24f, 19.58f, 152.27f),
             LandZone = new Vector3 (186.34f, 18.68f, 152.56f),
             GatheringType = 3,
-            NodeSet = 2
+            NodeSet = 12
         },
 
         #endregion
 
-        #region (231, -50, 100) (Set #3)
+        #region (Set #13)
 
         new GathNodeInfo
         {
@@ -409,7 +403,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (221.91f, 20.14f, 1.22f),
             LandZone = new Vector3 (221.63f, 19.27f, 1.76f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
         new GathNodeInfo
         {
@@ -418,7 +412,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (214.32f, 20.07f, -9.12f),
             LandZone = new Vector3 (214.58f, 19.17f, -9.09f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
         new GathNodeInfo
         {
@@ -427,7 +421,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (212.42f, 18.82f, -23.42f),
             LandZone = new Vector3 (212.86f, 18.07f, -22.78f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
         new GathNodeInfo
         {
@@ -436,7 +430,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (231.74f, 19.9f, -27.72f),
             LandZone = new Vector3 (231.49f, 18.96f, -27.89f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
         new GathNodeInfo
         {
@@ -445,7 +439,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (244.55f, 21.27f, -39.45f),
             LandZone = new Vector3 (244.63f, 20.4f, -39.56f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
         new GathNodeInfo
         {
@@ -454,7 +448,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (251.86f, 22.5f, -54.28f),
             LandZone = new Vector3 (252.26f, 21.65f, -54.21f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
         new GathNodeInfo
         {
@@ -463,7 +457,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (238.31f, 21.42f, -64.92f),
             LandZone = new Vector3 (238.52f, 20.47f, -65.07f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
         new GathNodeInfo
         {
@@ -472,7 +466,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (225.6f, 20.73f, -83.05f),
             LandZone = new Vector3 (225.59f, 19.73f, -82.86f),
             GatheringType = 3,
-            NodeSet = 3
+            NodeSet = 13
         },
 
         #endregion
@@ -686,7 +680,7 @@ public static unsafe class GatheringUtil
 
         // Botanist
 
-        #region (456, 221, 100) (Set #4)
+        #region (Set #14)
 
         new GathNodeInfo
         {
@@ -695,7 +689,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (421.1f, 33.1f, 189.18f),
             LandZone = new Vector3 (421.21f, 32.62f, 189.4f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
         new GathNodeInfo
         {
@@ -704,7 +698,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (441.48f, 33.91f, 186.57f),
             LandZone = new Vector3 (441.11f, 33.22f, 186.48f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
         new GathNodeInfo
         {
@@ -713,7 +707,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (439.68f, 34.32f, 211f),
             LandZone = new Vector3 (439.92f, 33.71f, 210.52f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
         new GathNodeInfo
         {
@@ -722,7 +716,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (460.41f, 34.31f, 206.39f),
             LandZone = new Vector3 (460.12f, 33.59f, 206.25f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
         new GathNodeInfo
         {
@@ -731,7 +725,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (468.54f, 34.92f, 216.16f),
             LandZone = new Vector3 (468.2f, 34.34f, 216.77f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
         new GathNodeInfo
         {
@@ -740,7 +734,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (459.23f, 34.89f, 234.63f),
             LandZone = new Vector3 (459.71f, 34.33f, 234.41f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
         new GathNodeInfo
         {
@@ -749,7 +743,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (454.67f, 34.75f, 254.14f),
             LandZone = new Vector3 (454.88f, 34.04f, 254.43f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
         new GathNodeInfo
         {
@@ -758,12 +752,12 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (461.14f, 35.08f, 268.28f),
             LandZone = new Vector3 (461.07f, 34.47f, 267.78f),
             GatheringType = 3,
-            NodeSet = 4
+            NodeSet = 14
         },
 
         #endregion
 
-        #region (-120, 368, 100) (Set #5)
+        #region (Set #15)
 
         new GathNodeInfo
         {
@@ -772,7 +766,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-185.84f, 32.88f, 351.45f),
             LandZone = new Vector3 (-185.52f, 32.05f, 351.6f),
             GatheringType = 3,
-            NodeSet = 5
+            NodeSet = 15
         },
         new GathNodeInfo
         {
@@ -781,7 +775,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-174.21f, 32.41f, 342.16f),
             LandZone = new Vector3 (-174.13f, 31.51f, 342.22f),
             GatheringType = 3,
-            NodeSet = 5
+            NodeSet = 15
         },
         new GathNodeInfo
         {
@@ -790,7 +784,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-83.13f, 28.26f, 312.21f),
             LandZone = new Vector3 (-83.36f, 27.38f, 311.6f),
             GatheringType = 3,
-            NodeSet = 5
+            NodeSet = 15
         },
         new GathNodeInfo
         {
@@ -799,7 +793,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-69.83f, 27.94f, 330.99f),
             LandZone = new Vector3 (-69.73f, 27.02f, 330.61f),
             GatheringType = 3,
-            NodeSet = 5
+            NodeSet = 15
         },
         new GathNodeInfo
         {
@@ -808,7 +802,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-110.16f, 34.36f, 427.53f),
             LandZone = new Vector3 (-110.27f, 33.45f, 428.06f),
             GatheringType = 3,
-            NodeSet = 5
+            NodeSet = 15
         },
         new GathNodeInfo
         {
@@ -817,12 +811,12 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-116.48f, 34.47f, 438.21f),
             LandZone = new Vector3 (-116.7f, 33.51f, 437.75f),
             GatheringType = 3,
-            NodeSet = 5
+            NodeSet = 15
         },
 
         #endregion
 
-        #region (455, 243, 100) (Set #6)
+        #region (Set #16)
 
         new GathNodeInfo
         {
@@ -831,7 +825,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (490.19f, 36.57f, 174.08f),
             LandZone = new Vector3 (489.71f, 35.7f, 174.19f),
             GatheringType = 3,
-            NodeSet = 6
+            NodeSet = 16
         },
         new GathNodeInfo
         {
@@ -840,7 +834,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (441.94f, 36.48f, 176.07f),
             LandZone = new Vector3 (441.74f, 35.5f, 176.29f),
             GatheringType = 3,
-            NodeSet = 6
+            NodeSet = 16
         },
         new GathNodeInfo
         {
@@ -849,7 +843,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (382.5f, 35.42f, 265.39f),
             LandZone = new Vector3 (383.06f, 35.01f, 264.97f),
             GatheringType = 3,
-            NodeSet = 6
+            NodeSet = 16
         },
         new GathNodeInfo
         {
@@ -858,7 +852,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (395.4f, 37.31f, 276.67f),
             LandZone = new Vector3 (395.65f, 36.48f, 276.62f),
             GatheringType = 3,
-            NodeSet = 6
+            NodeSet = 16
         },
         new GathNodeInfo
         {
@@ -867,7 +861,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (476.83f, 40.68f, 297.1f),
             LandZone = new Vector3 (477.28f, 39.93f, 297.15f),
             GatheringType = 3,
-            NodeSet = 6
+            NodeSet = 16
         },
         new GathNodeInfo
         {
@@ -876,7 +870,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (510.84f, 37.4f, 283.41f),
             LandZone = new Vector3 (510.55f, 36.63f, 283.3f),
             GatheringType = 3,
-            NodeSet = 6
+            NodeSet = 16
         },
 
         #endregion
