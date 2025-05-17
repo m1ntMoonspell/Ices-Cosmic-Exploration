@@ -45,6 +45,8 @@ namespace ICE
         public byte SequenceMissionPriority { get; set; } = 1;
         public byte WeatherMissionPriority { get; set; } = 2;
         public byte TimedMissionPriority { get; set; } = 3;
+        public bool ShowNotes { get; set; } = true;
+        public bool IncreaseMiddleColumn { get; set; } = true;
 
         public int TargetLevel { get; set; } = 10;
         public bool StopWhenLevel { get; set; } = false;

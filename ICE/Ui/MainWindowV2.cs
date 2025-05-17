@@ -89,6 +89,12 @@ namespace ICE.Ui
         private Dictionary<string, bool> headerStates = new();
         private int SortOption = C.TableSortOption;
         private bool hideUnsupported = C.HideUnsupportedMissions;
+        private bool showCredits = C.ShowCreditsColumn;
+        private bool showExp = C.ShowExpColums;
+        private bool showNotes = C.ShowNotes;
+        private bool increaseMiddleColumn = C.IncreaseMiddleColumn;
+
+        private bool showTableSetting = false;
 
         private List<(uint Id, string SortOptionName, Func<IEnumerable<KeyValuePair<uint, MissionListInfo>>, IEnumerable<KeyValuePair<uint, MissionListInfo>>> SortFunc)> sortOptions = new()
         {
@@ -121,7 +127,7 @@ namespace ICE.Ui
 
             // Setting up the columns to be 3 right here. 
             float leftPanelWidth = Math.Max(220, textLineHeight * 14);
-            float middlePanelWidth = Math.Max(750, textLineHeight * 22);
+            float middlePanelWidth = Math.Max(1000, textLineHeight * 22);
 
             ImGui.Columns(3, "Main Window", false);
             // ----------------------------
@@ -271,13 +277,64 @@ namespace ICE.Ui
             //  MIDDLE PANEL: MISSION LISTING
             // ------------------------------------------
             ImGui.NextColumn();
+
+            if (C.IncreaseMiddleColumn)
+                middlePanelWidth += 250;
             ImGui.SetColumnWidth(1, middlePanelWidth);
 
             if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
             {
+                if (ImGui.Checkbox("Show Unsupported Missions", ref hideUnsupported))
+                {
+                    C.HideUnsupportedMissions = hideUnsupported;
+                    C.Save();
+                }
 
+                ImGui.SameLine();
+
+                if (ImGui.Button("Open Table Settings"))
+                {
+                    ImGui.OpenPopup("Open Table Settings");
+                }
+
+                if (ImGui.BeginPopup("Open Table Settings"))
+                {
+                    ImGui.Text("Toggle Configs");
+                    ImGui.Separator();
+
+                    if (ImGui.Checkbox("Show Credit Column", ref showCredits))
+                    {
+                        C.ShowCreditsColumn = showCredits;
+                        C.Save();
+                    }
+                    if (ImGui.Checkbox("Show XP Amounts", ref showExp))
+                    {
+                        C.ShowExpColums = showExp;
+                        C.Save();
+                    }
+                    if (ImGui.Checkbox("Show Notes", ref showNotes))
+                    {
+                        C.ShowNotes = showNotes;
+                        C.Save();
+                    }
+                    if (ImGui.Checkbox("Increase Middle Column Size", ref increaseMiddleColumn))
+                    {
+                        C.IncreaseMiddleColumn = increaseMiddleColumn;
+                        C.Save();
+                    }
+
+                    ImGui.EndPopup();
+                }
+
+                ImGui.Dummy(new Vector2(0, 5));
+
+                ImGui.Separator();
+
+                ImGui.Dummy(new Vector2(0, 5));
 
                 // Mission Dropdown Sorting + Dropdowns themselves
+
+                #region Mission Dropdowns
 
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> criticalMissions =
                     MissionInfoDict
@@ -307,7 +364,6 @@ namespace ICE.Ui
                             .Where(m => m.Value.PreviousMissionID != 0);
                 bool sequentialGather = sequentialMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
                 sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
-
 
 
                 if (showCritical)
@@ -365,6 +421,8 @@ namespace ICE.Ui
                         MissionInfo($"Class {rank.RankName} Missions", missions, missionGather);
                     }
                 }
+
+                #endregion
             }
 
             ImGui.EndChild();
@@ -541,34 +599,6 @@ namespace ICE.Ui
             }
         }
 
-        private void DrawCenteredHeader(string label, float spacing = 4f)
-        {
-            var drawList = ImGui.GetWindowDrawList();
-            var cursorPos = ImGui.GetCursorScreenPos();
-            var windowWidth = ImGui.GetContentRegionAvail().X;
-
-            float padding = 6.0f;
-            var textSize = ImGui.CalcTextSize(label);
-            float bgHeight = textSize.Y + padding * 2;
-
-            var headerRectMin = cursorPos;
-            var headerRectMax = new Vector2(cursorPos.X + windowWidth, cursorPos.Y + bgHeight);
-
-            // Background and border
-            drawList.AddRectFilled(headerRectMin, headerRectMax, ImGui.GetColorU32(new Vector4(0.2f, 0.2f, 0.2f, 1f)), 2f);
-            drawList.AddRect(headerRectMin, headerRectMax, ImGui.GetColorU32(ImGuiColors.ParsedGold), 2f);
-
-            // Centered text
-            var textPos = new Vector2(
-                cursorPos.X + (windowWidth - textSize.X) * 0.5f,
-                cursorPos.Y + padding
-            );
-            drawList.AddText(textPos, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f)), label);
-
-            // Advance cursor to next line
-            ImGui.SetCursorScreenPos(new Vector2(cursorPos.X, cursorPos.Y + bgHeight + spacing));
-        }
-
         private void DrawCollapsibleHeader(string id, string label, float spacing = 4f)
         {
             var drawList = ImGui.GetWindowDrawList();
@@ -609,15 +639,73 @@ namespace ICE.Ui
 
         private void MissionInfo(string tableName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions, bool showGatherConfig = false)
         {
-            if (ImGui.BeginTable($"MissionList###{tableName}", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
-            {
-                float col1Width = ImGui.CalcTextSize("Enabled").X + 20f;  // Add buffer
-                float col2Width = ImGui.CalcTextSize("ID").X + 20f;       // Add buffer
+            int columnAmount = 4;
+            if (showCredits)
+                columnAmount += 2;
+            if (showExp)
+                columnAmount += 4;
+            if (showGatherConfig)
+                columnAmount += 1;
+            if (showNotes)
+                columnAmount += 1;
 
+            if (ImGui.BeginTable($"MissionList###{tableName}", columnAmount, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+            {
+                // Push font to get icon width
+                ImGui.PushFont(UiBuilder.IconFont);
+                float iconWidth = ImGui.CalcTextSize(FontAwesomeIcon.Flag.ToIconString()).X;
+                ImGui.PopFont();
+
+                // Extra buffer (empirically determined to prevent clipping)
+                float iconBuffer = iconWidth + 10f;
+
+                float maxMissionNameWidth = 0f;
+                foreach (var entry in missions)
+                {
+                    float nameWidth = ImGui.CalcTextSize(entry.Value.Name).X;
+                    bool hasFlag = MissionInfoDict[entry.Key].MarkerId != 0;
+                    float totalWidth = nameWidth + (hasFlag ? iconBuffer : 0f);
+                    if (totalWidth > maxMissionNameWidth)
+                        maxMissionNameWidth = totalWidth;
+                }
+
+                float col3Width = maxMissionNameWidth + 20f; // 20f buffer for spacing
+
+                float col1Width = ImGui.CalcTextSize("Enabled").X + 10f;  // Add buffer
+                float col2Width = ImGui.CalcTextSize("ID").X + 10f;       // Add buffer
+                float col4Width = ImGui.CalcTextSize("Cosmo").X + 5f;
+                float col5Width = ImGui.CalcTextSize("Lunar").X + 5f;
+                float colXPWidth = ImGui.CalcTextSize("III").X + 5f;
 
                 ImGui.TableSetupColumn("###EnableCheckbox", ImGuiTableColumnFlags.WidthFixed, col1Width);
                 ImGui.TableSetupColumn("###MissionIDs", ImGuiTableColumnFlags.WidthFixed, col2Width);
-                ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, 375);
+                ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, maxMissionNameWidth);
+                if (showCredits)
+                {
+                    ImGui.TableSetupColumn("###Cosmo", ImGuiTableColumnFlags.WidthFixed, col4Width);
+                    ImGui.TableSetupColumn("###Lunar", ImGuiTableColumnFlags.WidthFixed, col5Width);
+                }
+                IOrderedEnumerable<KeyValuePair<int, string>> orderedExp = ExpDictionary.ToList().OrderBy(exp => exp.Key);
+                if (showExp)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ImGui.TableSetupColumn($"###XPColumn{i}", ImGuiTableColumnFlags.WidthFixed, colXPWidth);
+                    }
+                }
+                // Settings column
+                ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
+
+                if (showGatherConfig)
+                {
+                    float columnWidth = ImGui.CalcTextSize("Gather Config").X + 5;
+                    ImGui.TableSetupColumn("Gather Config", ImGuiTableColumnFlags.WidthFixed, columnWidth);
+                }
+
+                if (showNotes)
+                {
+                    ImGui.TableSetupColumn("Mission Notes", ImGuiTableColumnFlags.WidthStretch);
+                }
 
                 // Render the header row (static headers get drawn here)
                 ImGui.TableHeadersRow();
@@ -626,19 +714,48 @@ namespace ICE.Ui
                 ImGui.TableSetColumnIndex(0);
                 CenterText("Enabled");
 
-                ImGui.TableSetColumnIndex(1);
+                ImGui.TableNextColumn();
                 CenterText("ID");
+
+                ImGui.TableSetColumnIndex(2);
+                if (showCredits)
+                {
+                    ImGui.TableNextColumn();
+                    CenterText("Cosmo");
+
+                    ImGui.TableNextColumn();
+                    CenterText("Lunar");
+                }
+                if (showExp)
+                {
+                    ImGui.TableNextColumn();
+                    CenterText("I");
+
+                    ImGui.TableNextColumn();
+                    CenterText("II");
+
+                    ImGui.TableNextColumn();
+                    CenterText("III");
+                    
+                    ImGui.TableNextColumn();
+                    CenterText("IV");
+                }
 
                 // Actual table entries now
                 foreach (var entry in missions)
                 {
                     bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
 
+                    uint gatherMissionType = 0;
+                    if (GatheringUtil.GatherMissionInfo.TryGetValue(entry.Key, out var missionInfo))
+                    {
+                        gatherMissionType = missionInfo.Type;
+                    }
+
                     if (entry.Value.JobId2 != 0)
                     {
                         unsupported = true;
                     }
-
 
                     if (unsupported && hideUnsupported)
                         continue;
@@ -726,11 +843,155 @@ namespace ICE.Ui
                         if (ImGui.IsItemClicked())
                             Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.X, info.Y, info.Radius, info.Name);
                     }
+
+                    // Column 3: Credits
+                    if (showCredits)
+                    {
+                        ImGui.TableNextColumn();
+                        CenterTextInTableCell(entry.Value.CosmoCredit.ToString());
+                        ImGui.TableNextColumn();
+                        CenterTextInTableCell(entry.Value.LunarCredit.ToString());
+                    }
+
+                    // Col 4-7
+                    if (showExp)
+                    {
+                        foreach (var expType in orderedExp)
+                        {
+                            ImGui.TableNextColumn();
+                            var relicXp = entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString();
+                            if (relicXp == "0")
+                            {
+                                relicXp = "-";
+                            }
+                            CenterTextInTableCell(relicXp);
+                        }
+                    }
+
+                    // Col 8 Turnin Settings
+                    ImGui.TableNextColumn();
+                    string[] modes;
+                    bool[] selectedModes;
+                    if (unsupported)
+                    {
+                        modes = ["Manual"];
+                        selectedModes = [mission.ManualMode];
+                    }
+                    else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.IsCriticalMission)
+                    {
+                        modes = ["ASAP", "Manual"];
+                        selectedModes = [mission.TurnInASAP, mission.ManualMode];
+                    }
+                    else
+                    {
+                        modes = ["Gold", "Silver", "Bronze", "Manual"];
+                        selectedModes =
+                        [
+                            mission.TurnInGold,
+                                mission.TurnInSilver,
+                                mission.TurnInASAP,
+                                mission.ManualMode
+                        ];
+                    }
+
+                    ImGui.SetNextItemWidth(-1);
+                    bool changed = false;
+                    if (ImGui.BeginCombo($"###{entry.Value.Name}_{entry.Key}_turninMode", string.Join(", ", modes.Where((m, i) => selectedModes[i]))))
+                    {
+                        for (int i = 0; i < modes.Length; i++)
+                        {
+                            bool selected = selectedModes[i];
+                            if (ImGui.Selectable(modes[i], selected, ImGuiSelectableFlags.DontClosePopups))
+                            {
+                                selectedModes[i] = !selected;
+                                changed = true;
+                            }
+                        }
+                        ImGui.EndCombo();
+                    }
+                    if (changed)
+                    {
+                        if (unsupported)
+                        {
+                            mission.ManualMode = true;
+                        }
+                        else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.IsCriticalMission)
+                        {
+                            mission.TurnInASAP = true;
+                            mission.ManualMode = selectedModes[1];
+                        }
+                        else
+                        {
+                            mission.TurnInGold = selectedModes[0];
+                            mission.TurnInSilver = selectedModes[1];
+                            mission.TurnInASAP = selectedModes[2];
+                            mission.ManualMode = selectedModes[3];
+                        }
+                        C.Save();
+                    }
+
+                    // Column #9
+                    if (showGatherConfig)
+                    {
+                        ImGui.TableNextColumn();
+                        if (GatheringJobList.Contains((int)entry.Value.JobId) || GatheringJobList.Contains((int)entry.Value.JobId2))
+                        {
+                            ImGui.SetNextItemWidth(-1);
+                            if (ImGui.BeginCombo($"###GatherProfile{entry.Value.Name}_{entry.Key}", mission.GatherSetting.Name))
+                            {
+                                foreach (var profile in C.GatherSettings)
+                                {
+                                    bool isSelected = mission.GatherSettingId == profile.Id;
+                                    if (ImGui.Selectable(profile.Name, isSelected))
+                                    {
+                                        mission.GatherSettingId = profile.Id;
+                                    }
+                                    if (isSelected)
+                                        ImGui.SetItemDefaultFocus();
+                                }
+                                ImGui.EndCombo();
+                            }
+                        }
+                    }
+
+                    if (showNotes)
+                    {
+                        ImGui.NextColumn();
+                        // debug
+                        ImGui.TableNextColumn();
+                        bool hasPreviousNotes = false;
+                        if (entry.Value.Weather != CosmicWeather.FairSkies)
+                        {
+                            hasPreviousNotes = true;
+
+                            ImGui.Text(entry.Value.Weather.ToString());
+                        }
+                        else if (entry.Value.Time != 0)
+                        {
+                            hasPreviousNotes = true;
+
+                            ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
+                        }
+                        else if (entry.Value.PreviousMissionID != 0)
+                        {
+                            hasPreviousNotes = true;
+
+                            var (Id, Name) = MissionInfoDict.Where(m => m.Key == entry.Value.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
+                            ImGui.Text($"[{Id}] {Name}");
+                        }
+                        if (entry.Value.JobId2 != 0)
+                        {
+                            if (hasPreviousNotes) ImGui.SameLine();
+                            ImGui.Text($"{jobOptions.Find(job => job.Id == entry.Value.JobId + 1).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2 + 1).Name}");
+                        }
+                    }
                 }
 
                 ImGui.EndTable();
             }
         }
+
+        #region Table Tools
 
         private void CenterText(string text)
         {
@@ -766,6 +1027,33 @@ namespace ICE.Ui
 
             }
         }
+        private void DrawCenteredHeader(string label, float spacing = 4f)
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            var cursorPos = ImGui.GetCursorScreenPos();
+            var windowWidth = ImGui.GetContentRegionAvail().X;
+
+            float padding = 6.0f;
+            var textSize = ImGui.CalcTextSize(label);
+            float bgHeight = textSize.Y + padding * 2;
+
+            var headerRectMin = cursorPos;
+            var headerRectMax = new Vector2(cursorPos.X + windowWidth, cursorPos.Y + bgHeight);
+
+            // Background and border
+            drawList.AddRectFilled(headerRectMin, headerRectMax, ImGui.GetColorU32(new Vector4(0.2f, 0.2f, 0.2f, 1f)), 2f);
+            drawList.AddRect(headerRectMin, headerRectMax, ImGui.GetColorU32(ImGuiColors.ParsedGold), 2f);
+
+            // Centered text
+            var textPos = new Vector2(
+                cursorPos.X + (windowWidth - textSize.X) * 0.5f,
+                cursorPos.Y + padding
+            );
+            drawList.AddText(textPos, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f)), label);
+
+            // Advance cursor to next line
+            ImGui.SetCursorScreenPos(new Vector2(cursorPos.X, cursorPos.Y + bgHeight + spacing));
+        }
         private List<uint> GetOnlyPreviousMissionsRecursive(uint missionId)
         {
             if (!MissionInfoDict.TryGetValue(missionId, out var missionInfo) || missionInfo.PreviousMissionID == 0)
@@ -789,5 +1077,8 @@ namespace ICE.Ui
             chain.AddRange(GetOnlyNextMissionsRecursive(nextMissionId.Value));
             return chain;
         }
+
+        #endregion
+
     }
 }
