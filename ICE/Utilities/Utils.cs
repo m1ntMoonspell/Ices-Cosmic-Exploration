@@ -14,9 +14,19 @@ namespace ICE.Utilities;
 /// </summary>
 public static unsafe class Utils
 {
+    public static float enableColumnLength = 0.0f;
+    public static float IDLength = 0.0f;
+    public static float missionLength = 0.0f;
+    public static float flagLength = 0.0f;
+    public static float cosmicLength = 0.0f;
+    public static float lunarLength = 0.0f;
+    public static float XPLength = 0.0f;
+    public static float TurninComboLength = 100.0f;
+    public static float GatherConfigLength = 0.0f;
+    public static float MissionNotesLength = 0.0f;
+
     public static bool HasPlugin(string name) => DalamudReflector.TryGetDalamudPlugin(name, out _, false, true);
     public static TaskManagerConfiguration TaskConfig => new(timeLimitMS: 10 * 60 * 3000, abortOnTimeout: false);
-
 
     public static unsafe void SetFlagForNPC(uint territoryId, float x, float y)
     {

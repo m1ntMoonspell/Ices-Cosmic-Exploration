@@ -74,7 +74,13 @@ namespace ICE.Ui
 
         // Left Column Settings
         private bool onlyGrabMission = C.OnlyGrabMission;
+        private bool stopCosmic = C.StopOnceHitCosmoCredits;
+        private int cosmicCap = C.CosmoCreditsCap;
+        private bool stopLunar = C.StopOnceHitLunarCredits;
+        private int lunarCap = C.LunarCreditsCap;
         private bool autoPickCurrentJob = C.AutoPickCurrentJob;
+        private bool stopWhenLevel = C.StopWhenLevel;
+        private int targetLevel = C.TargetLevel;
 
         private bool showCritical = C.showCritical;
         private bool showSequential = C.showSequential;
@@ -127,7 +133,7 @@ namespace ICE.Ui
 
             // Setting up the columns to be 3 right here. 
             float leftPanelWidth = Math.Max(220, textLineHeight * 14);
-            float middlePanelWidth = Math.Max(1000, textLineHeight * 22);
+            float middlePanelWidth = Math.Max(0, textLineHeight * 22);
 
             ImGui.Columns(3, "Main Window", false);
             // ----------------------------
@@ -156,11 +162,68 @@ namespace ICE.Ui
                     }
                 }
 
-                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
                 if (ImGui.Checkbox($"Only grab mission", ref onlyGrabMission))
                 {
                     C.OnlyGrabMission = onlyGrabMission;
                     C.Save();
+                }
+
+                ImGui.Spacing();
+
+                ImGui.Separator();
+
+                ImGui.Spacing();
+
+                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+                if (ImGui.Checkbox($"Stop at Cosmic Credits", ref stopCosmic))
+                {
+                    C.StopOnceHitCosmoCredits = stopCosmic;
+                    C.Save();
+                }
+                if (stopCosmic)
+                {
+                    ImGui.Indent(15);
+                    ImGui.SetNextItemWidth(-1);
+                    if (ImGui.SliderInt("###CosmicStop", ref cosmicCap, 0, 30000))
+                    {
+                        C.CosmoCreditsCap = cosmicCap;
+                        C.Save();
+                    }
+                    ImGui.Unindent(15);
+                }
+
+                if (ImGui.Checkbox($"Stop at Lunar Credits", ref stopLunar))
+                {
+                    C.StopOnceHitLunarCredits = stopLunar;
+                    C.Save();
+                }
+                if (stopLunar)
+                {
+                    ImGui.Indent(15);
+                    ImGui.SetNextItemWidth(-1);
+                    if (ImGui.SliderInt("###LunarStop", ref  lunarCap, 0, 10000))
+                    {
+                        C.LunarCreditsCap = lunarCap;
+                        C.Save();
+                    }
+                    ImGui.Unindent(15);
+                }
+
+                if (ImGui.Checkbox($"Stop at Level", ref stopWhenLevel))
+                {
+                    C.StopWhenLevel = stopWhenLevel;
+                    C.Save();
+                }
+                if (stopWhenLevel)
+                {
+                    ImGui.Indent(15);
+                    ImGui.SetNextItemWidth(-1);
+                    if (ImGui.SliderInt("###Level", ref targetLevel, 10, 100))
+                    {
+                        C.TargetLevel = targetLevel;
+                        C.Save();
+                    }
+                    ImGui.Unindent(15);
                 }
 
                 ImGui.Spacing();
@@ -278,8 +341,24 @@ namespace ICE.Ui
             // ------------------------------------------
             ImGui.NextColumn();
 
-            if (C.IncreaseMiddleColumn)
-                middlePanelWidth += 250;
+            middlePanelWidth += Utils.missionLength + 20f;
+            middlePanelWidth += Utils.enableColumnLength;
+            middlePanelWidth += Utils.IDLength;
+            if (showCredits)
+            {
+                middlePanelWidth += Utils.cosmicLength;
+                middlePanelWidth += Utils.lunarLength;
+            }
+            if (showExp)
+            {
+                middlePanelWidth += Utils.XPLength;
+            }
+            if (showNotes)
+            {
+                middlePanelWidth += 200;
+            }
+            // Buffer room for the scrollbar
+            middlePanelWidth += 20;
             ImGui.SetColumnWidth(1, middlePanelWidth);
 
             if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
@@ -964,25 +1043,25 @@ namespace ICE.Ui
                         {
                             hasPreviousNotes = true;
 
-                            ImGui.Text(entry.Value.Weather.ToString());
+                            ImGui.TextWrapped(entry.Value.Weather.ToString());
                         }
                         else if (entry.Value.Time != 0)
                         {
                             hasPreviousNotes = true;
 
-                            ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
+                            ImGui.TextWrapped($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
                         }
                         else if (entry.Value.PreviousMissionID != 0)
                         {
                             hasPreviousNotes = true;
 
                             var (Id, Name) = MissionInfoDict.Where(m => m.Key == entry.Value.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
-                            ImGui.Text($"[{Id}] {Name}");
+                            ImGui.TextWrapped($"[{Id}] {Name}");
                         }
                         if (entry.Value.JobId2 != 0)
                         {
                             if (hasPreviousNotes) ImGui.SameLine();
-                            ImGui.Text($"{jobOptions.Find(job => job.Id == entry.Value.JobId + 1).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2 + 1).Name}");
+                            ImGui.TextWrapped($"{jobOptions.Find(job => job.Id == entry.Value.JobId + 1).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2 + 1).Name}");
                         }
                     }
                 }
