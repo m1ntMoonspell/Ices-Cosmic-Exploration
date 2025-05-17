@@ -418,29 +418,29 @@ namespace ICE.Ui
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> criticalMissions =
                     MissionInfoDict
                 .Where(m => m.Value.JobId == selectedJob)
-                .Where(m => m.Value.IsCriticalMission);
+                .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.Critical));
                 criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
                 bool criticalGather = criticalMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
 
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                         MissionInfoDict
                             .Where(m => m.Value.JobId == selectedJob || m.Value.JobId2 == selectedJob)
-                            .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
-                            .Where(m => !m.Value.IsCriticalMission);
+                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalWeather))
+                            .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.Critical));
                 bool weatherGather = weatherRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
                 weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
 
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                         MissionInfoDict
                             .Where(m => m.Value.JobId == selectedJob)
-                            .Where(m => m.Value.Time != 0);
+                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalTimed));
                 bool timeGather = timeRestrictedMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
                 timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
 
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                         MissionInfoDict
                             .Where(m => m.Value.JobId == selectedJob)
-                            .Where(m => m.Value.PreviousMissionID != 0);
+                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalSequential));
                 bool sequentialGather = sequentialMissions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
                 sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
 
@@ -487,10 +487,10 @@ namespace ICE.Ui
                         MissionInfoDict
                             .Where(m => m.Value.JobId == selectedJob || m.Value.JobId2 == selectedJob)
                             .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
-                            .Where(m => !m.Value.IsCriticalMission)
-                            .Where(m => m.Value.Time == 0)
-                            .Where(m => m.Value.PreviousMissionID == 0)
-                            .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
+                            .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.Critical))
+                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalTimed))
+                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalSequential))
+                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalWeather));
                     missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
                     bool missionGather = missions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
@@ -920,7 +920,7 @@ namespace ICE.Ui
                         ImGui.Text(FontAwesomeIcon.Flag.ToIconString());
                         ImGui.PopFont();
                         if (ImGui.IsItemClicked())
-                            Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.X, info.Y, info.Radius, info.Name);
+                            Utils.SetGatheringRing(info.TerritoryId, info.X, info.Y, info.Radius, info.Name);
                     }
 
                     // Column 3: Credits
@@ -956,7 +956,7 @@ namespace ICE.Ui
                         modes = ["Manual"];
                         selectedModes = [mission.ManualMode];
                     }
-                    else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.IsCriticalMission)
+                    else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
                     {
                         modes = ["ASAP", "Manual"];
                         selectedModes = [mission.TurnInASAP, mission.ManualMode];
@@ -994,7 +994,7 @@ namespace ICE.Ui
                         {
                             mission.ManualMode = true;
                         }
-                        else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.IsCriticalMission)
+                        else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
                         {
                             mission.TurnInASAP = true;
                             mission.ManualMode = selectedModes[1];

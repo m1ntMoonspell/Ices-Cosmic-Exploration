@@ -211,7 +211,7 @@ public sealed partial class ICE : IDalamudPlugin
             if (info.Value == default) return;
             if (info.Value.MarkerId == 0) return;
 
-            Utils.SetGatheringRing(Svc.ClientState.TerritoryType, info.Value.X, info.Value.Y, info.Value.Radius, info.Value.Name);
+            Utils.SetGatheringRing(info.Value.TerritoryId, info.Value.X, info.Value.Y, info.Value.Radius, info.Value.Name);
         }
     }
 }

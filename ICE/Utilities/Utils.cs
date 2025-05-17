@@ -5,7 +5,6 @@ using ECommons.Reflection;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using Lumina.Excel.Sheets;
 
 namespace ICE.Utilities;
 
@@ -30,8 +29,7 @@ public static unsafe class Utils
 
     public static unsafe void SetFlagForNPC(uint territoryId, float x, float y)
     {
-        var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
-        var map = terSheet.GetRow(territoryId).Map.Value;
+        var map = ExcelHelper.TerritorySheet.GetRow(territoryId).Map.Value;
 
         var agent = AgentMap.Instance();
 
@@ -102,8 +100,7 @@ public static unsafe class Utils
 
     public static unsafe void SetGatheringRing(uint territoryId, int x, int y, int radius, string? tooltip = "Node Location")
     {
-        var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
-        var map = terSheet.GetRow(territoryId).Map.Value;
+        var map = ExcelHelper.TerritorySheet.GetRow(territoryId).Map.Value;
         var agent = AgentMap.Instance();
         
         Vector2 pos = MapToWorld(new Vector2(x, y), map.SizeFactor, map.OffsetX, map.OffsetY);
@@ -113,6 +110,6 @@ public static unsafe class Utils
         agent->SetFlagMapMarker(territoryId, map.RowId, x, y);
         agent->TempMapMarkerCount = 0;
         agent->AddGatheringTempMarker(x, y, radius, tooltip: tooltip);
-        agent->OpenMap(map.RowId, territoryId, tooltip, FFXIVClientStructs.FFXIV.Client.UI.Agent.MapType.GatheringLog);
+        agent->OpenMap(map.RowId, territoryId, tooltip, MapType.GatheringLog);
     }
 }

@@ -45,7 +45,7 @@ public static unsafe partial class CosmicHelper
         public uint JobId3 { get; set; } = 0;
         public uint ToDoSlot { get; set; }
         public uint Rank { get; set; }
-        public bool IsCriticalMission { get; set; }
+        public MissionAttributes Attributes { get; set; }
         public uint TimeLimit { get; set; }
         public uint Time { get; set; }
         public CosmicWeather Weather { get; set; }
@@ -56,10 +56,10 @@ public static unsafe partial class CosmicHelper
         public uint LunarCredit { get; set; }
         public uint PreviousMissionID { get; set; }
         public uint MarkerId { get; set; }
+        public uint TerritoryId { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
         public int Radius { get; set; }
-
         public List<(int Type, int Amount)> ExperienceRewards { get; set; }
     }
 

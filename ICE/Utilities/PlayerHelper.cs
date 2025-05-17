@@ -30,7 +30,7 @@ public class PlayerHelper
     internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
     {
         PlayerState* playerState = PlayerState.Instance();
-        return playerState->ClassJobLevels[Svc.Data.GetExcelSheet<ClassJob>().GetRowOrDefault((uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0)))?.ExpArrayIndex ?? 0];
+        return playerState->ClassJobLevels[ExcelHelper.ClassJobSheet.GetRowOrDefault((uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0)))?.ExpArrayIndex ?? 0];
     }
 
     public static bool IsInCosmicZone() => IsInSinusArdorum();

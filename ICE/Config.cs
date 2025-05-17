@@ -63,16 +63,16 @@ namespace ICE
         public bool ShowCreditsColumn { get; set; } = true;
 
         // Gathering Settings
-        public bool SelfRepairGather {  get; set; } = true;
+        public bool SelfRepairGather { get; set; } = true;
         public int RepairPercent { get; set; } = 50;
         public int SelectedGatherIndex { get; set; } = 0;
         public List<GatherBuffProfile> GatherSettings { get; set; } = new()
         {
             new GatherBuffProfile { Id = 0, Name = "Default"},
         };
-        
+
         // Gamba settings
-        public List<Gamba>GambaItemWeights { get; set; } = new();
+        public List<Gamba> GambaItemWeights { get; set; } = new();
         public bool GambaEnabled { get; set; } = false;
         public bool GambaPreferSmallerWheel { get; set; } = false;
         public int GambaCreditsMinimum { get; set; } = 0;

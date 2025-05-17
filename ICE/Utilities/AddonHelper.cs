@@ -13,7 +13,7 @@ public static class AddonHelper
         int[] basicCrafts = [1008, 1, 170, 663, 302, 464, 1101, 901];
         uint recipeId = (uint)basicCrafts[(int)PlayerHelper.GetClassJobId()-8];
 
-        AgentRecipeNote.Instance()->OpenRecipeByRecipeId(Svc.Data.GetExcelSheet<Recipe>().GetRow(recipeId).RowId);
+        AgentRecipeNote.Instance()->OpenRecipeByRecipeId(ExcelHelper.RecipeSheet.GetRow(recipeId).RowId);
     }
     public static unsafe bool IsAddonActive(string AddonName) // Used to see if the addon is active/ready to be fired on
     {

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
-using ICE.Enums;
-using Lumina.Excel.Sheets;
 using static ICE.Utilities.CosmicHelper;
+using static ICE.Enums.MissionAttributes;
+using static ICE.Utilities.ExcelHelper;
 
 namespace ICE;
 
@@ -11,17 +11,6 @@ public sealed partial class ICE
     public static unsafe void DictionaryCreation()
     {
         MoonRecipies = [];
-        Svc.Data.GameData.Options.PanicOnSheetChecksumMismatch = false;
-
-        var MoonMissionSheet = Svc.Data.GetExcelSheet<WKSMissionUnit>();
-        var MoonRecipeSheet = Svc.Data.GetExcelSheet<WKSMissionRecipe>();
-        var RecipeSheet = Svc.Data.GetExcelSheet<Recipe>();
-        var ItemSheet = Svc.Data.GetExcelSheet<Item>();
-        var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
-        var ToDoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
-        var MoonItemInfo = Svc.Data.GetExcelSheet<WKSItemInfo>();
-        var MarkerSheet = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
-        var LeveAssignmentSheet = Svc.Data.GetExcelSheet<LeveAssignmentType>(); // using this for icons
 
         var wk = WKSManager.Instance();
 
@@ -71,11 +60,44 @@ public sealed partial class ICE
             uint toDoValue = item.Unknown7;
 
             var todo = ToDoSheet.GetRow((uint)(item.Unknown7 + *((byte*)wk + 0xC62)));
+            uint missionText = todo.Unknown19;
             var marker = MarkerSheet.GetRow(todo.Unknown13);
+            uint territoryId = 1237; // TODO: Make this set the correct territoryId once new planets are added and we figure out where it is.
 
             int _x = marker.Unknown1 - 1024;
             int _y = marker.Unknown2 - 1024;
             int radius = marker.Unknown3;
+
+            MissionAttributes attributes = missionText switch
+            {
+                99 or 101 or 145 => Craft | Limited,
+                100 or 102 or 146 or 147 or 148 => Craft | Limited | Collectables,
+                103 => Gather | Limited,
+                104 => Gather | ScoreTimeRemaining,
+                105 or 139 => Gather,
+                106 => Gather | ScoreChains,
+                107 => Gather | ScoreGatherersBoon,
+                108 => Gather | ScoreChains | ScoreGatherersBoon,
+                109 or 111 => Gather | Collectables,
+                110 => Gather | ReducedItems | ScoreTimeRemaining,
+                112 => Gather | ReducedItems,
+                113 => Fish | ScoreVariety | ScoreTimeRemaining,
+                114 or 115 => Fish | ScoreTimeRemaining,
+                116 => Fish | Limited | ScoreVariety,
+                117 => Fish | Limited | ScoreLargestSize,
+                118 => Fish | Limited | Collectables,
+                119 or 121 => Fish,
+                120 => Fish | ScoreLargestSize,
+                122 => Fish | Collectables,
+                >= 123 and <= 134 => Craft | Gather, // Dual class
+                >= 135 and <= 138 => Craft | Fish,  // Dual class
+                140 or 149 => Craft,
+                _ => None
+            };
+            attributes |= isCritical ? Critical : None;
+            attributes |= weather != CosmicWeather.FairSkies ? ProvisionalWeather : None;
+            attributes |= time != 0 ? ProvisionalTimed : None;
+            attributes |= previousMissionId != 0 ? ProvisionalSequential : None;
 
             if (CrafterJobList.Contains(JobId))
             {
@@ -96,7 +118,7 @@ public sealed partial class ICE
                 if (toDoRow.Unknown3 != 0 && !isCritical) // shouldn't be 0, 1st item entry
                 {
                     var item1Amount = toDoRow.Unknown6;
-                    var item1Id = MoonItemInfo.GetRow(toDoRow.Unknown3).Item;
+                    var item1Id = MoonItemInfoSheet.GetRow(toDoRow.Unknown3).Item;
                     var item1Name = ItemSheet.GetRow(item1Id).Name.ToString();
                     var item1RecipeRow = RecipeSheet.Where(e => e.ItemResult.RowId == item1Id)
                                                     .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[0].Value.RowId ||
@@ -131,7 +153,7 @@ public sealed partial class ICE
                 if (toDoRow.Unknown4 != 0) // 2nd item entry
                 {
                     var item2Amount = toDoRow.Unknown7;
-                    var item2Id = MoonItemInfo.GetRow(toDoRow.Unknown4).Item;
+                    var item2Id = MoonItemInfoSheet.GetRow(toDoRow.Unknown4).Item;
                     var item2Name = ItemSheet.GetRow(item2Id).Name.ToString();
 
                     var item2RecipeRow = RecipeSheet.Where(e => e.ItemResult.RowId == item2Id)
@@ -166,7 +188,7 @@ public sealed partial class ICE
                 if (toDoRow.Unknown5 != 0) // 3rd item entry
                 {
                     var item3Amount = toDoRow.Unknown8;
-                    var item3Id = MoonItemInfo.GetRow(toDoRow.Unknown5).Item;
+                    var item3Id = MoonItemInfoSheet.GetRow(toDoRow.Unknown5).Item;
                     var item3Name = ItemSheet.GetRow(item3Id).Name.ToString();
 
                     var item3RecipeRow = RecipeSheet.Where(e => e.ItemResult.RowId == item3Id)
@@ -228,7 +250,7 @@ public sealed partial class ICE
                 if (todoRow.Unknown3 != 0) // First item in the gathering list. Shouldn't be 0...
                 {
                     var minAmount = todoRow.Unknown6.ToInt();
-                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown3).Item;
+                    var itemInfoId = MoonItemInfoSheet.GetRow(todoRow.Unknown3).Item;
                     if (!GatherItems.ContainsKey(itemInfoId))
                     {
                         GatherItems.Add(itemInfoId, minAmount);
@@ -237,7 +259,7 @@ public sealed partial class ICE
                 if (todoRow.Unknown4 != 0) // First item in the gathering list. Shouldn't be 0...
                 {
                     var minAmount = todoRow.Unknown7.ToInt();
-                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown4).Item;
+                    var itemInfoId = MoonItemInfoSheet.GetRow(todoRow.Unknown4).Item;
                     if (!GatherItems.ContainsKey(itemInfoId))
                     {
                         GatherItems.Add(itemInfoId, minAmount);
@@ -246,7 +268,7 @@ public sealed partial class ICE
                 if (todoRow.Unknown5 != 0) // First item in the gathering list. Shouldn't be 0...
                 {
                     var minAmount = todoRow.Unknown8.ToInt();
-                    var itemInfoId = MoonItemInfo.GetRow(todoRow.Unknown5).Item;
+                    var itemInfoId = MoonItemInfoSheet.GetRow(todoRow.Unknown5).Item;
                     if (!GatherItems.ContainsKey(itemInfoId))
                     {
                         GatherItems.Add(itemInfoId, minAmount);
@@ -296,7 +318,7 @@ public sealed partial class ICE
                     JobId2 = ((uint)Job2),
                     ToDoSlot = toDoValue,
                     Rank = rank,
-                    IsCriticalMission = isCritical,
+                    Attributes = attributes,
                     TimeLimit = timeLimit,
                     Time = time,
                     Weather = weather,
@@ -308,6 +330,7 @@ public sealed partial class ICE
                     ExperienceRewards = Exp,
                     PreviousMissionID = previousMissionId,
                     MarkerId = marker.RowId,
+                    TerritoryId = territoryId,
                     X = _x,
                     Y = _y,
                     Radius = radius,
@@ -391,19 +414,19 @@ public sealed partial class ICE
     }
     private static MissionType GetMissionType(MissionListInfo mission)
     {
-        if (mission.IsCriticalMission)
+        if (mission.Attributes.HasFlag(Critical))
         {
             return MissionType.Critical;
         }
-        else if (mission.Time != 0)
+        else if (mission.Attributes.HasFlag(ProvisionalTimed))
         {
             return MissionType.Timed;
         }
-        else if (mission.Weather != CosmicWeather.FairSkies)
+        else if (mission.Attributes.HasFlag(ProvisionalWeather))
         {
             return MissionType.Weather;
         }
-        else if (mission.PreviousMissionID != 0)
+        else if (mission.Attributes.HasFlag(ProvisionalSequential))
         {
             return MissionType.Sequential;
         }
