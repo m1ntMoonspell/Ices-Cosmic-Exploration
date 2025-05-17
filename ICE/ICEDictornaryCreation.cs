@@ -100,6 +100,7 @@ public sealed partial class ICE
                 120 => MissionAttributes.Fish | MissionAttributes.ScoreLargestSize,
                 122 => MissionAttributes.Fish | MissionAttributes.Collectables,
                 >= 123 and <= 134 => MissionAttributes.Craft | MissionAttributes.Gather, // Dual class
+                >= 135 and <= 138 => MissionAttributes.Craft | MissionAttributes.Fish,  // Dual class
                 140 => MissionAttributes.Craft,
                 _ => MissionAttributes.None
             };
