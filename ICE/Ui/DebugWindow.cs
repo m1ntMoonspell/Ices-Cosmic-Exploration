@@ -754,11 +754,12 @@ internal class DebugWindow : Window
     {
         var itemName = ExcelHelper.ItemSheet;
 
-        if (ImGui.BeginTable("Gathering Mission Dictionary", 9, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
+        if (ImGui.BeginTable("Gathering Mission Dictionary", 10, ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
         {
             ImGui.TableSetupColumn("MissionId");
             ImGui.TableSetupColumn("Mission Name");
             ImGui.TableSetupColumn("Flag Location");
+            ImGui.TableSetupColumn("Nodeset");
             ImGui.TableSetupColumn("Item 1");
             ImGui.TableSetupColumn("Item Amount###Item1Amount");
             ImGui.TableSetupColumn("Item 2");
@@ -785,6 +786,9 @@ internal class DebugWindow : Window
                 {
                     ImGui.SetClipboardText($"new Vector2({mission.X}, {mission.Y}), ");
                 }
+
+                ImGui.TableNextColumn();
+                ImGui.Text($"Nodeset: {mission.NodeSet}");
 
                 foreach (var item in entry.Value.MinGatherItems)
                 {

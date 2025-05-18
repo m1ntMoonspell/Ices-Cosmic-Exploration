@@ -56,7 +56,7 @@ namespace ICE.Scheduler.Tasks
                 }
                 else
                 {
-                    var missionNode = GatheringUtil.GatherMissionInfo[CosmicHelper.CurrentLunarMission].NodeSet;
+                    var missionNode = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet;
                     if (missionNode != SchedulerMain.PreviousNodeSet)
                     {
                         SchedulerMain.PreviousNodeSet = missionNode;
@@ -571,7 +571,7 @@ namespace ICE.Scheduler.Tasks
                 var currentMission = CosmicHelper.CurrentLunarMission;
                 if (currentMission != 0)
                 {
-                    var missionNode = GatheringUtil.GatherMissionInfo[currentMission].NodeSet;
+                    var missionNode = CosmicHelper.MissionInfoDict[currentMission].NodeSet;
                     if (missionNode != SchedulerMain.PreviousNodeSet)
                     {
                         SchedulerMain.PreviousNodeSet = missionNode;

@@ -488,9 +488,9 @@ namespace ICE.Ui
                             .Where(m => m.Value.JobId == selectedJob || m.Value.JobId2 == selectedJob)
                             .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                             .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.Critical))
-                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalTimed))
-                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalSequential))
-                            .Where(m => m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalWeather));
+                            .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalTimed))
+                            .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalSequential))
+                            .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalWeather));
                     missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
                     bool missionGather = missions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
@@ -583,25 +583,24 @@ namespace ICE.Ui
                         ImGui.EndTable();
 
                         ImGui.Dummy(new Vector2(0, 5));
-                        if (GatheringJobList.Contains((int)mission.JobId) && GatheringUtil.GatherMissionInfo.TryGetValue(selectedMission, out var missionInfo))
+
+#if DEBUG
+                        MissionAttributes flags = mission.Attributes;
+                        var activeFlags = Enum.GetValues(typeof(MissionAttributes))
+                                              .Cast<MissionAttributes>()
+                                              .Where(f => f != MissionAttributes.None && flags.HasFlag(f))
+                                              .ToList();
+                        ImGui.Text($"Debug Section");
+                        ImGui.Spacing();
+
+                        ImGui.Text($"[Debug] Nodeset: {mission.NodeSet}");
+
+                        ImGui.Text($"[Debug] Active Mission Flags:");
+                        foreach (var flag in activeFlags)
                         {
-                            Dictionary<uint, string> MissionType = new()
-                            {
-                                { 1, "Quantity Limited" },
-                                { 2, "Gather X Amount" },
-                                { 3, "Time Attack" },
-                                { 4, "Chain Scoring" },
-                                { 5, "Gatherer's Boon Scoring" },
-                                { 6, "Chain + Gatherer's Boon Scoring" },
-                                { 7, "Collectables" },
-                                { 8, "Steller Reduction" },
-                                { 9, "Dual Class" },
-                            };
-
-                            var type = missionInfo.Type;
-
-                            ImGui.Text($"Mission Type: {MissionType[type]}");
+                            ImGui.Text($"{flag}");
                         }
+#endif
                     }
                 }
             }
@@ -825,13 +824,15 @@ namespace ICE.Ui
                 {
                     bool unsupported = UnsupportedMissions.Ids.Contains(entry.Key);
 
-                    uint gatherMissionType = 0;
-                    if (GatheringUtil.GatherMissionInfo.TryGetValue(entry.Key, out var missionInfo))
-                    {
-                        gatherMissionType = missionInfo.Type;
-                    }
+                    bool craftMission = entry.Value.Attributes.HasFlag(MissionAttributes.Craft);
+                    bool gatherMission = entry.Value.Attributes.HasFlag(MissionAttributes.Gather);
+                    bool fishMission = entry.Value.Attributes.HasFlag(MissionAttributes.Fish);
+                    bool collectableMission = entry.Value.Attributes.HasFlag(MissionAttributes.Collectables);
+                    bool stellerReductionMission = entry.Value.Attributes.HasFlag(MissionAttributes.ReducedItems);
 
-                    if (entry.Value.JobId2 != 0)
+                    bool dualclass = craftMission && (gatherMission || fishMission);
+
+                    if (dualclass || fishMission || (gatherMission && (collectableMission || stellerReductionMission)) || (gatherMission && entry.Value.NodeSet == 0))
                     {
                         unsupported = true;
                     }
@@ -956,7 +957,7 @@ namespace ICE.Ui
                         modes = ["Manual"];
                         selectedModes = [mission.ManualMode];
                     }
-                    else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
+                    else if (entry.Value.Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
                     {
                         modes = ["ASAP", "Manual"];
                         selectedModes = [mission.TurnInASAP, mission.ManualMode];
@@ -994,7 +995,7 @@ namespace ICE.Ui
                         {
                             mission.ManualMode = true;
                         }
-                        else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
+                        else if (entry.Value.Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
                         {
                             mission.TurnInASAP = true;
                             mission.ManualMode = selectedModes[1];
@@ -1061,7 +1062,7 @@ namespace ICE.Ui
                         if (entry.Value.JobId2 != 0)
                         {
                             if (hasPreviousNotes) ImGui.SameLine();
-                            ImGui.TextWrapped($"{jobOptions.Find(job => job.Id == entry.Value.JobId + 1).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2 + 1).Name}");
+                            ImGui.TextWrapped($"{jobOptions.Find(job => job.Id == entry.Value.JobId).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2).Name}");
                         }
                     }
                 }

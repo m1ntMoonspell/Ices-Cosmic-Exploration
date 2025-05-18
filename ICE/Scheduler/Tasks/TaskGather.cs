@@ -70,22 +70,9 @@ namespace ICE.Scheduler.Tasks
 
                 List<uint> MissionNodes = new List<uint>();
 
-                // still needs to be implimented. Moreso to seperate BTN/MIN
-                var GatheringType = 0;
-                if (PlayerHelper.GetClassJobId() == 16)
-                {
-                    // Miner Type
-                    GatheringType = 2;
-                }
-                else if (PlayerHelper.GetClassJobId() == 17)
-                {
-                    // Botany Type
-                    GatheringType = 3;
-                }
-
                 foreach (var entry in GatheringUtil.MoonNodeInfoList)
                 {
-                    if (GatheringUtil.GatherMissionInfo[currentMission].NodeSet == entry.NodeSet && entry.GatheringType == GatheringType)
+                    if (MissionInfoDict[currentMission].NodeSet == entry.NodeSet)
                     {
                         MissionNodes.Add(entry.NodeId);
                     }
@@ -170,9 +157,10 @@ namespace ICE.Scheduler.Tasks
                             BYieldII = GatheringUtil.GathActionDict["BountifulYieldII"].MinActionId;
                         }
 
-                        var missionType = GatheringUtil.GatherMissionInfo[currentMission].Type;
+                        bool Collectable = MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.Collectables);
+                        bool Reducable = MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.ReducedItems);
 
-                        if (missionType <= 6 && x.TotalIntegrity != 0)
+                        if (!(Collectable || Reducable) && x.TotalIntegrity != 0)
                         {
                             var DictEntry = GatheringItemDict[currentMission].MinGatherItems;
                             bool hasAllItems = true;

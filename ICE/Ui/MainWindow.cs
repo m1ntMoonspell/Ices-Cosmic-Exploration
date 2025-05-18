@@ -303,11 +303,10 @@ namespace ICE.Ui
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
-                        .Where(m => !m.Value.Attributes.HasFlag(
-                            MissionAttributes.Critical |
-                            MissionAttributes.ProvisionalTimed |
-                            MissionAttributes.ProvisionalSequential |
-                            MissionAttributes.ProvisionalWeather));
+                        .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.Critical))
+                        .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalTimed))
+                        .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalSequential))
+                        .Where(m => !m.Value.Attributes.HasFlag(MissionAttributes.ProvisionalWeather));
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
                 bool missionGather = missions.Any(g => GatheringJobList.Contains((int)g.Value.JobId) || GatheringJobList.Contains((int)g.Value.JobId2));
@@ -420,14 +419,6 @@ namespace ICE.Ui
 
                         if (entry.Value.JobId2 != 0 || (entry.Value.JobId >= 16 && entry.Value.JobId <= 18))
                             unsupported = true;
-                            
-                        uint gatherMissionType = 0;
-                        if (GatheringUtil.GatherMissionInfo.TryGetValue(entry.Key, out var missionInfo))
-                        {
-                            gatherMissionType = missionInfo.Type;
-                        }
-                        if (gatherMissionType != 0)
-                            unsupported = false;
 
                         if (unsupported && hideUnsupported)
                             continue;
@@ -543,11 +534,6 @@ namespace ICE.Ui
                             modes = ["Manual"];
                             selectedModes = [mission.ManualMode];
                         }
-                        else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
-                        {
-                            modes = ["ASAP", "Manual"];
-                            selectedModes = [mission.TurnInASAP, mission.ManualMode];
-                        }
                         else
                         {
                             modes = ["Gold", "Silver", "Bronze", "Manual"];
@@ -581,7 +567,7 @@ namespace ICE.Ui
                             {
                                 mission.ManualMode = true;
                             }
-                            else if ((GatheringJobList.Contains((int)entry.Value.JobId) && gatherMissionType == 3) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
+                            else if (entry.Value.Attributes.HasFlag(MissionAttributes.ProvisionalTimed) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
                             {
                                 mission.TurnInASAP = true;
                                 mission.ManualMode = selectedModes[1];

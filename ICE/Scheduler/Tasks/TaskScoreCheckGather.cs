@@ -27,9 +27,9 @@ namespace ICE.Scheduler.Tasks
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 var (currentScore, silverScore, goldScore) = TaskGather.GetCurrentScores();
-                var missionType = GatheringUtil.GatherMissionInfo[CosmicHelper.CurrentLunarMission].Type;
+                bool timedMission = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining);
 
-                if (currentScore != 0 && missionType is 1 or 2 or 4 or 5 or 6) // Base ones that have item counters
+                if (currentScore != 0 && !timedMission) // Base ones that have item counters
                 {
                     if (IceLogging.ShouldLog())
                     {
@@ -68,7 +68,7 @@ namespace ICE.Scheduler.Tasks
                         return;
                     }
                 }
-                else if (missionType is 3)
+                else if (timedMission)
                 {
                     var hasAllItems = TaskGather.HaveEnoughMain();
                     if (hasAllItems == null)

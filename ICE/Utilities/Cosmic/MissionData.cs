@@ -60,6 +60,7 @@ public static unsafe partial class CosmicHelper
         public int X { get; set; }
         public int Y { get; set; }
         public int Radius { get; set; }
+        public uint NodeSet { get; set; }
         public List<(int Type, int Amount)> ExperienceRewards { get; set; }
     }
 

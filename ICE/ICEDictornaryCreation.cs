@@ -309,6 +309,12 @@ public sealed partial class ICE
                 Exp.Add((ExpSheet.GetRow(keyId).Unknown14, ExpSheet.GetRow(keyId).Unknown4));
             }
 
+            uint nodeSet = 0;
+            if (GatheringUtil.Nodeset.TryGetValue(new Vector2(_x, _y), out nodeSet)) 
+            {
+
+            }
+
             if (!MissionInfoDict.ContainsKey(keyId))
             {
                 MissionInfoDict[keyId] = new MissionListInfo()
@@ -333,6 +339,7 @@ public sealed partial class ICE
                     TerritoryId = territoryId,
                     X = _x,
                     Y = _y,
+                    NodeSet = nodeSet,
                     Radius = radius,
                 };
             }
