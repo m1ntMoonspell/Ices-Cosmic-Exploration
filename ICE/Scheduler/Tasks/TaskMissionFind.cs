@@ -571,7 +571,7 @@ namespace ICE.Scheduler.Tasks
                 var currentMission = CosmicHelper.CurrentLunarMission;
                 if (currentMission != 0)
                 {
-                    var missionNode = CosmicHelper.MissionInfoDict[currentMission].NodeSet;
+                    var missionNode = CosmicHelper.MissionInfoDict  [currentMission].NodeSet;
                     if (missionNode != SchedulerMain.PreviousNodeSet)
                     {
                         SchedulerMain.PreviousNodeSet = missionNode;

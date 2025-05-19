@@ -106,8 +106,7 @@ namespace ICE.Scheduler.Tasks
                             }
                             else
                             {
-                                // Game Object is not targetable... which shouldn't be possible. 
-                                // Need to just kick it to score checker, try and turnin initially, then if that fails then just abandon
+
                             }
                         }
                     }

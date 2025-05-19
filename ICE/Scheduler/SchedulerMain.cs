@@ -27,11 +27,12 @@ namespace ICE.Scheduler
         internal static bool StopBeforeGrab = false;
         internal static uint PreviousNodeSet = 0;
         internal static int currentIndex = 0;
+        internal static bool GatherNodeMissing = false;
 #if DEBUG
         // Debug only settings
         internal static bool DebugOOMMain = false;
         internal static bool DebugOOMSub = false;
-        #endif
+#endif
 
         internal static IceState State = IceState.Idle;
 
