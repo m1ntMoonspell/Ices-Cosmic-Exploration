@@ -161,9 +161,6 @@ namespace ICE.Scheduler.Tasks
 
                 P.TaskManager.BeginStack(); // Enable stack mode
 
-
-                P.TaskManager.Enqueue(() => SchedulerMain.State |= IceState.Waiting, "Change state to wait for crafts");
-
                 if (preItemsToCraft.Count > 0)
                 {
                     IceLogging.Debug("[Crafting] Queuing up pre-craft items", true);
@@ -215,6 +212,7 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
             P.TaskManager.Enqueue(() => Craft(craft.Key, craft.Value.Item1, item), "PreCraft item");
             P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
+            P.TaskManager.Enqueue(() => SchedulerMain.State |= IceState.Waiting, "Change state to wait for crafts");
             P.TaskManager.Enqueue(() => WaitTillActuallyDone(), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
             {
                 TimeLimitMS = CosmicHelper.CurrentMissionInfo.TimeLimit == 0 ? 240000 : (int?)CosmicHelper.CurrentMissionInfo.TimeLimit * 1000, // Limit to mission time limit (If no limit - 4 minute limit per craft)
@@ -264,6 +262,8 @@ namespace ICE.Scheduler.Tasks
                     if ((Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.PreparingToCraft]) && !P.Artisan.IsBusy())
                     {
                         IceLogging.Debug("[Crafting] [Wait] We seem to no longer be crafting", true);
+                        SchedulerMain.State |= IceState.ScoringMission;
+                        SchedulerMain.State &= ~IceState.Waiting;
                         return true;
                     }
                     else
@@ -276,7 +276,8 @@ namespace ICE.Scheduler.Tasks
                 {
                     IceLogging.Error($"[Crafting] [Wait] Current mission is {CosmicHelper.CurrentLunarMission}, aborting");
                     SchedulerMain.State = IceState.GrabMission;
-                    return false;
+                    P.TaskManager.Abort();
+                    return true;
                 }
                 uint targetLevel = 0;
                 if (currentMission.TurnInGold)
@@ -289,18 +290,24 @@ namespace ICE.Scheduler.Tasks
                 if (currentScore >= goldScore && enoughMain.Value)
                 {
                     IceLogging.Debug("[Crafting] [Wait] Gold wanted. Gold reached.", true);
+                    SchedulerMain.State |= IceState.ScoringMission;
+                    SchedulerMain.State &= ~IceState.Waiting;
                     P.Artisan.SetEnduranceStatus(false);
                     return true;
                 }
                 else if (targetLevel == 2 && currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
                 {
                     IceLogging.Debug("[Crafting] [Wait] Silver wanted. Silver reached.", true);
+                    SchedulerMain.State |= IceState.ScoringMission;
+                    SchedulerMain.State &= ~IceState.Waiting;
                     P.Artisan.SetEnduranceStatus(false);
                     return true;
                 }
                 else if (targetLevel == 1 && enoughMain.Value)
                 {
                     IceLogging.Debug("[Crafting] [Wait] Bronze wanted. Turning in.", true);
+                    SchedulerMain.State |= IceState.ScoringMission;
+                    SchedulerMain.State &= ~IceState.Waiting;
                     P.Artisan.SetEnduranceStatus(false);
                     return true;
                 }
@@ -308,6 +315,8 @@ namespace ICE.Scheduler.Tasks
                 if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.IsBusy())
                 {
                     IceLogging.Debug("[Crafting] [Wait] We seem to no longer be crafting", true);
+                    SchedulerMain.State |= IceState.ScoringMission;
+                    SchedulerMain.State &= ~IceState.Waiting;
                     return true;
                 }
             }

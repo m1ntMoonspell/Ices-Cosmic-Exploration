@@ -1,4 +1,3 @@
-using System.Diagnostics.Tracing;
 using Dalamud.Game.ClientState.Conditions;
 using static ICE.Enums.IceState;
 
@@ -128,7 +127,11 @@ namespace ICE.Scheduler
             if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
                 State = AbortInProgress;
             else if (CosmicHelper.CurrentLunarMission != 0)
+            {
                 TaskMissionFind.UpdateStateFlags();
+                if (State.HasFlag(Craft) && P.Artisan.IsBusy())
+                    State |= Waiting;
+            }
             else if (AddonHelper.IsAddonActive("WKSLottery"))
                 State = Gambling;
             else
