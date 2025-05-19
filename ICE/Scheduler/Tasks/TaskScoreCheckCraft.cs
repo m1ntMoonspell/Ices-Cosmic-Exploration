@@ -23,9 +23,9 @@ namespace ICE.Scheduler.Tasks
 
             IceLogging.Debug($"[Score Checker] Current Scoring Mission Id: {CosmicHelper.CurrentLunarMission}", true);
             var currentMission = C.Missions.Single(x => x.Id == CosmicHelper.CurrentLunarMission);
+            var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
                 if (SchedulerMain.AnimationLockAbandonState && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
                 {
                     IceLogging.Error("[Score Checker] Aborting mission");
@@ -33,7 +33,7 @@ namespace ICE.Scheduler.Tasks
                     return;
                 }
 
-                var enoughMain = MissionHandler.HaveEnoughMain();
+                bool? enoughMain = MissionHandler.HaveEnoughMain();
                 if (enoughMain == null)
                 {
                     IceLogging.Error("[Score Checker] Current mission is 0, aborting");
@@ -41,7 +41,7 @@ namespace ICE.Scheduler.Tasks
                     return;
                 }
 
-                if (enoughMain.Value || SchedulerMain.State == IceState.AbortInProgress)
+                if (enoughMain.Value || SchedulerMain.State.HasFlag(IceState.AbortInProgress))
                 {
                     uint targetLevel = 0;
                     if (currentMission.TurnInGold)
@@ -50,14 +50,15 @@ namespace ICE.Scheduler.Tasks
                         targetLevel = 2;
                     else if (currentMission.TurnInASAP)
                         targetLevel = 1;
-                    IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore} | Target Level: {targetLevel}", true);
+                    IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore} | Target Level: {targetLevel} | Abort State: {SchedulerMain.State.HasFlag(IceState.AbortInProgress)}", true);
 
                     if (targetLevel == 3)
                     {
                         if (currentScore >= goldScore ||
-                        (SchedulerMain.State == IceState.AbortInProgress && currentMission.TurnInSilver && currentScore > silverScore) ||
-                        (SchedulerMain.State == IceState.AbortInProgress && currentMission.TurnInASAP))
+                        (SchedulerMain.State.HasFlag(IceState.AbortInProgress) && currentMission.TurnInSilver && currentScore > silverScore) ||
+                        (SchedulerMain.State.HasFlag(IceState.AbortInProgress) && currentMission.TurnInASAP))
                         {
+                            IceLogging.Debug("[Score Checker] Gold was enabled, and you also meet gold threshold.", true);
                             MissionHandler.TurnIn(z);
                             return;
                         }
@@ -65,32 +66,35 @@ namespace ICE.Scheduler.Tasks
                     else if (targetLevel == 2)
                     {
                         if (currentScore >= silverScore ||
-                        (SchedulerMain.State == IceState.AbortInProgress && currentMission.TurnInASAP))
+                        (SchedulerMain.State.HasFlag(IceState.AbortInProgress) && currentMission.TurnInASAP))
                         {
+                            IceLogging.Debug("[Score Checker] Silver was enabled, and you also meet silver threshold.", true);
                             MissionHandler.TurnIn(z);
                             return;
                         }
                     }
                     else if (targetLevel <= 1)
                     {
+                        IceLogging.Debug("[Score Checker] Turnin Asap was enabled, and true. Firing off", true);
                         MissionHandler.TurnIn(z);
                         return;
                     }
-                    else if (SchedulerMain.State == IceState.AbortInProgress)
+                    if (SchedulerMain.State.HasFlag(IceState.AbortInProgress))
                     {
+                        IceLogging.Error("[Score Checker] Aborting mission");
                         MissionHandler.TurnIn(z, true);
                         return;
                     }
                 }
-                if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.GetEnduranceStatus())
+                if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.Gathering]) && !P.Artisan.GetEnduranceStatus())
                 {
-                    SchedulerMain.State = IceState.StartCraft;
+                    SchedulerMain.State &= ~IceState.ScoringMission;
                 }
             }
             else
             {
                 IceLogging.Debug("[Score Checker] Addon not ready or player is busy");
-                CosmicHelper.OpenStellaMission();
+                CosmicHelper.OpenStellarMission();
             }
         }
     }

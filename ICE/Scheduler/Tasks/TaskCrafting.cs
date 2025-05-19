@@ -9,7 +9,9 @@ namespace ICE.Scheduler.Tasks
     {
         public static void TryEnqueueCrafts()
         {
-            if (CosmicHelper.CurrentLunarMission != 0)
+            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
+                SchedulerMain.State |= IceState.AbortInProgress;
+            else if (CosmicHelper.CurrentLunarMission != 0)
                 MakeCraftingTasks();
         }
 
@@ -17,27 +19,16 @@ namespace ICE.Scheduler.Tasks
         {
             var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
 
-            if (currentScore == 0 && silverScore == 0 && goldScore == 0 && C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type != MissionType.Critical)
+            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
             {
-                IceLogging.Error("Failed to get scores on first attempt retrying");
-                (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
-                if (currentScore == 0 && silverScore == 0 && goldScore == 0)
-                {
-                    IceLogging.Error("Failed to get scores on second attempt retrying");
-                    (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
-                    if (currentScore == 0 && silverScore == 0 && goldScore == 0)
-                    {
-                        IceLogging.Error("Failed to get scores on third attempt aborting");
-                        SchedulerMain.State = IceState.Idle;
-                        return;
-                    }
-                }
+                IceLogging.Debug("Failed to get scores, aborting");
+                return;
             }
 
             if (currentScore >= goldScore)
             {
                 IceLogging.Debug("[Crafting] We reached gold, switching to Score Check.", true);
-                SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
+                SchedulerMain.State |= IceState.ScoringMission;
                 return;
             }
 
@@ -45,9 +36,8 @@ namespace ICE.Scheduler.Tasks
             if (!P.TaskManager.IsBusy) // ensure no pending tasks or manual craft while plogon enabled
             {
                 SchedulerMain.PossiblyStuck = 0;
-                SchedulerMain.State = IceState.CraftInProcess;
 
-                CosmicHelper.OpenStellaMission();
+                CosmicHelper.OpenStellarMission();
 
                 var needPreCraft = false;
                 var itemsToCraft = new Dictionary<ushort, Tuple<int, int>>();
@@ -172,7 +162,7 @@ namespace ICE.Scheduler.Tasks
                 P.TaskManager.BeginStack(); // Enable stack mode
 
 
-                P.TaskManager.Enqueue(() => SchedulerMain.State = IceState.WaitForCrafts, "Change state to wait for crafts");
+                P.TaskManager.Enqueue(() => SchedulerMain.State |= IceState.Waiting, "Change state to wait for crafts");
 
                 if (preItemsToCraft.Count > 0)
                 {
@@ -211,7 +201,7 @@ namespace ICE.Scheduler.Tasks
                 P.TaskManager.Enqueue(() =>
                 {
                     IceLogging.Debug("Check score and turn in cause crafting is done.", true);
-                    SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
+                    SchedulerMain.State |= IceState.ScoringMission;
                 }, "Check score and turn in if complete");
 
                 P.TaskManager.EnqueueStack();

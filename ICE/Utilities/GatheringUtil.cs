@@ -204,7 +204,7 @@ public static unsafe class GatheringUtil
             Position = new Vector3 (-228.04f, 17.31f, -13.59f),
             LandZone = new Vector3 (-228.84f, 16.82f, -13.53f),
             GatheringType = 3,
-            NodeSet = 1
+            NodeSet = 11
         },
         new GathNodeInfo
         {

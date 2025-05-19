@@ -1,4 +1,6 @@
-using ICE.Scheduler.Tasks;
+using System.Diagnostics.Tracing;
+using Dalamud.Game.ClientState.Conditions;
+using static ICE.Enums.IceState;
 
 namespace ICE.Scheduler
 {
@@ -6,14 +8,14 @@ namespace ICE.Scheduler
     {
         internal static bool EnablePlugin()
         {
-            State = IceState.ResumeChecker;
+            State = Start;
             return true;
         }
         internal static bool DisablePlugin()
         {
             P.TaskManager.Abort();
             StopBeforeGrab = false;
-            State = IceState.Idle;
+            State = Idle;
             if (P.Navmesh.IsRunning())
                 P.Navmesh.Stop();
             return true;
@@ -23,90 +25,116 @@ namespace ICE.Scheduler
         internal static bool inMission = false;
         internal static bool Abandon = false;
         internal static bool AnimationLockAbandonState = false;
-        internal static int PossiblyStuck = 0;
+        internal static uint PossiblyStuck = 0;
         internal static bool StopBeforeGrab = false;
         internal static uint PreviousNodeSet = 0;
-        internal static int currentIndex = 0;
+        internal static int CurrentIndex = 0;
+        internal static uint NodesVisited = 0;
 #if DEBUG
         // Debug only settings
         internal static bool DebugOOMMain = false;
         internal static bool DebugOOMSub = false;
-        #endif
+#endif
 
-        internal static IceState State = IceState.Idle;
+        internal static IceState State = Idle;
 
+        // <summary>
+        // Main Scheduler. General flow is to raise flags as necessary and resolve them based on priority:
+        // -1. Idle - do nothing.
+        // 0. On start, check what state we are in and set flags as needed.
+        // 1. If Score flag is set, run score check, reset state to Idle or Grab if turned in, otherwise unset Score flag.
+        // 2. If AnimationLock flag is set, attempt unstuck, unset flag after.
+        // 3. If Gamba flag is set, run gamba, reset to Idle.
+        // 4. If GrabMission && Waiting - wait for non-standard mission conditions to be true before resuming.
+        // 5. If GrabMission flag is set, get a mission. Once obtained raise Craft/Gather/Fish flags and ExecutingMission flag. Otherwise if can't get a mission and no standards - raise Waiting.
+        // 6. If Manual is set on a mission - Zen. (Also Fish)
+        // 7. If Gather && ExecutingMission flag is set, run gathering. If DualClass - lower Gather flag on enough mats. Raise ScoringMission flag on completion of a loop.
+        // 8. If Craft && ExecutingMission flag is set, run crafting. If DualClass - raise Gather flag on if not enough mats. Raise ScoringMission flag on completion of a loop.
+        // </summary>
         internal static void Tick()
         {
-            if (Throttles.GenericThrottle && P.TaskManager.Tasks.Count == 0)
+            if (Throttles.GenericThrottle && P.TaskManager.Tasks.Count == 0 && State != Idle)
             {
-                switch (State)
-                {
-                    case IceState.Idle:
-                        break;
-                    case IceState.Gamba:
-                        TaskGamba.TryHandleGamba();
-                        break;
-                    case IceState.AnimationLock:
-                        TaskAnimationLock.Enqueue();
-                        break;
-                    case IceState.RepairMode:
-                        TaskRepair.GatherCheck();
-                        break;
-                    case IceState.GrabbingMission:
-                        break;
-                    case IceState.WaitForNonStandard:
-                        TaskMissionFind.WaitForNonStandard();
-                        break;
-                    case IceState.GrabMission:
-                        TaskMissionFind.Enqueue();
-                        break;
-                    case IceState.StartCraft:
-                        TaskCrafting.TryEnqueueCrafts();
-                        break;
-                    case IceState.AbortInProgress:
-                    case IceState.WaitForCrafts:
-                    case IceState.CraftInProcess:
-                    case IceState.CraftCheckScoreAndTurnIn:
-                        TaskScoreCheckCraft.TryCheckScore();
-                        break;
-                    case IceState.GatherScoreandTurnIn:
-                        TaskScoreCheckGather.TryCheckScore();
-                        break;
-                    case IceState.ManualMode:
-                        TaskManualMode.ZenMode();
-                        break;
-                    case IceState.ResumeChecker:
-                        TaskMissionFind.EnqueueResumeCheck();
-                        break;
-                    case IceState.GatherNormal:
-                        TaskGather.TryEnqueueGathering();
-                        break;
-                    default:
-                        throw new Exception("Invalid state");
-                }
+                if (State.HasFlag(Start))
+                    EnqueueResumeCheck();
+                else if (State.HasFlag(ScoringMission) || State.HasFlag(AbortInProgress))
+                    TaskScoreCheckCraft.TryCheckScore();
+                else if (State.HasFlag(AnimationLock))
+                    TaskAnimationLock.Enqueue();
+                else if (State.HasFlag(Gambling))
+                    TaskGamba.TryHandleGamba();
+                else if (State.HasFlag(GrabMission) && State.HasFlag(Waiting))
+                    TaskMissionFind.WaitForNonStandard();
+                else if (State.HasFlag(GrabMission))
+                    TaskMissionFind.Enqueue();
+                else if (State.HasFlag(ManualMode) || State.HasFlag(Fish))
+                    TaskManualMode.ZenMode();
+                else if (State.HasFlag(Gather) && State.HasFlag(ExecutingMission))
+                    TaskGather.TryEnqueueGathering();
+                else if (State.HasFlag(Craft) && State.HasFlag(Waiting))
+                    TaskCrafting.WaitTillActuallyDone();
+                else if (State.HasFlag(Craft) && State.HasFlag(ExecutingMission))
+                    TaskCrafting.TryEnqueueCrafts();
             }
+            /* switch (State)
+            {
+                case IceState.Idle:
+                    break;
+                case IceState.Gamba:
+                    TaskGamba.TryHandleGamba();
+                    break;
+                case IceState.AnimationLock:
+                    TaskAnimationLock.Enqueue();
+                    break;
+                case IceState.RepairMode:
+                    TaskRepair.GatherCheck();
+                    break;
+                case IceState.GrabbingMission:
+                    break;
+                case IceState.WaitForNonStandard:
+                    TaskMissionFind.WaitForNonStandard();
+                    break;
+                case IceState.GrabMission:
+                    TaskMissionFind.Enqueue();
+                    break;
+                case IceState.StartCraft:
+                    TaskCrafting.TryEnqueueCrafts();
+                    break;
+                case IceState.AbortInProgress:
+                case IceState.WaitForCrafts:
+                case IceState.CraftInProcess:
+                case IceState.CraftCheckScoreAndTurnIn:
+                    TaskScoreCheckCraft.TryCheckScore();
+                    break;
+                case IceState.GatherScoreandTurnIn:
+                    TaskScoreCheckGather.TryCheckScore();
+                    break;
+                case IceState.ManualMode:
+                    TaskManualMode.ZenMode();
+                    break;
+                case IceState.ResumeChecker:
+                    TaskMissionFind.EnqueueResumeCheck();
+                    break;
+                case IceState.GatherNormal:
+                    TaskGather.TryEnqueueGathering();
+                    break;
+                default:
+                    throw new Exception("Invalid state");
+            } */
         }
-    }
-
-    internal enum IceState
-    {
-        AbortInProgress,
-        AnimationLock,
-        CraftCheckScoreAndTurnIn,
-        CraftInProcess,
-        Gamba,
-        GatherCollectable,
-        GatherScoreandTurnIn,
-        GatherNormal,
-        GatherReduce,
-        GrabbingMission,
-        GrabMission,
-        Idle,
-        ManualMode,
-        ResumeChecker,
-        RepairMode,
-        StartCraft,
-        WaitForCrafts,
-        WaitForNonStandard
+        public static void EnqueueResumeCheck()
+        {
+            State = Idle;
+            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
+                State = AbortInProgress;
+            else if (CosmicHelper.CurrentLunarMission != 0)
+                TaskMissionFind.UpdateStateFlags();
+            else if (AddonHelper.IsAddonActive("WKSLottery"))
+                State = Gambling;
+            else
+                State = GrabMission;
+            if (AnimationLockAbandonState || (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
+                State |= AnimationLock;
+        }
     }
 }

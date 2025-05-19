@@ -10,7 +10,7 @@
             }
             if (!C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode && C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).JobId <= 15)
             {
-                SchedulerMain.State = IceState.StartCraft;
+                SchedulerMain.State &= ~IceState.ManualMode;
             }
         }
     }

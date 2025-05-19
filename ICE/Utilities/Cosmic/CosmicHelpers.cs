@@ -22,11 +22,11 @@ public static partial class CosmicHelper
     };
 
 
-    public static void OpenStellaMission()
+    public static void OpenStellarMission()
     {
         if (GenericHelpers.TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !AddonHelper.IsAddonActive("WKSMissionInfomation"))
         {
-            if (EzThrottler.Throttle("Opening Steller Missions"))
+            if (EzThrottler.Throttle("Opening Stellar Missions"))
             {
                 IceLogging.Debug("Opening Mission Menu");
                 hud.Mission();

@@ -26,7 +26,7 @@ namespace ICE.Scheduler.Tasks
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                var (currentScore, silverScore, goldScore) = TaskGather.GetCurrentScores();
+                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
                 bool timedMission = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining);
 
                 if (currentScore != 0 && !timedMission) // Base ones that have item counters
@@ -38,7 +38,7 @@ namespace ICE.Scheduler.Tasks
                         IceLogging.Debug($"[Score Checker] Is Turnin Asap Enabled?: {currentMission.TurnInASAP}", true);
                     }
 
-                    var hasAllItems = TaskGather.HaveEnoughMain();
+                    var hasAllItems = MissionHandler.HaveEnoughMain();
                     if (hasAllItems == null)
                     {
                         IceLogging.Error("[Score Checker] Current mission is 0, aborting");
@@ -70,7 +70,7 @@ namespace ICE.Scheduler.Tasks
                 }
                 else if (timedMission)
                 {
-                    var hasAllItems = TaskGather.HaveEnoughMain();
+                    var hasAllItems = MissionHandler.HaveEnoughMain();
                     if (hasAllItems == null)
                     {
                         IceLogging.Error("[Score Checker] Current mission is 0, aborting");
@@ -90,13 +90,13 @@ namespace ICE.Scheduler.Tasks
                 {
                     IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore}", true);
                     IceLogging.Debug($"[Score Checker] Player has not hit the score requirements, going back to the gathering mines", true);
-                    SchedulerMain.State = IceState.GatherNormal;
+                    SchedulerMain.State |= IceState.ExecutingMission;
                 }
             }
             else
             {
                 IceLogging.Debug("[Score Checker] Addon not ready or player is busy");
-                CosmicHelper.OpenStellaMission();
+                CosmicHelper.OpenStellarMission();
             }
         }
 
@@ -115,7 +115,7 @@ namespace ICE.Scheduler.Tasks
             }
             else
             {
-                CosmicHelper.OpenStellaMission();
+                CosmicHelper.OpenStellarMission();
             }
 
             return false;
