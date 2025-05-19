@@ -15,6 +15,12 @@ internal static class MissionHandler
             SchedulerMain.State |= IceState.AbortInProgress;
             return true;
         }
+        else if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
+        {
+            var (currentScore, _, _) = GetCurrentScores();
+            if (currentScore == 0)
+                return false;
+        }
         else if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft))
         {
             foreach (var main in CosmicHelper.CurrentMoonRecipe.MainCraftsDict)
@@ -132,10 +138,10 @@ internal static class MissionHandler
             SchedulerMain.StopBeforeGrab = true;
             Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
             {
-                Message = "[ICE] Unexpected error. Insufficient materials. Stopping. You failed to reach your Score Target.\n" +
+                Message = "[ICE] Unexpected error. Stopping. You failed to reach your Score Target.\n" +
                 $"If you expect Mission ID {CosmicHelper.CurrentLunarMission} to not reach " + (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).TurnInSilver ? "Silver" : "Gold") +
                 " - please mark it as Silver/ASAP accordingly.\n" +
-                "If you were expecting it to reach the target, check your Artisan settings/gear.",
+                "If you were expecting it to reach the target, check your settings/gear.",
                 Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
             });
         }
