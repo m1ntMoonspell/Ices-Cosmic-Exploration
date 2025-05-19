@@ -106,7 +106,10 @@ namespace ICE.Scheduler.Tasks
                             }
                             else
                             {
-
+                                // Node wasn't found. force abandoning
+                                // SchedulerMain.State = IceState.GatherScoreandTurnIn;
+                                // SchedulerMain.GatherNodeMissing = true;
+                                // return;
                             }
                         }
                     }
