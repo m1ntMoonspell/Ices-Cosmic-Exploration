@@ -96,6 +96,18 @@ namespace ICE.Scheduler.Tasks
             if (!SchedulerMain.State.HasFlag(IceState.GrabMission))
                 return;
 
+            if (!(HasCritical || HasWeather || HasTimed || HasSequence || HasStandard))
+            {
+                IceLogging.Error("[SchedulerMain] No missions available, stopping the plugin");
+                Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                {
+                    Message = $"[ICE] No missions enabled for {Svc.ClientState.LocalPlayer?.ClassJob.Value.Name}. Did you forget to set me up?",
+                    Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                });
+                SchedulerMain.DisablePlugin();
+                return;
+            }
+
             P.TaskManager.Enqueue(TaskRepair.GatherCheck, "Checking for repairs");
 
             P.TaskManager.Enqueue(UpdateValues, "Updating Task Mission Values");
@@ -466,6 +478,7 @@ namespace ICE.Scheduler.Tasks
                         if (!HasStandard && (HasWeather || HasTimed))
                         {
                             SchedulerMain.State |= IceState.Waiting;
+                            return true;
                         }
                     }
                     else
