@@ -87,6 +87,12 @@ namespace ICE.Scheduler
                     case var s when s.HasFlag(Craft) && s.HasFlag(ExecutingMission):
                         TaskCrafting.TryEnqueueCrafts();
                         break;
+                    default:
+                        if (C.StopOnAbort)
+                            throw new Exception("Invalid state");
+                        else
+                            EnqueueResumeCheck();
+                        break;
                 }
             }
             /* switch (State)
