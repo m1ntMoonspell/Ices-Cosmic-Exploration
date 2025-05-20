@@ -1,11 +1,8 @@
 ﻿using ECommons.Automation;
-using ECommons.UIHelpers.AddonMasterImplementations;
-using ICE.Enums;
 using ICE.Ui;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ECommons.GameHelpers;
-using Dalamud.Game.ClientState.Conditions;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ECommons.GenericHelpers;
 
@@ -42,39 +39,6 @@ namespace ICE.Scheduler.Tasks
         private static bool HasC => CMissions.Any();
         private static bool HasD => DMissions.Any();
 
-        public static void EnqueueResumeCheck()
-        {   
-            if (SchedulerMain.AnimationLockAbandonState || (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]))
-            {
-                SchedulerMain.State = IceState.AnimationLock;
-            }
-            else if (CosmicHelper.CurrentLunarMission != 0)
-            {
-                if (!ModeChangeCheck(isGatherer))
-                {
-                    SchedulerMain.State = IceState.CraftCheckScoreAndTurnIn;
-                }
-                else
-                {
-                    var missionNode = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet;
-                    if (missionNode != SchedulerMain.PreviousNodeSet)
-                    {
-                        SchedulerMain.PreviousNodeSet = missionNode;
-                        SchedulerMain.currentIndex = 0;
-                    }
-                    SchedulerMain.State = IceState.GatherScoreandTurnIn;
-                }
-            }
-            else if (AddonHelper.IsAddonActive("WKSLottery"))
-            {
-                SchedulerMain.State = IceState.Gamba;
-            }
-            else
-            {
-                SchedulerMain.State = IceState.RepairMode;
-            }
-        }
-
         public static void Enqueue()
         {
             if (SchedulerMain.AnimationLockAbandonState)
@@ -84,7 +48,7 @@ namespace ICE.Scheduler.Tasks
             }
             if (C.StopOnceHitCosmoCredits)
             {
-                if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
                 {
                     if (hud.CosmoCredit >= C.CosmoCreditsCap)
                     {
@@ -94,8 +58,7 @@ namespace ICE.Scheduler.Tasks
                             Message = $"[ICE] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits.",
                             Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                         });
-                        SchedulerMain.StopBeforeGrab = false;
-                        SchedulerMain.State = IceState.Idle;
+                        SchedulerMain.DisablePlugin();
                         return;
                     }
                 }
@@ -113,8 +76,7 @@ namespace ICE.Scheduler.Tasks
                             Message = $"[ICE] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits",
                             Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                         });
-                        SchedulerMain.StopBeforeGrab = false;
-                        SchedulerMain.State = IceState.Idle;
+                        SchedulerMain.DisablePlugin();
                         return;
                     }
                 }
@@ -127,73 +89,87 @@ namespace ICE.Scheduler.Tasks
             }
             if (SchedulerMain.StopBeforeGrab)
             {
-                SchedulerMain.StopBeforeGrab = false;
-                SchedulerMain.State = IceState.Idle;
+                SchedulerMain.DisablePlugin();
                 return;
             }
 
-            if (SchedulerMain.State != IceState.GrabMission)
+            if (!SchedulerMain.State.HasFlag(IceState.GrabMission))
                 return;
 
-            SchedulerMain.State = IceState.GrabbingMission;
+            if (!(HasCritical || HasWeather || HasTimed || HasSequence || HasStandard))
+            {
+                IceLogging.Error("[SchedulerMain] No missions available, stopping the plugin");
+                Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
+                {
+                    Message = $"[ICE] No missions enabled for {Svc.ClientState.LocalPlayer?.ClassJob.Value.Name}. Did you forget to set me up?",
+                    Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
+                });
+                SchedulerMain.DisablePlugin();
+                return;
+            }
 
-            P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
-            P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
+            P.TaskManager.Enqueue(TaskRepair.GatherCheck, "Checking for repairs");
+
+            P.TaskManager.Enqueue(UpdateValues, "Updating Task Mission Values");
+            P.TaskManager.Enqueue(OpenMissionFinder, "Opening the Mission finder");
             if (HasCritical)
             {
-                P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
-                P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
+                P.TaskManager.Enqueue(CriticalButton, "Selecting Critical Mission");
+                P.TaskManager.Enqueue(FindCriticalMission, "Checking to see if critical mission available");
             }
             if (HasWeather || HasTimed || HasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
             {
-                P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
-                P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
+                P.TaskManager.Enqueue(WeatherButton, "Selecting Weather");
+                P.TaskManager.Enqueue(FindWeatherMission, "Checking to see if weather mission avaialable");
             }
             if (HasStandard)
             {
-                P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
-                P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
-                P.TaskManager.Enqueue(() => FindResetMission(), "Checking for abandon mission");
+                P.TaskManager.Enqueue(BasicMissionButton, "Selecting Basic Missions");
+                P.TaskManager.Enqueue(FindBasicMission, "Finding Basic Mission");
+                P.TaskManager.Enqueue(FindResetMission, "Checking for abandon mission");
             }
-            P.TaskManager.Enqueue(() => GrabMission(), "Grabbing the mission");
+            P.TaskManager.Enqueue(GrabMission, "Grabbing the mission");
             DelayMission();
-            P.TaskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission");
-            P.TaskManager.Enqueue(() =>
-            {
-                if (SchedulerMain.Abandon)
-                {
-                    P.TaskManager.Enqueue(() => CosmicHelper.CurrentLunarMission == 0);
-                    DelayMission();
-                    SchedulerMain.Abandon = false;
-                    SchedulerMain.State = IceState.GrabMission;
-                }
-            }, "Checking if you are abandoning mission");
+            P.TaskManager.Enqueue(AbandonMission, "Checking to see if need to leave mission");
             P.TaskManager.Enqueue(async () =>
             {
-                if (EzThrottler.Throttle("Opening Steller Missions"))
+                if (EzThrottler.Throttle("UI", 250))
                 {
-                    if (CosmicHelper.CurrentLunarMission != 0)
+                    if (SchedulerMain.Abandon == true)
                     {
-                        if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !AddonHelper.IsAddonActive("WKSMissionInfomation"))
-                        {
-                            var gatherer = isGatherer;
-                            IceLogging.Debug("Opening Mission Menu", true);
-                            hud.Mission();
-
-                            while (!AddonHelper.IsAddonActive("WKSMissionInfomation"))
-                            {
-                                IceLogging.Debug("Waiting for WKSMissionInfomation to be active");
-                                await Task.Delay(500);
-                            }
-                            if (!ModeChangeCheck(gatherer))
-                            {
-                                SchedulerMain.State = IceState.StartCraft;
-                            }
-
-                        }
+                        SchedulerMain.Abandon = false;
+                        return;
+                    }
+                    else if (CosmicHelper.CurrentLunarMission != 0)
+                    {
+                        UpdateStateFlags();
+                        return;
                     }
                 }
             });
+        }
+
+        internal static void UpdateStateFlags()
+        {
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft))
+                SchedulerMain.State |= IceState.Craft;
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
+            {
+                SchedulerMain.State |= IceState.Gather;
+                var missionNode = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet;
+                if (missionNode != SchedulerMain.PreviousNodeSet)
+                {
+                    SchedulerMain.PreviousNodeSet = missionNode;
+                    SchedulerMain.CurrentIndex = 0;
+                }
+                SchedulerMain.NodesVisited = 0;
+            }
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Fish))
+                SchedulerMain.State |= IceState.Fish;
+            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode)
+                SchedulerMain.State |= IceState.ManualMode;
+            SchedulerMain.State |= IceState.ExecutingMission;
+            SchedulerMain.State &= ~IceState.GrabMission;
         }
 
         internal static bool? UpdateValues()
@@ -499,10 +475,10 @@ namespace ICE.Scheduler.Tasks
                     if (!CosmicHelper.MissionInfoDict.ContainsKey(MissionId))
                     {
                         IceLogging.Debug($"No values were found for mission id {MissionId}... which is odd. Stopping the process");
-                        SchedulerMain.DisablePlugin();
                         if (!HasStandard && (HasWeather || HasTimed))
                         {
-                            SchedulerMain.State = IceState.WaitForNonStandard;
+                            SchedulerMain.State |= IceState.Waiting;
+                            return true;
                         }
                     }
                     else
@@ -558,38 +534,13 @@ namespace ICE.Scheduler.Tasks
             return false;
         }
 
-        private static bool ModeChangeCheck(bool gatherer)
-        {
-            if (C.OnlyGrabMission || CosmicHelper.CurrentMissionInfo.JobId2 != 0 || C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode) // Manual Mode for Only Grab Mission / Dual Class Mission
-            {
-                SchedulerMain.State = IceState.ManualMode;
-                return true;
-            }
-            else if (gatherer)
-            {
-                SchedulerMain.State = IceState.GatherNormal;
-                var currentMission = CosmicHelper.CurrentLunarMission;
-                if (currentMission != 0)
-                {
-                    var missionNode = CosmicHelper.MissionInfoDict  [currentMission].NodeSet;
-                    if (missionNode != SchedulerMain.PreviousNodeSet)
-                    {
-                        SchedulerMain.PreviousNodeSet = missionNode;
-                        SchedulerMain.currentIndex = 0;
-                    }
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
         public static void WaitForNonStandard()
         {
-            if (!PlayerHelper.IsInCosmicZone()) return;
+            if (!PlayerHelper.IsInCosmicZone())
+                return;
 
-            if (HasStandard) SchedulerMain.State = IceState.GrabMission;
+            if (HasStandard)
+                SchedulerMain.State &= ~IceState.Waiting;
 
             uint currentWeatherId = WeatherForecastHandler.GetCurrentWeatherId();
             bool isUmbralWind = currentWeatherId == 49;
@@ -599,9 +550,7 @@ namespace ICE.Scheduler.Tasks
                 bool hasCorrectWeather = WeatherMissions
                     .Any(x => (CosmicHelper.MissionInfoDict[x.Id].Weather == CosmicWeather.UmbralWind && isUmbralWind) || (CosmicHelper.MissionInfoDict[x.Id].Weather == CosmicWeather.MoonDust && isMoonDust));
                 if (hasCorrectWeather)
-                {
-                    SchedulerMain.State = IceState.GrabMission;
-                }
+                    SchedulerMain.State &= ~IceState.Waiting;
             }
 
             //bool isSporingMist = currentWeatherId == 197;
@@ -627,9 +576,7 @@ namespace ICE.Scheduler.Tasks
                     bool hasMissionAtThisTime = TimedMissions
                         .Any(mission => currentTimedBonus.Key.start == 2 * (CosmicHelper.MissionInfoDict[mission.Id].Time - 1));
                     if (hasMissionAtThisTime)
-                    {
-                        SchedulerMain.State = IceState.GrabMission;
-                    }
+                        SchedulerMain.State &= ~IceState.Waiting;
                 }
             }
         }

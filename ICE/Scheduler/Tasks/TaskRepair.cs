@@ -17,7 +17,6 @@ namespace ICE.Scheduler.Tasks
                     P.TaskManager.Enqueue(() => SelfRepair(), "Repairing self");
                 }
             }
-            P.TaskManager.Enqueue(() => SchedulerMain.State = IceState.GrabMission);
         }
 
         internal unsafe static bool OpenSelfRepair()

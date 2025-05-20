@@ -924,7 +924,7 @@ namespace ICE.Ui
 
                     bool dualclass = craftMission && (gatherMission || fishMission);
 
-                    if (dualclass || fishMission || (gatherMission && (collectableMission || stellerReductionMission)) || (gatherMission && entry.Value.NodeSet == 0))
+                    if (fishMission || (gatherMission && (collectableMission || stellerReductionMission)) || (gatherMission && entry.Value.NodeSet == 0))
                     {
                         unsupported = true;
                     }

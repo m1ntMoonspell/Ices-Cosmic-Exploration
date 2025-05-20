@@ -29,43 +29,49 @@ namespace ICE.Scheduler.Tasks
         public static void TryEnqueueGathering()
         {
             if (CosmicHelper.CurrentLunarMission != 0)
-                MakeGatheringTask();
+            {
+                Job targetClass;
+                if (((Job)CosmicHelper.CurrentMissionInfo.JobId).IsDol())
+                    targetClass = (Job)CosmicHelper.CurrentMissionInfo.JobId;
+                else if (((Job)CosmicHelper.CurrentMissionInfo.JobId2).IsDol())
+                    targetClass = (Job)CosmicHelper.CurrentMissionInfo.JobId2;
+                else
+                    return;
+                if ((Job)PlayerHelper.GetClassJobId() != targetClass)
+                    GearsetHandler.TaskClassChange(targetClass);
+                else
+                    MakeGatheringTask();
+            }
         }
 
         // Version 2 of the gathering task. Trying to improve on it all...
         internal static void MakeGatheringTask()
         {
-            var (currentScore, silverScore, goldScore) = GetCurrentScores();
+            var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
+            {
+                SchedulerMain.State |= IceState.AbortInProgress;
+                return;
+            }
 
             if (currentScore == 0 && silverScore == 0 && goldScore == 0)
             {
-                IceLogging.Error("Failed to get scores on first attempt retrying");
-                (currentScore, silverScore, goldScore) = GetCurrentScores();
-                if (currentScore == 0 && silverScore == 0 && goldScore == 0)
-                {
-                    IceLogging.Error("Failed to get scores on second attempt retrying");
-                    (currentScore, silverScore, goldScore) = GetCurrentScores();
-                    if (currentScore == 0 && silverScore == 0 && goldScore == 0)
-                    {
-                        IceLogging.Error("Failed to get scores on third attempt aborting");
-                        SchedulerMain.State = IceState.Idle;
-                        return;
-                    }
-                }
+                IceLogging.Debug("Failed to get scores, aborting");
+                return;
             }
 
             if (currentScore >= goldScore)
             {
                 IceLogging.Error("[TaskGathering | Current Score] We shouldn't be here, stopping and progressing");
-                SchedulerMain.State = IceState.GatherScoreandTurnIn;
+                SchedulerMain.State |= IceState.ScoringMission;
                 return;
             }
 
             if (!P.TaskManager.IsBusy)
             {
-                int currentIndex = SchedulerMain.currentIndex;
+                int currentIndex = SchedulerMain.CurrentIndex;
 
-                CosmicHelper.OpenStellaMission();
+                CosmicHelper.OpenStellarMission();
                 var currentMission = CosmicHelper.CurrentLunarMission;
 
                 List<uint> MissionNodes = new List<uint>();
@@ -106,10 +112,8 @@ namespace ICE.Scheduler.Tasks
                             }
                             else
                             {
-                                // Node wasn't found. force abandoning
-                                // SchedulerMain.State = IceState.GatherScoreandTurnIn;
-                                // SchedulerMain.GatherNodeMissing = true;
-                                // return;
+                                P.TaskManager.Enqueue(() => UpdateIndex(MissionNodes), "Increasing the index by 1");
+                                return;
                             }
                         }
                     }
@@ -378,19 +382,21 @@ namespace ICE.Scheduler.Tasks
                                             }
                                         }
                                     }
-                                    #nullable enable
+#nullable enable
                                 }
                             }
                         }
+                        else if (x.CurrentIntegrity == 0)
+                        {
+                            P.TaskManager.Enqueue(() => IntegrityCheck(x));
+                        }
 
                     }
-                    
+
                 }
 
                 // Check the score
-                P.TaskManager.Enqueue(() => SchedulerMain.State = IceState.GatherScoreandTurnIn);
-                if (!Svc.Condition[ConditionFlag.Gathering])
-                    P.TaskManager.Enqueue(() => UpdateIndex(MissionNodes), "Increasing the index by 1");
+                P.TaskManager.Enqueue(() => SchedulerMain.State |= IceState.ScoringMission, "Checking score");
             }
         }
 
@@ -559,61 +565,50 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? UpdateIndex(List<uint> MissionNodes)
         {
-            if (SchedulerMain.currentIndex < MissionNodes.Count - 1)
+            if (SchedulerMain.CurrentIndex < MissionNodes.Count - 1)
             {
                 IceLogging.Debug($"Mission count: {MissionNodes.Count}");
-                IceLogging.Debug($"Current index: {SchedulerMain.currentIndex}. Adding +1 to it");
-                SchedulerMain.currentIndex += 1;
-                IceLogging.Debug($"New index value: {SchedulerMain.currentIndex}");
+                IceLogging.Debug($"Current index: {SchedulerMain.CurrentIndex}. Adding +1 to it");
+                SchedulerMain.CurrentIndex += 1;
+                SchedulerMain.NodesVisited += 1;
+                IceLogging.Debug($"New index value: {SchedulerMain.CurrentIndex}");
                 return true;
             }
             else
             {
                 IceLogging.Debug($"Resetting index value to 0");
-                SchedulerMain.currentIndex = 0;
+                SchedulerMain.CurrentIndex = 0;
                 return true;
             }
         }
 
-        internal static bool? HaveEnoughMain()
+        internal static bool? IntegrityCheck(Gathering x)
         {
-            if (CurrentLunarMission == 0)
-                return null;
-
-            var DictEntry = GatheringItemDict[CurrentLunarMission].MinGatherItems;
-            foreach (var item in DictEntry)
+            if (Svc.Condition[ConditionFlag.Gathering])
             {
-                if (PlayerHelper.GetItemCount((int)item.Key, out int count) && count < item.Value)
+                if (x.IsAddonReady && x.CurrentIntegrity != 0)
                 {
-                    return false;
+                    return true;
                 }
             }
+            else if (PlayerHelper.IsPlayerNotBusy())
+            {
+                return true;
+            }
 
-            return true;
+            return false;
         }
 
+        [Obsolete("Use MissionHandler.HaveEnoughMain instead.")]
+        internal static bool? HaveEnoughMain()
+        {
+            return MissionHandler.HaveEnoughMain();
+        }
+
+        [Obsolete("Use MissionHandler.GetCurrentScores instead.")]
         internal static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
         {
-            if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
-            {
-                var goldScore = CosmicHelper.CurrentMissionInfo.GoldRequirement;
-                var silverScore = CosmicHelper.CurrentMissionInfo.SilverRequirement;
-
-                string currentScoreText = AddonHelper.GetNodeText("WKSMissionInfomation", 27);
-                currentScoreText = currentScoreText.Replace(",", ""); // English client comma's
-                currentScoreText = currentScoreText.Replace(" ", ""); // French client spacing
-                currentScoreText = currentScoreText.Replace(".", ""); // French client spacing
-                if (uint.TryParse(currentScoreText, out uint tempScore))
-                {
-                    return (tempScore, silverScore, goldScore);
-                }
-                else
-                {
-                    return (0, silverScore, goldScore);
-                }
-            }
-
-            return (0, 0, 0);
+            return MissionHandler.GetCurrentScores();
         }
     }
 }

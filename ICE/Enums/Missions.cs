@@ -1,4 +1,3 @@
-
 namespace ICE.Enums
 {
     [Flags]

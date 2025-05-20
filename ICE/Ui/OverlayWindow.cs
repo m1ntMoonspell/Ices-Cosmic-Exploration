@@ -23,7 +23,7 @@ namespace ICE.Ui
             ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
 
 #if DEBUG
-            ImGui.Text($"Current node: {SchedulerMain.currentIndex}");
+            ImGui.Text($"Current node: {SchedulerMain.CurrentIndex} / Visited: {SchedulerMain.NodesVisited}");
 #endif
 
             ImGuiHelpers.ScaledDummy(2);
