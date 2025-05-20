@@ -109,10 +109,13 @@ internal static class MissionHandler
 
             if (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
             {
-                IceLogging.Error("[TurnIn] Unexpected error. Potential Crafting Animation Lock.");
+                if (SchedulerMain.PossiblyStuck > 0)
+                {
+                    IceLogging.Error("[TurnIn] Unexpected error. Potential Crafting Animation Lock.");
 #if DEBUG
-                IceLogging.Error($"[TurnIn] PossiblyStuck: {SchedulerMain.PossiblyStuck} | AnimationLockToggle {C.AnimationLockAbandon} | AnimationLockState {SchedulerMain.AnimationLockAbandonState}");
+                    IceLogging.Error($"[TurnIn] PossiblyStuck: {SchedulerMain.PossiblyStuck} | AnimationLockToggle {C.AnimationLockAbandon} | AnimationLockState {SchedulerMain.AnimationLockAbandonState}");
 #endif
+                }
                 if (SchedulerMain.PossiblyStuck < 2 && C.AnimationLockAbandon)
                 {
                     SchedulerMain.PossiblyStuck += 1;
@@ -122,8 +125,8 @@ internal static class MissionHandler
                     SchedulerMain.AnimationLockAbandonState = true;
                     Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
                     {
-                        Message = "[ICE] Unexpected error. I might be Animation Locked. Trigger count: " + SchedulerMain.PossiblyStuck + " " +
-                        (C.AnimationLockAbandon ? "Attempting experimental unstuck." : "Please enable Experimental unstuck to attempt unstuck."),
+                        Message = "[ICE] Unexpected error. I might be Animation Locked. " +
+                        (C.AnimationLockAbandon ? "Attempting unstuck." : "Please enable Experimental unstuck to attempt unstuck."),
                         Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
                     });
                 }
