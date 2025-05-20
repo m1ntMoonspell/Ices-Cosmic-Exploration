@@ -8,6 +8,7 @@ namespace ICE.Scheduler
         internal static bool EnablePlugin()
         {
             State = Start;
+            StartClassJob = (Job)PlayerHelper.GetClassJobId();
             return true;
         }
         internal static bool DisablePlugin()
@@ -15,6 +16,7 @@ namespace ICE.Scheduler
             P.TaskManager.Abort();
             StopBeforeGrab = false;
             State = Idle;
+            StartClassJob = Job.ADV;
             if (P.Navmesh.IsRunning())
                 P.Navmesh.Stop();
             return true;
@@ -37,6 +39,7 @@ namespace ICE.Scheduler
 #endif
 
         internal static IceState State = Idle;
+        internal static Job StartClassJob = Job.ADV;
 
         // <summary>
         // Main Scheduler. General flow is to raise flags as necessary and resolve them based on priority:
@@ -48,7 +51,7 @@ namespace ICE.Scheduler
         // If Gamba flag is set, run gamba, reset to Idle.
         // If GrabMission && Waiting - wait for non-standard mission conditions to be true before resuming.
         // If GrabMission flag is set, get a mission. Once obtained raise Craft/Gather/Fish flags and ExecutingMission flag. Otherwise if no standards - raise Waiting. If no missions at all - set state to Idle.
-        // If Manual is set on a mission - Zen. (Also Fish + DualClass, for now.)
+        // If Manual is set on a mission - Zen. (Also Fish, for now.)
         // If Gather && ExecutingMission flag is set, run gathering. If DualClass - lower Gather flag on enough mats. Raise ScoringMission flag on completion of a loop.
         // If Craft && ExecutingMission flag is set, run crafting. If DualClass - raise Gather flag on if not enough mats. Raise ScoringMission flag on completion of a loop.
         // </summary>
@@ -79,7 +82,7 @@ namespace ICE.Scheduler
                     case var s when s.HasFlag(GrabMission):
                         TaskMissionFind.Enqueue();
                         break;
-                    case var s when s.HasFlag(ManualMode) || s.HasFlag(Fish) || (s.HasFlag(Craft) && s.HasFlag(Gather)):
+                    case var s when s.HasFlag(ManualMode) || s.HasFlag(Fish):
                         TaskManualMode.ZenMode();
                         break;
                     case var s when s.HasFlag(Gather) && s.HasFlag(ExecutingMission):

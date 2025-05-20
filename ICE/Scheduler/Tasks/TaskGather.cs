@@ -29,7 +29,19 @@ namespace ICE.Scheduler.Tasks
         public static void TryEnqueueGathering()
         {
             if (CosmicHelper.CurrentLunarMission != 0)
-                MakeGatheringTask();
+            {
+                Job targetClass;
+                if (((Job)CosmicHelper.CurrentMissionInfo.JobId).IsDol())
+                    targetClass = (Job)CosmicHelper.CurrentMissionInfo.JobId;
+                else if (((Job)CosmicHelper.CurrentMissionInfo.JobId2).IsDol())
+                    targetClass = (Job)CosmicHelper.CurrentMissionInfo.JobId2;
+                else
+                    return;
+                if ((Job)PlayerHelper.GetClassJobId() != targetClass)
+                    GearsetHandler.TaskClassChange(targetClass);
+                else
+                    MakeGatheringTask();
+            }
         }
 
         // Version 2 of the gathering task. Trying to improve on it all...

@@ -10,7 +10,19 @@ namespace ICE.Scheduler.Tasks
         public static void TryEnqueueCrafts()
         {
             if (CosmicHelper.CurrentLunarMission != 0)
-                MakeCraftingTasks();
+            {
+                Job targetClass;
+                if (((Job)CosmicHelper.CurrentMissionInfo.JobId).IsDoh())
+                    targetClass = (Job)CosmicHelper.CurrentMissionInfo.JobId;
+                else if (((Job)CosmicHelper.CurrentMissionInfo.JobId2).IsDoh())
+                    targetClass = (Job)CosmicHelper.CurrentMissionInfo.JobId2;
+                else
+                    return;
+                if ((Job)PlayerHelper.GetClassJobId() != targetClass)
+                    GearsetHandler.TaskClassChange(targetClass);
+                else
+                    MakeCraftingTasks();
+            }
         }
 
         internal static void MakeCraftingTasks()

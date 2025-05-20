@@ -1,6 +1,5 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Memory;
-using ECommons.Automation;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 internal static class MissionHandler
@@ -55,6 +54,22 @@ internal static class MissionHandler
         }
         return true;
     }
+    internal static (bool craft, bool gather) HaveEnoughMainDual()
+    {
+        bool craft = false;
+        bool gather = false;
+        foreach (var main in CosmicHelper.CurrentMoonRecipe.MainCraftsDict)
+        {
+            var itemId = ExcelHelper.RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
+            var mainNeed = main.Value;
+            PlayerHelper.GetItemCount((int)itemId, out var currentAmount);
+            craft = currentAmount >= mainNeed;
+        }
+        foreach (var item in CosmicHelper.GatheringItemDict[CosmicHelper.CurrentLunarMission].MinGatherItems)
+            if (PlayerHelper.GetItemCount((int)item.Key, out int count))
+                gather = count >= item.Value;
+        return (craft, gather);
+    }
     internal unsafe static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
     {
         uint currentScore = 0, silverScore = 0, goldScore = 0;
@@ -71,27 +86,27 @@ internal static class MissionHandler
                 silverScore = 1;
                 goldScore = 2;
             }
-                else if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining))
-                {
-                    currentScore = (uint)(HaveEnoughMain() == true ? 1 : 0);
-                    silverScore = 1;
-                    goldScore = 1;
-                }
-                else
-                {
-                    string _currentScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[2].String.Value).GetText();
-                    string _silverScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[3].String.Value).GetText();
-                    string _goldScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[4].String.Value).GetText();
+            else if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining))
+            {
+                currentScore = (uint)(HaveEnoughMain() == true ? 1 : 0);
+                silverScore = 1;
+                goldScore = 1;
+            }
+            else
+            {
+                string _currentScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[2].String.Value).GetText();
+                string _silverScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[3].String.Value).GetText();
+                string _goldScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[4].String.Value).GetText();
 
-                    // Remove all non-digit characters before parsing
-                    _currentScore = new string(_currentScore.Where(char.IsDigit).ToArray());
-                    _silverScore = new string(_silverScore.Where(char.IsDigit).ToArray());
-                    _goldScore = new string(_goldScore.Where(char.IsDigit).ToArray());
+                // Remove all non-digit characters before parsing
+                _currentScore = new string(_currentScore.Where(char.IsDigit).ToArray());
+                _silverScore = new string(_silverScore.Where(char.IsDigit).ToArray());
+                _goldScore = new string(_goldScore.Where(char.IsDigit).ToArray());
 
-                    uint.TryParse(_currentScore, out currentScore);
-                    uint.TryParse(_silverScore, out silverScore);
-                    uint.TryParse(_goldScore, out goldScore);
-                }
+                uint.TryParse(_currentScore, out currentScore);
+                uint.TryParse(_silverScore, out silverScore);
+                uint.TryParse(_goldScore, out goldScore);
+            }
         }
         else
         {
@@ -167,43 +182,48 @@ internal static class MissionHandler
                 SchedulerMain.State = IceState.GrabMission;
                 return true;
             }
+
+            if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady)
             {
-                if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady)
-                {
-                    IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
-                    cr.Addon->FireCallbackInt(-1);
-                    return false;
-                }
-                if (GenericHelpers.TryGetAddonMaster<GatheringMasterpiece>("GatheringMasterpiece", out var gm) && gm.IsAddonReady)
-                {
-                    IceLogging.Info("[Score Checker] Player is gathering collectibles, trying to fix", true);
-                    gm.Addon->FireCallbackInt(-1);
-                    return false;
-                }
-                if (GenericHelpers.TryGetAddonMaster<Gathering>("Gathering", out var g) && g.IsAddonReady)
-                {
-                    IceLogging.Info("[Score Checker] Player is gathering, trying to fix", true);
-                    g.Addon->FireCallbackInt(-1);
-                    return false;
-                }
+                IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
+                cr.Addon->FireCallbackInt(-1);
+                return false;
+            }
+            else if (GenericHelpers.TryGetAddonMaster<GatheringMasterpiece>("GatheringMasterpiece", out var gm) && gm.IsAddonReady)
+            {
+                IceLogging.Info("[Score Checker] Player is gathering collectibles, trying to fix", true);
+                gm.Addon->FireCallbackInt(-1);
+                return false;
+            }
+            else if (GenericHelpers.TryGetAddonMaster<Gathering>("Gathering", out var g) && g.IsAddonReady)
+            {
+                IceLogging.Info("[Score Checker] Player is gathering, trying to fix", true);
+                g.Addon->FireCallbackInt(-1);
+                return false;
+            }
+
+            if ((Job)PlayerHelper.GetClassJobId() != SchedulerMain.StartClassJob)
+            {
+                GearsetHandler.TaskClassChange(SchedulerMain.StartClassJob);
+                return false;
             }
 
             if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
-            {
-                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition[ConditionFlag.NormalConditions])
                 {
-                    var gameObject = Utils.TryGetObjectCollectionPoint();
-                    float gameObjectDistance = 100;
-                    if (gameObject is not null)
-                        gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
-                    //Utils.TargetgameObject(gameObject);
-                    if (gameObjectDistance < 5)
-                        Utils.InteractWithObject(gameObject);
-                    else if (gameObjectDistance < 100)
-                        TaskGather.PathToNode(gameObject.Position);
+                    if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition[ConditionFlag.NormalConditions])
+                    {
+                        var gameObject = Utils.TryGetObjectCollectionPoint();
+                        float gameObjectDistance = 100;
+                        if (gameObject is not null)
+                            gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
+                        //Utils.TargetgameObject(gameObject);
+                        if (gameObjectDistance < 5)
+                            Utils.InteractWithObject(gameObject);
+                        else if (gameObjectDistance < 100)
+                            TaskGather.PathToNode(gameObject.Position);
+                    }
+                    return false;
                 }
-                return false;
-            }
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {

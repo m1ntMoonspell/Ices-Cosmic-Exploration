@@ -41,6 +41,26 @@ namespace ICE.Scheduler.Tasks
                     return;
                 }
 
+                if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft) && CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
+                {
+                    var (craft, gather) = MissionHandler.HaveEnoughMainDual();
+                    PlayerHelper.GetItemCount(48233, out int count);
+                    if (gather)
+                    {
+                        SchedulerMain.State &= ~IceState.Gather;
+                        return;
+                    }
+                    else if (count > 0 && !gather && !craft)
+                    {
+                        SchedulerMain.State |= IceState.Gather;
+                        return;
+                    }
+                    else if (count == 0)
+                    {
+                        SchedulerMain.State |= IceState.AbortInProgress;
+                    }
+                }
+
                 if (enoughMain.Value || SchedulerMain.State.HasFlag(IceState.AbortInProgress))
                 {
                     uint targetLevel = 0;

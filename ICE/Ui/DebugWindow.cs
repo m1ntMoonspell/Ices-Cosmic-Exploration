@@ -436,6 +436,15 @@ internal class DebugWindow : Window
             ImGui.SameLine();
             ImGui.Text($"Distance to nearest: {collectionPointDistance}");
 
+            if (ImGui.Button("Switch class to CRP"))
+            {
+                GearsetHandler.TaskClassChange(Job.CRP);
+            }
+            if (ImGui.Button("Switch class to MIN"))
+            {
+                GearsetHandler.TaskClassChange(Job.MIN);
+            }
+
 
             ImGui.TreePop();
         }
