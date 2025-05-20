@@ -40,16 +40,17 @@ namespace ICE.Scheduler
 
         // <summary>
         // Main Scheduler. General flow is to raise flags as necessary and resolve them based on priority:
-        // -1. Idle - do nothing.
-        // 0. On start, check what state we are in and set flags as needed.
-        // 1. If Score flag is set, run score check, reset state to Idle or Grab if turned in, otherwise unset Score flag.
-        // 2. If AnimationLock flag is set, attempt unstuck, unset flag after.
-        // 3. If Gamba flag is set, run gamba, reset to Idle.
-        // 4. If GrabMission && Waiting - wait for non-standard mission conditions to be true before resuming.
-        // 5. If GrabMission flag is set, get a mission. Once obtained raise Craft/Gather/Fish flags and ExecutingMission flag. Otherwise if can't get a mission and no standards - raise Waiting.
-        // 6. If Manual is set on a mission - Zen. (Also Fish)
-        // 7. If Gather && ExecutingMission flag is set, run gathering. If DualClass - lower Gather flag on enough mats. Raise ScoringMission flag on completion of a loop.
-        // 8. If Craft && ExecutingMission flag is set, run crafting. If DualClass - raise Gather flag on if not enough mats. Raise ScoringMission flag on completion of a loop.
+        // Idle - do nothing.
+        // On start, check what state we are in and set flags as needed.
+        // If Craft && Waiting - Wait for craft loop to exit. Raise ScoringMission + lower Waiting on exit.
+        // If ScoringMission flag is set, run score check, reset state to Idle or Grab if turned in, otherwise unset ScoringMission flag (Returning us to Cradt/Gather/Fish)
+        // If AnimationLock flag is set, attempt unstuck, unset flag after.
+        // If Gamba flag is set, run gamba, reset to Idle.
+        // If GrabMission && Waiting - wait for non-standard mission conditions to be true before resuming.
+        // If GrabMission flag is set, get a mission. Once obtained raise Craft/Gather/Fish flags and ExecutingMission flag. Otherwise if no standards - raise Waiting. If no missions at all - set state to Idle.
+        // If Manual is set on a mission - Zen. (Also Fish + DualClass, for now.)
+        // If Gather && ExecutingMission flag is set, run gathering. If DualClass - lower Gather flag on enough mats. Raise ScoringMission flag on completion of a loop.
+        // If Craft && ExecutingMission flag is set, run crafting. If DualClass - raise Gather flag on if not enough mats. Raise ScoringMission flag on completion of a loop.
         // </summary>
         internal static void Tick()
         {
@@ -59,6 +60,9 @@ namespace ICE.Scheduler
                 {
                     case var s when s.HasFlag(Start):
                         EnqueueResumeCheck();
+                        break;
+                    case var s when s.HasFlag(Craft) && s.HasFlag(Waiting):
+                        TaskCrafting.WaitTillActuallyDone();
                         break;
                     case var s when s.HasFlag(ScoringMission) || s.HasFlag(AbortInProgress):
                         TaskScoreCheckCraft.TryCheckScore();
@@ -75,14 +79,11 @@ namespace ICE.Scheduler
                     case var s when s.HasFlag(GrabMission):
                         TaskMissionFind.Enqueue();
                         break;
-                    case var s when s.HasFlag(ManualMode) || s.HasFlag(Fish):
+                    case var s when s.HasFlag(ManualMode) || s.HasFlag(Fish) || (s.HasFlag(Craft) && s.HasFlag(Gather)):
                         TaskManualMode.ZenMode();
                         break;
                     case var s when s.HasFlag(Gather) && s.HasFlag(ExecutingMission):
                         TaskGather.TryEnqueueGathering();
-                        break;
-                    case var s when s.HasFlag(Craft) && s.HasFlag(Waiting):
-                        TaskCrafting.WaitTillActuallyDone();
                         break;
                     case var s when s.HasFlag(Craft) && s.HasFlag(ExecutingMission):
                         TaskCrafting.TryEnqueueCrafts();
