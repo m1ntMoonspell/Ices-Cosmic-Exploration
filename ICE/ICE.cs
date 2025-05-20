@@ -143,7 +143,7 @@ public sealed partial class ICE : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "s" || firstArg.ToLower() == "settings")
         {
-            settingWindow.IsOpen = true;
+            settingWindow.IsOpen = !settingWindow.IsOpen;
             return;
         }
         else if (firstArg.ToLower() == "clear")

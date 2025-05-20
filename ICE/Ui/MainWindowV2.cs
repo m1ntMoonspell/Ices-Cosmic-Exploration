@@ -29,7 +29,7 @@ namespace ICE.Ui
             SizeConstraints = new()
             {
                 MinimumSize = new Vector2(100, 100),
-                MaximumSize = new Vector2(2000, 2000)
+                MaximumSize = new Vector2(2000, 3000)
             };
 
             P.windowSystem.AddWindow(this);
@@ -141,8 +141,6 @@ namespace ICE.Ui
             float leftPanelWidth = Math.Max(220, textLineHeight * 14);
             float middlePanelWidth = Math.Max(0, textLineHeight * 22);
 
-            Kofi.DrawRaw();
-
             ImGui.Columns(3, "Main Window", false);
             // ----------------------------
             //  LEFT PANEL (Start/Stop, Class Selection, Filter Ui)
@@ -152,16 +150,16 @@ namespace ICE.Ui
 
             if (ImGui.BeginChild("###Filter Panel", new Vector2(0, childHeight), true))
             {
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 4.0f);
+
                 using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !usingSupportedJob))
                 {
-                    ImGui.SetNextItemWidth(200);
                     if (ImGui.Button("Start", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                     {
                         SchedulerMain.EnablePlugin();
                     }
                 }
 
-                ImGui.SetNextItemWidth(200);
                 using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle))
                 {
                     if (ImGui.Button("Stop", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
@@ -169,12 +167,18 @@ namespace ICE.Ui
                         SchedulerMain.DisablePlugin();
                     }
                 }
+                if (ImGui.Button("Settings", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                {
+                    P.settingWindow.IsOpen = !P.settingWindow.IsOpen;
+                }
 
                 if (ImGui.Checkbox($"Only grab mission", ref onlyGrabMission))
                 {
                     C.OnlyGrabMission = onlyGrabMission;
                     C.Save();
                 }
+
+                ImGui.PopStyleVar();
 
                 ImGui.Spacing();
 
@@ -297,6 +301,17 @@ namespace ICE.Ui
 
                 ImGui.Dummy(new Vector2(0, 5));
 
+                ImGui.Text("Quick Mission Apply");
+
+                ImGui.Dummy(new Vector2(0, 5));
+                UpdateMissions();
+
+                ImGui.Dummy(new Vector2(0, 5));
+
+                ImGui.Separator();
+
+                ImGui.Dummy(new Vector2(0, 5));
+
 #if DEBUG
                 ImGui.Text($"Show following missions");
                 if (ImGui.Checkbox($"Critical", ref showCritical))
@@ -371,8 +386,6 @@ namespace ICE.Ui
 
             if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
             {
-
-                UpdateMissions();
 
                 if (ImGui.Checkbox("Show Unsupported Missions", ref hideUnsupported))
                 {
@@ -524,6 +537,9 @@ namespace ICE.Ui
 
             if (ImGui.BeginChild("###MissionDetailPanel", new Vector2(0, childHeight), true))
             {
+                Kofi.DrawRight();
+                ImGui.NewLine();
+
                 if (selectedMission != 0)
                 {
                     ImGui.Text($"Mission Info (More Detailed)");
@@ -1192,15 +1208,6 @@ namespace ICE.Ui
                 ImGui.EndPopup();
             }
 
-            ImGui.SameLine();
-
-            float comboSize = -1.0f;
-            for (int i = 0; i < missionOptions.Length; i++)
-            {
-                comboSize = Math.Max(comboSize, ImGui.CalcTextSize(missionOptions[i]).X);
-            }
-            comboSize += 20f;
-            ImGui.SetNextItemWidth(comboSize);
             if (ImGui.BeginCombo("###ProfileSelector", selectedOption))
             {
                 for (int i = 0; i < missionOptions.Length; i++)
@@ -1214,9 +1221,7 @@ namespace ICE.Ui
                 ImGui.EndCombo();
             }
 
-            ImGui.SameLine();
-
-            if (ImGui.Button("Apply to all profiles"))
+            if (ImGui.Button("Apply to selected profiles"))
             {
                 var currentJob = PlayerHelper.GetClassJobId();
 
