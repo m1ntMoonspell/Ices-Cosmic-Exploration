@@ -124,15 +124,15 @@ public sealed partial class ICE : IDalamudPlugin
 
         if (subcommands.Length == 0 || args == "")
         {
-            mainWindow.IsOpen = !mainWindow.IsOpen;
+            mainWindow2.IsOpen = !mainWindow2.IsOpen;
             return;
         }
 
         var firstArg = subcommands[0];
 
-        if (firstArg.ToLower() == "2")
+        if (firstArg.ToLower() == "old")
         {
-            mainWindow2.IsOpen = !mainWindow2.IsOpen;
+            mainWindow.IsOpen = !mainWindow.IsOpen;
             return;
         }
 

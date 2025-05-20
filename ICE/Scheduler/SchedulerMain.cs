@@ -29,6 +29,7 @@ namespace ICE.Scheduler
         internal static uint PreviousNodeSet = 0;
         internal static int CurrentIndex = 0;
         internal static uint NodesVisited = 0;
+        internal static bool GatherNodeMissing = false;
 #if DEBUG
         // Debug only settings
         internal static bool DebugOOMMain = false;

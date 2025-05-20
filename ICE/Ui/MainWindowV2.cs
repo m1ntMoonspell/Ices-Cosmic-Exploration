@@ -8,6 +8,7 @@ using ICE.Enums;
 using ICE.Utilities.Cosmic;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Channels;
 using static ICE.Utilities.CosmicHelper;
 
 namespace ICE.Ui
@@ -101,6 +102,11 @@ namespace ICE.Ui
         private bool increaseMiddleColumn = C.IncreaseMiddleColumn;
 
         private bool showTableSetting = false;
+        private string[] modes = ["Gold", "Silver", "Bronze", "Manual"];
+        private bool[] selectedModes = [false, false, false, false];
+
+        private string[] missionOptions = ["Current Class", "All Missions", "Currently Enabled"];
+        private string selectedOption = "Current Class";
 
         private List<(uint Id, string SortOptionName, Func<IEnumerable<KeyValuePair<uint, MissionListInfo>>, IEnumerable<KeyValuePair<uint, MissionListInfo>>> SortFunc)> sortOptions = new()
         {
@@ -134,6 +140,8 @@ namespace ICE.Ui
             // Setting up the columns to be 3 right here. 
             float leftPanelWidth = Math.Max(220, textLineHeight * 14);
             float middlePanelWidth = Math.Max(0, textLineHeight * 22);
+
+            Kofi.DrawRaw();
 
             ImGui.Columns(3, "Main Window", false);
             // ----------------------------
@@ -289,8 +297,8 @@ namespace ICE.Ui
 
                 ImGui.Dummy(new Vector2(0, 5));
 
+#if DEBUG
                 ImGui.Text($"Show following missions");
-
                 if (ImGui.Checkbox($"Critical", ref showCritical))
                 {
                     C.showCritical = showCritical;
@@ -331,7 +339,7 @@ namespace ICE.Ui
                     C.showClassD = showClassD;
                     C.Save();
                 }
-
+#endif
             }
 
             ImGui.EndChild();
@@ -363,6 +371,9 @@ namespace ICE.Ui
 
             if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
             {
+
+                UpdateMissions();
+
                 if (ImGui.Checkbox("Show Unsupported Missions", ref hideUnsupported))
                 {
                     C.HideUnsupportedMissions = hideUnsupported;
@@ -584,12 +595,93 @@ namespace ICE.Ui
 
                         ImGui.Dummy(new Vector2(0, 5));
 
-#if DEBUG
+                        ImGui.Separator();
+
+                        ImGui.Dummy(new Vector2(0, 5));
+
                         MissionAttributes flags = mission.Attributes;
                         var activeFlags = Enum.GetValues(typeof(MissionAttributes))
                                               .Cast<MissionAttributes>()
                                               .Where(f => f != MissionAttributes.None && flags.HasFlag(f))
                                               .ToList();
+
+                        var entry = C.Missions.Where(e => e.Id == selectedMission);
+
+                        ImGui.Text($"Notes:");
+                        bool hasPreviousNotes = false;
+                        if (mission.Weather != CosmicWeather.FairSkies)
+                        {
+                            hasPreviousNotes = true;
+
+                            ImGui.TextWrapped(mission.Weather.ToString());
+                        }
+                        else if (mission.Time != 0)
+                        {
+                            hasPreviousNotes = true;
+
+                            ImGui.TextWrapped($"{2 * (mission.Time - 1)}:00 - {2 * (mission.Time)}:00");
+                        }
+                        else if (mission.PreviousMissionID != 0)
+                        {
+                            hasPreviousNotes = true;
+
+                            var (Id, Name) = MissionInfoDict.Where(m => m.Key == mission.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
+                            ImGui.TextWrapped($"[{Id}] {Name}");
+                        }
+                        if (mission.JobId2 != 0)
+                        {
+                            if (hasPreviousNotes) ImGui.SameLine();
+                            ImGui.TextWrapped($"{jobOptions.Find(job => job.Id == mission.JobId).Name}/{jobOptions.Find(job => job.Id == mission.JobId2).Name}");
+                        }
+
+                        if (mission.Attributes.HasFlag(MissionAttributes.Gather))
+                        {
+                            ImGui.Dummy(new Vector2(0, 5));
+
+                            ImGui.Separator();
+
+                            ImGui.Dummy(new Vector2(0, 5));
+
+                            bool craftMission = mission.Attributes.HasFlag(MissionAttributes.Craft);
+
+                            bool LimitedQuant = mission.Attributes.HasFlag(MissionAttributes.Limited);
+                            // Gather X Amount is just "Gather" 
+                            bool TimedMission = mission.Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining);
+                            bool ChainedMission = mission.Attributes.HasFlag(MissionAttributes.ScoreChains);
+                            bool BoonMission = mission.Attributes.HasFlag(MissionAttributes.ScoreGatherersBoon);
+                            bool collectableMission = mission.Attributes.HasFlag(MissionAttributes.Collectables);
+                            bool stellerReductionMission = mission.Attributes.HasFlag(MissionAttributes.ReducedItems);
+
+                            bool GatherX = !stellerReductionMission && !collectableMission && !BoonMission && !ChainedMission && !TimedMission && !LimitedQuant;
+
+                            string MissionType = "";
+                            if (craftMission)
+                            {
+                                MissionType = "Dual Class Mission";
+                            }
+                            else if (LimitedQuant)
+                            {
+                                MissionType = "Limited Quantity/Nodes";
+                            }
+                            else if (TimedMission)
+                                MissionType = "Timed Scoring/Time Attack";
+                            else if (ChainedMission && !BoonMission)
+                                MissionType = "Chained Gather Scoring";
+                            else if (BoonMission && !ChainedMission)
+                                MissionType = "Gatherer's Boon Scoring";
+                            else if (BoonMission && ChainedMission)
+                                MissionType = "Chained + Gatherer's Boon Scoring";
+                            else if (collectableMission && !stellerReductionMission)
+                                MissionType = "Collectable Scoring";
+                            else if (stellerReductionMission)
+                                MissionType = "Steller Reduction/Collectables";
+                            else if (GatherX)
+                                MissionType = "Gather X Amount of Items";
+
+                            ImGui.Text("Mission Type: " + MissionType);
+                        }
+#if DEBUG
+                        ImGui.Dummy(new(0, 10));
                         ImGui.Text($"Debug Section");
                         ImGui.Spacing();
 
@@ -989,6 +1081,17 @@ namespace ICE.Ui
                         }
                         ImGui.EndCombo();
                     }
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Turnin's Enabled:");
+                        for (int i = 0; i < selectedModes.Length; i++)
+                        {
+                            if (selectedModes[i] == true)
+                                ImGui.Text($"{modes[i]}");
+                        }
+                        ImGui.EndTooltip();
+                    }
                     if (changed)
                     {
                         if (unsupported)
@@ -1068,6 +1171,139 @@ namespace ICE.Ui
                 }
 
                 ImGui.EndTable();
+            }
+        }
+
+        private void UpdateMissions()
+        {
+            ImGui.SetNextItemWidth(100);
+            if (ImGui.Button("Select Modes"))
+            {
+                ImGui.OpenPopup("Select Mission Profiles");
+            }
+
+            if (ImGui.BeginPopup("Select Mission Profiles"))
+            {
+                ImGui.Checkbox($"Gold", ref selectedModes[0]);
+                ImGui.Checkbox($"Silver", ref selectedModes[1]);
+                ImGui.Checkbox($"Bronze/ASAP", ref selectedModes[2]);
+                ImGui.Checkbox($"Manual", ref selectedModes[3]);
+
+                ImGui.EndPopup();
+            }
+
+            ImGui.SameLine();
+
+            float comboSize = -1.0f;
+            for (int i = 0; i < missionOptions.Length; i++)
+            {
+                comboSize = Math.Max(comboSize, ImGui.CalcTextSize(missionOptions[i]).X);
+            }
+            comboSize += 20f;
+            ImGui.SetNextItemWidth(comboSize);
+            if (ImGui.BeginCombo("###ProfileSelector", selectedOption))
+            {
+                for (int i = 0; i < missionOptions.Length; i++)
+                {
+                    bool selected = selectedModes[i];
+                    if (ImGui.Selectable(missionOptions[i], selected))
+                    {
+                        selectedOption = missionOptions[i];
+                    }
+                }
+                ImGui.EndCombo();
+            }
+
+            ImGui.SameLine();
+
+            if (ImGui.Button("Apply to all profiles"))
+            {
+                var currentJob = PlayerHelper.GetClassJobId();
+
+                foreach (var mission in C.Missions)
+                {
+                    var id = mission.Id;
+
+                    bool unsupported = UnsupportedMissions.Ids.Contains(id);
+
+                    var missionDict = MissionInfoDict[id];
+
+                    bool craftMission = missionDict.Attributes.HasFlag(MissionAttributes.Craft);
+                    bool gatherMission = missionDict.Attributes.HasFlag(MissionAttributes.Gather);
+                    bool fishMission = missionDict.Attributes.HasFlag(MissionAttributes.Fish);
+                    bool collectableMission = missionDict.Attributes.HasFlag(MissionAttributes.Collectables);
+                    bool stellerReductionMission = missionDict.Attributes.HasFlag(MissionAttributes.ReducedItems);
+                    bool TimedMission = missionDict.Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining);
+
+                    bool dualclass = craftMission && (gatherMission || fishMission);
+
+                    if (dualclass || fishMission || (gatherMission && (collectableMission || stellerReductionMission)) || (gatherMission && missionDict.NodeSet == 0))
+                    {
+                        unsupported = true;
+                    }
+
+                    // "Current Class", "All Missions", "Currently Enabled"
+                    void UpdateMissions()
+                    {
+                        if (TimedMission)
+                        {
+                            if (!selectedModes[2] && !selectedModes[3])
+                            {
+                                mission.TurnInASAP = true;
+                                mission.ManualMode = false;
+
+                            }
+                            else
+                            {
+                                mission.TurnInGold = false;
+                                mission.TurnInSilver = false;
+                                mission.TurnInASAP = selectedModes[2];
+                                mission.ManualMode = selectedModes[3];
+                            }
+                        }
+                        else if (unsupported)
+                        {
+                            mission.TurnInGold = false;
+                            mission.TurnInSilver = false;
+                            mission.TurnInASAP = false;
+                            mission.ManualMode = true;
+                        }
+                        else
+                        {
+                            // should be the catch all for all missions
+                            mission.TurnInGold = selectedModes[0];
+                            mission.TurnInSilver = selectedModes[1];
+                            mission.TurnInASAP = selectedModes[2];
+                            mission.ManualMode = selectedModes[3];
+                        }
+                    }
+
+
+                    if (selectedOption == missionOptions[0])
+                    {
+                        if (missionDict.JobId == currentJob)
+                        {
+                            UpdateMissions();
+                        }
+                        else
+                            continue;
+                    }
+                    else if (selectedOption == missionOptions[1])
+                    {
+                        UpdateMissions();
+                    }
+                    else if (selectedOption == missionOptions[2])
+                    {
+                        if (mission.Enabled)
+                        {
+                            UpdateMissions();
+                        }
+                        else
+                            continue;
+                    }
+                }
+
+                C.Save();
             }
         }
 
