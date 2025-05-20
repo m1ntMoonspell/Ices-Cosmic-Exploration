@@ -112,10 +112,8 @@ namespace ICE.Scheduler.Tasks
                             }
                             else
                             {
-                                // Node wasn't found. force abandoning
-                                // SchedulerMain.State = IceState.GatherScoreandTurnIn;
-                                // SchedulerMain.GatherNodeMissing = true;
-                                // return;
+                                P.TaskManager.Enqueue(() => UpdateIndex(MissionNodes), "Increasing the index by 1");
+                                return;
                             }
                         }
                     }
@@ -194,7 +192,7 @@ namespace ICE.Scheduler.Tasks
                                 {
                                     if (hasAllItems && item.ItemID != 0)
                                     {
-#nullable disable
+                                        #nullable disable
                                         int boonChance = item.BoonChance;
                                         IceLogging.Debug($"Boon Increase 2: {BoonIncrease2Bool(boonChance, gBuffs)} && Missing durability: {missingDur}");
                                         if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
@@ -388,6 +386,10 @@ namespace ICE.Scheduler.Tasks
                                 }
                             }
                         }
+                        else if (x.CurrentIntegrity == 0)
+                        {
+                            P.TaskManager.Enqueue(() => IntegrityCheck(x));
+                        }
 
                     }
 
@@ -395,8 +397,6 @@ namespace ICE.Scheduler.Tasks
 
                 // Check the score
                 P.TaskManager.Enqueue(() => SchedulerMain.State |= IceState.ScoringMission, "Checking score");
-                if (!Svc.Condition[ConditionFlag.Gathering])
-                    P.TaskManager.Enqueue(() => UpdateIndex(MissionNodes), "Increasing the index by 1");
             }
         }
 
@@ -580,6 +580,23 @@ namespace ICE.Scheduler.Tasks
                 SchedulerMain.CurrentIndex = 0;
                 return true;
             }
+        }
+
+        internal static bool? IntegrityCheck(Gathering x)
+        {
+            if (Svc.Condition[ConditionFlag.Gathering])
+            {
+                if (x.IsAddonReady && x.CurrentIntegrity != 0)
+                {
+                    return true;
+                }
+            }
+            else if (PlayerHelper.IsPlayerNotBusy())
+            {
+                return true;
+            }
+
+            return false;
         }
 
         [Obsolete("Use MissionHandler.HaveEnoughMain instead.")]
