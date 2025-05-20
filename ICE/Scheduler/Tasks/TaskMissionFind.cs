@@ -109,6 +109,7 @@ namespace ICE.Scheduler.Tasks
             }
 
             P.TaskManager.Enqueue(TaskRepair.GatherCheck, "Checking for repairs");
+            P.TaskManager.Enqueue(TaskSpiritbond.TryExtractMateria, "Checking for materia");
 
             P.TaskManager.Enqueue(UpdateValues, "Updating Task Mission Values");
             P.TaskManager.Enqueue(OpenMissionFinder, "Opening the Mission finder");
@@ -156,12 +157,19 @@ namespace ICE.Scheduler.Tasks
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
             {
                 SchedulerMain.State |= IceState.Gather;
-                var missionNode = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet;
-                if (missionNode != SchedulerMain.PreviousNodeSet)
+                List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet)];
+                var pathfinder = new GatheringPathfinder();
+                if (SchedulerMain.TSPLength > missionNode.Count)
                 {
-                    SchedulerMain.PreviousNodeSet = missionNode;
+                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveOpenEndedTSP(Player.Position, missionNode);
                     SchedulerMain.CurrentIndex = 0;
                 }
+                else
+                {
+                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveCyclicalTSP(missionNode, SchedulerMain.TSPLength);
+                }
+
+                SchedulerMain.PreviousNodeSet = missionNode;
                 SchedulerMain.NodesVisited = 0;
             }
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Fish))

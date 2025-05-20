@@ -76,7 +76,7 @@ namespace ICE.Scheduler.Tasks
 
                 List<uint> MissionNodes = new List<uint>();
 
-                foreach (var entry in GatheringUtil.MoonNodeInfoList)
+                foreach (var entry in SchedulerMain.PreviousNodeSet)
                 {
                     if (MissionInfoDict[currentMission].NodeSet == entry.NodeSet)
                     {
@@ -572,14 +572,16 @@ namespace ICE.Scheduler.Tasks
                 SchedulerMain.CurrentIndex += 1;
                 SchedulerMain.NodesVisited += 1;
                 IceLogging.Debug($"New index value: {SchedulerMain.CurrentIndex}");
-                return true;
             }
             else
             {
                 IceLogging.Debug($"Resetting index value to 0");
                 SchedulerMain.CurrentIndex = 0;
-                return true;
             }
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Limited)
+                && SchedulerMain.NodesVisited >= SchedulerMain.PreviousNodeSet.Count)
+                SchedulerMain.State |= IceState.AbortInProgress;
+            return true;
         }
 
         internal static bool? IntegrityCheck(Gathering x)

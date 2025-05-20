@@ -21,12 +21,16 @@ namespace ICE.Ui
         public override void Draw()
         {
             ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
-
 #if DEBUG
-            ImGui.Text($"Current node: {SchedulerMain.CurrentIndex} / Visited: {SchedulerMain.NodesVisited}");
+            if (CosmicHelper.CurrentLunarMission != 0)
+            {
+                ImGui.Text($"Current node: {SchedulerMain.CurrentIndex} / Visited: {SchedulerMain.NodesVisited}");
+                ImGui.Text($"NodeSet: {CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet}");
+                ImGui.Text($"Attributes: {CosmicHelper.CurrentMissionInfo.Attributes}");
+            }
 #endif
 
-            ImGuiHelpers.ScaledDummy(2);
+                ImGuiHelpers.ScaledDummy(2);
             ImGui.Separator();
             ImGuiHelpers.ScaledDummy(2);
 

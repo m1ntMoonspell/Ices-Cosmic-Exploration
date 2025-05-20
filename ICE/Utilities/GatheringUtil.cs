@@ -131,16 +131,16 @@ public static unsafe class GatheringUtil
         }},
     };
 
-   /* First things first, there's several types of missions for gathering
-    * 1 Quantity Limited(Gather x amount on limited amount of nodes)
-    * 2 Quantity(Gather x amount, gather more for increased score)
-    * 3 Timed(Gather x amount in the time limit)
-    * 4 Chain(Increase score based on chain)
-    * 5 Gatherer's Boon (Increase score by hitting boon % chance)
-    * 6 Chain + Boon(Get score from chain nodes + boon % chance)
-    * 7 Collectables(This is going to be annoying)
-    * 8 Time Steller Reduction(???) (Assuming Collectables -> Reducing for score...fuck)
-    */
+    /* First things first, there's several types of missions for gathering
+     * 1 Quantity Limited(Gather x amount on limited amount of nodes)
+     * 2 Quantity(Gather x amount, gather more for increased score)
+     * 3 Timed(Gather x amount in the time limit)
+     * 4 Chain(Increase score based on chain)
+     * 5 Gatherer's Boon (Increase score by hitting boon % chance)
+     * 6 Chain + Boon(Get score from chain nodes + boon % chance)
+     * 7 Collectables(This is going to be annoying)
+     * 8 Time Steller Reduction(???) (Assuming Collectables -> Reducing for score...fuck)
+     */
 
     public static Dictionary<Vector2, uint> Nodeset = new()
     {
@@ -973,11 +973,11 @@ public static unsafe class GatheringUtil
         new GathNodeInfo
         {
             ZoneId = 1237,
-            NodeId = 35082,
-            Position = new Vector3 (-752.37f, 88.51f, -717.92f),
-            LandZone = new Vector3 (-751.33f, 87.55f, -718.4f),
+            NodeId = 35079,
+            Position = new Vector3 (32.70f, 43.50f, -521.08f),
+            LandZone = new Vector3 (32.70f, 43.50f, -521.08f),
             GatheringType = 2,
-            NodeSet = 8
+            NodeSet = 6
         },
 
         new GathNodeInfo
