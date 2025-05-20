@@ -28,9 +28,7 @@ namespace ICE.Scheduler.Tasks
 
         public static void TryEnqueueGathering()
         {
-            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
-                SchedulerMain.State |= IceState.AbortInProgress;
-            else if (CosmicHelper.CurrentLunarMission != 0)
+            if (CosmicHelper.CurrentLunarMission != 0)
                 MakeGatheringTask();
         }
 
@@ -38,6 +36,11 @@ namespace ICE.Scheduler.Tasks
         internal static void MakeGatheringTask()
         {
             var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
+            {
+                SchedulerMain.State |= IceState.AbortInProgress;
+                return;
+            }
 
             if (currentScore == 0 && silverScore == 0 && goldScore == 0)
             {

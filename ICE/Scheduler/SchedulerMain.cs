@@ -54,26 +54,39 @@ namespace ICE.Scheduler
         {
             if (Throttles.GenericThrottle && P.TaskManager.Tasks.Count == 0 && State != Idle)
             {
-                if (State.HasFlag(Start))
-                    EnqueueResumeCheck();
-                else if (State.HasFlag(ScoringMission) || State.HasFlag(AbortInProgress))
-                    TaskScoreCheckCraft.TryCheckScore();
-                else if (State.HasFlag(AnimationLock))
-                    TaskAnimationLock.Enqueue();
-                else if (State.HasFlag(Gambling))
-                    TaskGamba.TryHandleGamba();
-                else if (State.HasFlag(GrabMission) && State.HasFlag(Waiting))
-                    TaskMissionFind.WaitForNonStandard();
-                else if (State.HasFlag(GrabMission))
-                    TaskMissionFind.Enqueue();
-                else if (State.HasFlag(ManualMode) || State.HasFlag(Fish))
-                    TaskManualMode.ZenMode();
-                else if (State.HasFlag(Gather) && State.HasFlag(ExecutingMission))
-                    TaskGather.TryEnqueueGathering();
-                else if (State.HasFlag(Craft) && State.HasFlag(Waiting))
-                    TaskCrafting.WaitTillActuallyDone();
-                else if (State.HasFlag(Craft) && State.HasFlag(ExecutingMission))
-                    TaskCrafting.TryEnqueueCrafts();
+                switch (State)
+                {
+                    case var s when s.HasFlag(Start):
+                        EnqueueResumeCheck();
+                        break;
+                    case var s when s.HasFlag(ScoringMission) || s.HasFlag(AbortInProgress):
+                        TaskScoreCheckCraft.TryCheckScore();
+                        break;
+                    case var s when s.HasFlag(AnimationLock):
+                        TaskAnimationLock.Enqueue();
+                        break;
+                    case var s when s.HasFlag(Gambling):
+                        TaskGamba.TryHandleGamba();
+                        break;
+                    case var s when s.HasFlag(GrabMission) && s.HasFlag(Waiting):
+                        TaskMissionFind.WaitForNonStandard();
+                        break;
+                    case var s when s.HasFlag(GrabMission):
+                        TaskMissionFind.Enqueue();
+                        break;
+                    case var s when s.HasFlag(ManualMode) || s.HasFlag(Fish):
+                        TaskManualMode.ZenMode();
+                        break;
+                    case var s when s.HasFlag(Gather) && s.HasFlag(ExecutingMission):
+                        TaskGather.TryEnqueueGathering();
+                        break;
+                    case var s when s.HasFlag(Craft) && s.HasFlag(Waiting):
+                        TaskCrafting.WaitTillActuallyDone();
+                        break;
+                    case var s when s.HasFlag(Craft) && s.HasFlag(ExecutingMission):
+                        TaskCrafting.TryEnqueueCrafts();
+                        break;
+                }
             }
             /* switch (State)
             {
@@ -124,10 +137,16 @@ namespace ICE.Scheduler
         public static void EnqueueResumeCheck()
         {
             State = Idle;
-            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
-                State = AbortInProgress;
-            else if (CosmicHelper.CurrentLunarMission != 0)
+            if (CosmicHelper.CurrentLunarMission != 0)
             {
+                if (!AddonHelper.IsAddonActive("WKSMissionInfomation"))
+                {
+                    CosmicHelper.OpenStellarMission();
+                    State = Start;
+                    return;
+                }
+                if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
+                    State |= AbortInProgress;
                 TaskMissionFind.UpdateStateFlags();
                 if (State.HasFlag(Craft) && P.Artisan.IsBusy())
                     State |= Waiting;

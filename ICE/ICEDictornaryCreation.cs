@@ -74,7 +74,7 @@ public sealed partial class ICE
                 100 or 102 or 146 or 147 or 148 => Craft | Limited | Collectables,
                 103 => Gather | Limited,
                 104 => Gather | ScoreTimeRemaining,
-                105 or 139 => Gather,
+                105 => Gather,
                 106 => Gather | ScoreChains,
                 107 => Gather | ScoreGatherersBoon,
                 108 => Gather | ScoreChains | ScoreGatherersBoon,
@@ -91,6 +91,7 @@ public sealed partial class ICE
                 122 => Fish | Collectables,
                 >= 123 and <= 134 => Craft | Gather, // Dual class
                 >= 135 and <= 138 => Craft | Fish,  // Dual class
+                139 => JobId == 18 ? Fish : Gather, // Critical
                 140 or 149 => Craft,
                 _ => None
             };

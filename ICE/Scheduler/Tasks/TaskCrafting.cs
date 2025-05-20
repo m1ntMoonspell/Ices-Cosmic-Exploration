@@ -9,21 +9,24 @@ namespace ICE.Scheduler.Tasks
     {
         public static void TryEnqueueCrafts()
         {
-            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
-                SchedulerMain.State |= IceState.AbortInProgress;
-            else if (CosmicHelper.CurrentLunarMission != 0)
+            if (CosmicHelper.CurrentLunarMission != 0)
                 MakeCraftingTasks();
         }
 
         internal static void MakeCraftingTasks()
         {
             var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
-
-            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
             {
-                IceLogging.Debug("Failed to get scores, aborting");
+                SchedulerMain.State |= IceState.AbortInProgress;
                 return;
             }
+
+            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+                {
+                    IceLogging.Debug("Failed to get scores, aborting");
+                    return;
+                }
 
             if (currentScore >= goldScore)
             {
@@ -36,8 +39,6 @@ namespace ICE.Scheduler.Tasks
             if (!P.TaskManager.IsBusy) // ensure no pending tasks or manual craft while plogon enabled
             {
                 SchedulerMain.PossiblyStuck = 0;
-
-                CosmicHelper.OpenStellarMission();
 
                 var needPreCraft = false;
                 var itemsToCraft = new Dictionary<ushort, Tuple<int, int>>();

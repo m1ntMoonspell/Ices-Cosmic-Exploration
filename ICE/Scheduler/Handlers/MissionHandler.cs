@@ -185,7 +185,7 @@ internal static class MissionHandler
                 }
             }
 
-            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical)
+            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
             {
                 if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition[ConditionFlag.NormalConditions])
                 {
