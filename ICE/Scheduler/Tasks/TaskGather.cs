@@ -90,7 +90,7 @@ namespace ICE.Scheduler.Tasks
                 {
 
                     Vector3 nodeLoc = GatheringUtil.MoonNodeInfoList.Where(x => x.NodeId == nodeId).FirstOrDefault().LandZone;
-                    if (PlayerHelper.GetDistanceToPlayer(nodeLoc) > 2)
+                    if (PlayerHelper.GetDistanceToPlayer(nodeLoc) > 1.5f)
                     {
                         // Seen that the distance between you and the node is greater than 2, pathfinding
                         P.TaskManager.Enqueue(() => PathToNode(nodeLoc), "Pathing to node");
@@ -406,14 +406,14 @@ namespace ICE.Scheduler.Tasks
         /// <param name="id"></param>
         internal static bool? PathToNode(Vector3 nodeLoc)
         {
-            if (PlayerHelper.GetDistanceToPlayer(nodeLoc) > 2 && !P.Navmesh.IsRunning())
+            if (PlayerHelper.GetDistanceToPlayer(nodeLoc) > 1.5f && !P.Navmesh.IsRunning())
             {
                 if (EzThrottler.Throttle("Throttling pathfind"))
                 {
                     P.Navmesh.PathfindAndMoveTo(nodeLoc, false);
                 }
             }
-            else if (PlayerHelper.GetDistanceToPlayer(nodeLoc) < 2)
+            else if (PlayerHelper.GetDistanceToPlayer(nodeLoc) < 1.5f)
             {
                 if (P.Navmesh.IsRunning())
                 {

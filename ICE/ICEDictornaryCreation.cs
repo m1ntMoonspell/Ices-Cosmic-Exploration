@@ -24,7 +24,6 @@ public sealed partial class ICE
             string LeveName = item.Item.ToString();
             LeveName = LeveName.Replace("<nbsp>", " ");
             LeveName = LeveName.Replace("<->", "");
-            Utils.missionLength = Math.Max(Utils.missionLength, ImGui.CalcTextSize(LeveName).X);
 
             if (LeveName == "")
                 continue;
@@ -453,14 +452,6 @@ public sealed partial class ICE
                 C.Save();
             }
         }
-
-        // Updating the column lengths based on the text size
-        Utils.enableColumnLength = ImGui.CalcTextSize("Enabled").X + 10f;
-        Utils.IDLength = ImGui.CalcTextSize("ID").X + 10f;
-        Utils.enableColumnLength = ImGui.CalcTextSize("Enabled").X + 10f;  // Add buffer
-        Utils.cosmicLength = ImGui.CalcTextSize("Cosmo").X + 5f;
-        Utils.lunarLength = ImGui.CalcTextSize("Lunar").X + 5f;
-        Utils.XPLength = (ImGui.CalcTextSize("III").X + 5f) * 4f;
     }
     private static MissionType GetMissionType(MissionListInfo mission)
     {
