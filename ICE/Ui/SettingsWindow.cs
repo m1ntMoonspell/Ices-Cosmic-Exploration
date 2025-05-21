@@ -129,6 +129,7 @@ internal class SettingsWindow : Window
 
     private bool SelfRepairGather = C.SelfRepairGather;
     private float SelfRepairPercent = C.RepairPercent;
+    private bool SelfSpiritbondGather = C.SelfSpiritbondGather;
     private string newProfileName = "";
 
     private string[] MissionTypes = ["Limited Nodes", "Gather x Amount", "Time Attack", "Chained Scoring", "Boon Scoring", "Chain + Boon Scoring", "Dual Class"];
@@ -194,6 +195,14 @@ internal class SettingsWindow : Window
                 }
             }
             ImGui.Unindent(15);
+        }
+        if (ImGui.Checkbox("Extract Spiritbond on Gather", ref SelfSpiritbondGather))
+        {
+            if (C.SelfSpiritbondGather != SelfSpiritbondGather)
+            {
+                C.SelfSpiritbondGather = SelfSpiritbondGather;
+                C.Save();
+            }
         }
 
         ImGui.Dummy(new(0, 5));
@@ -584,6 +593,7 @@ internal class SettingsWindow : Window
         ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
         ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
         ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
+        ImGui.SliderInt("TSP Path Length", ref SchedulerMain.TSPLength, 2, 20);
 
         var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
                 {

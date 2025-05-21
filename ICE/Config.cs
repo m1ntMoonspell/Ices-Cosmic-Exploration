@@ -64,6 +64,7 @@ namespace ICE
 
         // Gathering Settings
         public bool SelfRepairGather { get; set; } = true;
+        public bool SelfSpiritbondGather { get; set; } = true;
         public int RepairPercent { get; set; } = 50;
         public int SelectedGatherIndex { get; set; } = 0;
         public List<GatherBuffProfile> GatherSettings { get; set; } = new()
