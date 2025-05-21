@@ -4,6 +4,8 @@ using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;
 using ICE.Scheduler.Handlers;
+using System.Collections.Generic;
+using static ICE.Utilities.CosmicHelper;
 
 namespace ICE;
 
@@ -18,6 +20,7 @@ public sealed partial class ICE : IDalamudPlugin
     // Window's that I use, base window to the settings... need these to actually show shit 
     internal WindowSystem windowSystem;
     internal MainWindow mainWindow;
+    internal MainWindowV2 mainWindow2;
     internal SettingsWindow settingWindow;
     internal OverlayWindow overlayWindow;
     internal DebugWindow debugWindow;
@@ -30,6 +33,7 @@ public sealed partial class ICE : IDalamudPlugin
     internal NavmeshIPC Navmesh;
     internal PandoraIPC Pandora;
     internal ArtisanIPC Artisan;
+    internal VislandIPC Visland;
 
     public ICE(IDalamudPluginInterface pi)
     {
@@ -45,19 +49,25 @@ public sealed partial class ICE : IDalamudPlugin
         Navmesh = new();
         Pandora = new();
         Artisan = new();
+        Visland = new();
 
         // all the windows
         windowSystem = new();
         mainWindow = new();
+        mainWindow2 = new();
         settingWindow = new();
         overlayWindow = new();
         debugWindow = new();
 
         EzCmd.Add("/icecosmic", OnCommand, """
             Open plugin interface
-            - start -> starts the loops
-            - stop -> stops the loops
-            - clear -> clears all
+            /ice clear - Removes all missions
+            /ice stop - Stops ICE
+            /ice start - Starts ICE
+            /ice add | remove | toggle | only 
+            	(Ex. /ice add 405 406 410)
+            /ice flag [id] - Opens the map and marks where the area of gathering is.
+                (Ex. /ice flag 301)
             """);
         EzCmd.Add("/ice", OnCommand);
         EzCmd.Add("/IceCosmic", OnCommand);
@@ -77,10 +87,9 @@ public sealed partial class ICE : IDalamudPlugin
         DictionaryCreation();
     }
 
-    private void Init()
+    private static void Init()
     {
-        CosmicHelper.Init();
-        WeatherForecastHandler.Init();
+        ExcelHelper.Init();
     }
 
     private void Tick(object _)
@@ -115,11 +124,17 @@ public sealed partial class ICE : IDalamudPlugin
 
         if (subcommands.Length == 0 || args == "")
         {
-            mainWindow.IsOpen = !mainWindow.IsOpen;
+            mainWindow2.IsOpen = !mainWindow2.IsOpen;
             return;
         }
 
         var firstArg = subcommands[0];
+
+        if (firstArg.ToLower() == "old")
+        {
+            mainWindow.IsOpen = !mainWindow.IsOpen;
+            return;
+        }
 
         if (firstArg.ToLower() == "d" || firstArg.ToLower() == "debug")
         {
@@ -128,12 +143,13 @@ public sealed partial class ICE : IDalamudPlugin
         }
         else if (firstArg.ToLower() == "s" || firstArg.ToLower() == "settings")
         {
-            settingWindow.IsOpen = true;
+            settingWindow.IsOpen = !settingWindow.IsOpen;
             return;
         }
         else if (firstArg.ToLower() == "clear")
         {
             C.Missions.ForEach(x => x.Enabled = false);
+            C.Save();
         }
         else if (firstArg.ToLower() == "stop")
         {
@@ -142,6 +158,60 @@ public sealed partial class ICE : IDalamudPlugin
         else if (firstArg.ToLower() == "start")
         {
             SchedulerMain.EnablePlugin();
+        }
+        else if (firstArg.ToLower() == "add")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.Where(item => idSet.Contains(item.Id))
+                .ToList()
+                .ForEach(item => item.Enabled = true);
+            C.Save();
+        }
+        else if (firstArg.ToLower() == "remove")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.Where(item => idSet.Contains(item.Id))
+                .ToList()
+                .ForEach(item => item.Enabled = false);
+            C.Save();
+        }
+        else if (firstArg.ToLower() == "toggle")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.Where(item => idSet.Contains(item.Id))
+                .ToList()
+                .ForEach(item => item.Enabled = !item.Enabled);
+            C.Save();
+        }
+        else if (firstArg.ToLower() == "only")
+        {
+            uint[] ids = [.. subcommands.Skip(1).Select(uint.Parse)];
+            var idSet = new HashSet<uint>(ids);
+            if (ids.Length == 0) return;
+
+            C.Missions.ForEach(item => item.Enabled = idSet.Contains(item.Id));
+            C.Save();
+        }
+        else if (firstArg.ToLower() == "flag")
+        {
+            if (subcommands.Length != 2) return;
+            if (!PlayerHelper.IsInCosmicZone()) return;
+
+            int missionId = int.Parse(subcommands[1]);
+            var info = MissionInfoDict.FirstOrDefault(mission => mission.Key == missionId);
+            if (info.Value == default) return;
+            if (info.Value.MarkerId == 0) return;
+
+            Utils.SetGatheringRing(info.Value.TerritoryId, info.Value.X, info.Value.Y, info.Value.Radius, info.Value.Name);
         }
     }
 }

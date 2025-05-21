@@ -24,6 +24,17 @@ namespace ICE
 #if DEBUG
         public bool FailsafeRecipeSelect = false;
 #endif
+        // Main Window Settings
+        public uint SelectedJob = 8;
+
+        public bool showCritical = true;
+        public bool showSequential = true;
+        public bool showWeather = true;
+        public bool showTimeRestricted = true;
+        public bool showClassA = true;
+        public bool showClassB = true;
+        public bool showClassC = true;
+        public bool showClassD = true;
 
         // Mission settings
         public bool OnlyGrabMission { get; set; } = false;
@@ -34,6 +45,8 @@ namespace ICE
         public byte SequenceMissionPriority { get; set; } = 1;
         public byte WeatherMissionPriority { get; set; } = 2;
         public byte TimedMissionPriority { get; set; } = 3;
+        public bool ShowNotes { get; set; } = true;
+        public bool IncreaseMiddleColumn { get; set; } = true;
 
         public int TargetLevel { get; set; } = 10;
         public bool StopWhenLevel { get; set; } = false;
@@ -48,6 +61,23 @@ namespace ICE
         public int TableSortOption = 0;
         public bool ShowExpColums { get; set; } = true;
         public bool ShowCreditsColumn { get; set; } = true;
+
+        // Gathering Settings
+        public bool SelfRepairGather { get; set; } = true;
+        public bool SelfSpiritbondGather { get; set; } = true;
+        public int RepairPercent { get; set; } = 50;
+        public int SelectedGatherIndex { get; set; } = 0;
+        public List<GatherBuffProfile> GatherSettings { get; set; } = new()
+        {
+            new GatherBuffProfile { Id = 0, Name = "Default"},
+        };
+
+        // Gamba settings
+        public List<Gamba> GambaItemWeights { get; set; } = new();
+        public bool GambaEnabled { get; set; } = false;
+        public bool GambaPreferSmallerWheel { get; set; } = false;
+        public int GambaCreditsMinimum { get; set; } = 0;
+        public int GambaDelay { get; set; } = 250;
 
         // Misc settings
         public bool EnableAutoSprint { get; set; } = true;
@@ -67,9 +97,47 @@ namespace ICE
         public uint PreviousMissionId { get; set; } = 0;
         public uint JobId { get; set; }
         public bool TurnInSilver { get; set; } = false;
+        public bool TurnInGold { get; set; } = false;
         public bool TurnInASAP { get; set; } = false;
         public bool ManualMode { get; set; } = false;
+        public int GatherSettingId { get; set; } = 0;
+        [JsonIgnore]
+        public GatherBuffProfile GatherSetting => C.GatherSettings.FirstOrDefault(x => x.Id == GatherSettingId)
+                                          ?? C.GatherSettings[0]; // fallback to default
         public string TurnInMode;
+    }
+
+    public class Gamba
+    {
+        public uint ItemId { get; set; }
+        public int Weight { get; set; } = 0;
+        public GambaType Type { get; set; }
+    }
+
+    public class GatherBuffs
+    {
+        public bool BoonIncrease2 { get; set; } = false;
+        public int BoonIncrease2Gp { get; set; } = 100;
+        public bool BoonIncrease1 { get; set; } = false;
+        public int BoonIncrease1Gp { get; set; } = 50;
+        public bool TidingsBool { get; set; } = false;
+        public int TidingsGp { get; set; } = 200;
+        public bool YieldII { get; set; } = false;
+        public int YieldIIGp { get; set; } = 500;
+        public bool YieldI { get; set; } = false;
+        public int YieldIGp { get; set; } = 400;
+        public bool BountifulYieldII { get; set; } = false;
+        public int BountifulYieldIIGp { get; set; } = 100;
+        public bool BonusIntegrity { get; set; } = false;
+        public int BonusIntegrityGp { get; set; } = 300;
+        public bool IntegrityBool { get; set; } = true;
+    }
+
+    public class GatherBuffProfile
+    {
+        public int Id { get; set; } // Index being set for quick reference
+        public string Name { get; set; } = ""; // Name, moreso for Ui
+        public GatherBuffs Buffs { get; set; } = new();
     }
 
     public enum MissionType
@@ -79,5 +147,18 @@ namespace ICE
         Weather = 2,
         Timed = 3,
         Critical = 4
-    }//
+    }
+
+    public enum GambaType
+    {
+        Mount = 0,
+        Emote = 1,
+        Minion = 2,
+        Outfit = 3,
+        Accessory = 4,
+        Orchestrion = 5,
+        Housing = 6,
+        Dye = 7,
+        Other = 8
+    }
 }

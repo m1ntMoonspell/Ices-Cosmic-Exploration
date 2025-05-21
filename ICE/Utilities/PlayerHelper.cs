@@ -30,7 +30,7 @@ public class PlayerHelper
     internal static unsafe short GetCurrentLevelFromSheet(Job? job = null)
     {
         PlayerState* playerState = PlayerState.Instance();
-        return playerState->ClassJobLevels[Svc.Data.GetExcelSheet<ClassJob>().GetRowOrDefault((uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0)))?.ExpArrayIndex ?? 0];
+        return playerState->ClassJobLevels[ExcelHelper.ClassJobSheet.GetRowOrDefault((uint)(job ?? (Player.Available ? Player.Object.GetJob() : 0)))?.ExpArrayIndex ?? 0];
     }
 
     public static bool IsInCosmicZone() => IsInSinusArdorum();
@@ -92,6 +92,46 @@ public class PlayerHelper
             count = 0;
             return false;
         }
+    }
+
+    public static unsafe bool NeedsRepair(float below = 0)
+    {
+        var im = InventoryManager.Instance();
+        if (im == null)
+        {
+            Svc.Log.Error("InventoryManager was null");
+            return false;
+        }
+
+        var equipped = im->GetInventoryContainer(InventoryType.EquippedItems);
+        if (equipped == null)
+        {
+            Svc.Log.Error("InventoryContainer was null");
+            return false;
+        }
+
+        if (!equipped->IsLoaded)
+        {
+            Svc.Log.Error($"InventoryContainer is not loaded");
+            return false;
+        }
+
+        for (var i = 0; i < equipped->Size; i++)
+        {
+            var item = equipped->GetInventorySlot(i);
+            if (item == null)
+                continue;
+
+            var itemCondition = Convert.ToInt32(Convert.ToDouble(item->Condition) / 30000.0 * 100.0);
+
+            if (itemCondition <= below)
+            {
+                IceLogging.Debug($"Found an item that needed repair. Condition: {itemCondition}");
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static Vector3 NavDestination = Vector3.Zero;

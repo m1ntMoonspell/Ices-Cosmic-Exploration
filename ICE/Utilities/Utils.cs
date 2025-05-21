@@ -5,7 +5,6 @@ using ECommons.Reflection;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using Lumina.Excel.Sheets;
 
 namespace ICE.Utilities;
 
@@ -14,14 +13,23 @@ namespace ICE.Utilities;
 /// </summary>
 public static unsafe class Utils
 {
+    public static float enableColumnLength = 0.0f;
+    public static float IDLength = 0.0f;
+    public static float missionLength = 0.0f;
+    public static float flagLength = 0.0f;
+    public static float cosmicLength = 0.0f;
+    public static float lunarLength = 0.0f;
+    public static float XPLength = 0.0f;
+    public static float TurninComboLength = 100.0f;
+    public static float GatherConfigLength = 0.0f;
+    public static float MissionNotesLength = 0.0f;
+
     public static bool HasPlugin(string name) => DalamudReflector.TryGetDalamudPlugin(name, out _, false, true);
     public static TaskManagerConfiguration TaskConfig => new(timeLimitMS: 10 * 60 * 3000, abortOnTimeout: false);
 
-
     public static unsafe void SetFlagForNPC(uint territoryId, float x, float y)
     {
-        var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
-        var map = terSheet.GetRow(territoryId).Map.Value;
+        var map = ExcelHelper.TerritorySheet.GetRow(territoryId).Map.Value;
 
         var agent = AgentMap.Instance();
 
@@ -47,7 +55,7 @@ public static unsafe class Utils
         return objectPosition / scalar - center / scalar;
     }
 
-    internal static bool? TargetgameObject(IGameObject? gameObject)
+    public static bool? TargetgameObject(IGameObject? gameObject)
     {
         var x = gameObject;
         if (Svc.Targets.Target != null && Svc.Targets.Target.DataId == x.DataId)
@@ -67,7 +75,15 @@ public static unsafe class Utils
         return false;
     }
     internal static bool TryGetObjectByDataId(ulong dataId, out IGameObject? gameObject) => (gameObject = Svc.Objects.OrderBy(PlayerHelper.GetDistanceToPlayer).FirstOrDefault(x => x.DataId == dataId)) != null;
-    internal static unsafe void InteractWithObject(IGameObject? gameObject)
+    public static IGameObject? TryGetObjectNearestEventObject()
+    {
+        return Svc.Objects.OrderBy(PlayerHelper.GetDistanceToPlayer).FirstOrDefault(x => x.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj);
+    }
+    public static IGameObject? TryGetObjectCollectionPoint()
+    {
+        return Svc.Objects.OrderBy(PlayerHelper.GetDistanceToPlayer).FirstOrDefault(x => x.DataId == 2014616 || x.DataId == 2014618);
+    }
+    public static unsafe void InteractWithObject(IGameObject? gameObject)
     {
         try
         {
@@ -82,19 +98,18 @@ public static unsafe class Utils
         }
     }
 
-    public static unsafe void SetGatheringRing(uint teri, int x, int y, int radius)
+    public static unsafe void SetGatheringRing(uint territoryId, int x, int y, int radius, string? tooltip = "Node Location")
     {
+        var map = ExcelHelper.TerritorySheet.GetRow(territoryId).Map.Value;
         var agent = AgentMap.Instance();
-        var debugText = "Current teri/map: {currentTeri} {currentMap}" + ", " + agent->CurrentTerritoryId
-                       + ", " + agent->CurrentMapId;
-        IceLogging.Debug(debugText);
-
-        var terSheet = Svc.Data.GetExcelSheet<TerritoryType>();
-        var mapId = terSheet.GetRow(teri).Map.Value.RowId;
+        
+        Vector2 pos = MapToWorld(new Vector2(x, y), map.SizeFactor, map.OffsetX, map.OffsetY);
+        IceLogging.Debug($"Current map: {map.RowId} {territoryId} | {map.PlaceName.Value.Name} | {pos.X} {pos.Y} | {x} {y} | {radius} | {tooltip}");
 
         agent->IsFlagMarkerSet = false;
-        agent->SetFlagMapMarker(teri, mapId, x, y);
-        agent->AddGatheringTempMarker(x, y, radius, tooltip: "Node Location");
-        agent->OpenMap(agent->CurrentMapId, teri, "Node Location", FFXIVClientStructs.FFXIV.Client.UI.Agent.MapType.GatheringLog);
+        agent->SetFlagMapMarker(territoryId, map.RowId, x, y);
+        agent->TempMapMarkerCount = 0;
+        agent->AddGatheringTempMarker(x, y, radius, tooltip: tooltip);
+        agent->OpenMap(map.RowId, territoryId, tooltip, MapType.GatheringLog);
     }
 }

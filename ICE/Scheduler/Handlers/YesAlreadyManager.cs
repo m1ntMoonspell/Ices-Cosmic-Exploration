@@ -10,7 +10,7 @@ namespace ICE.Scheduler.Handlers
         {
             if (WasChanged)
             {
-                if (SchedulerMain.State == IceState.Idle)
+                if (!SchedulerMain.State.HasFlag(IceState.GrabMission))
                 {
                     WasChanged = false;
                     Unlock();
@@ -19,7 +19,7 @@ namespace ICE.Scheduler.Handlers
             }
             else
             {
-                if (SchedulerMain.State != IceState.Idle)
+                if (SchedulerMain.State.HasFlag(IceState.GrabMission))
                 {
                     WasChanged = true;
                     Lock();
