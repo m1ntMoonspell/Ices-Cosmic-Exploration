@@ -37,8 +37,8 @@ internal class SettingsWindow : Window
             ,("Gathering Config", GatherSettings, null, true)
             ,("Overlay", Overlay, null, true)
             ,("Misc", Misc, null, true)
-#if DEBUG
             ,("Gamble Wheel Settings", GambaWheel, null, true)
+#if DEBUG
             ,("Debug", Debug, null, true)
 #endif
         );
@@ -503,9 +503,9 @@ internal class SettingsWindow : Window
             C.GambaEnabled = gambaEnabled;
             C.Save();
         }
+        ImGuiEx.HelpMarker("To run this, make sure you have the gamble wheels shown at Orbitingway, and press start. It will full auto from there.");
         if (gambaEnabled)
         {
-            ImGui.SameLine();
             ImGui.SetNextItemWidth(150);
             if (ImGui.SliderInt("Gamba Delay", ref gambaDelay, 50, 2000))
             {

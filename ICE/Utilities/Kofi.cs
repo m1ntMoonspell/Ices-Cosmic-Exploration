@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ICE.Utilities;
 
-internal class Kofi
+internal class Kofi // Heavily borrowed from the Ecommons version. 
 {
     public static void DrawRight()
     {
