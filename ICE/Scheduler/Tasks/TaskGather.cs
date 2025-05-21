@@ -194,7 +194,6 @@ namespace ICE.Scheduler.Tasks
                                     {
                                         #nullable disable
                                         int boonChance = item.BoonChance;
-                                        IceLogging.Debug($"Boon Increase 2: {BoonIncrease2Bool(boonChance, gBuffs)} && Missing durability: {missingDur}");
                                         if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
                                         {
                                             IceLogging.Debug($"Should be activating buff...", true);
@@ -288,12 +287,11 @@ namespace ICE.Scheduler.Tasks
                                     }
                                     else if (!hasAllItems && item.ItemID == itemToGather)
                                     {
-                                        IceLogging.Debug($"Condion F Met", true);
+                                        IceLogging.Debug($"[Condition F] Mission is aiming to gather: {itemToGather}", true);
+
                                         int boonChance = item.BoonChance;
-                                        IceLogging.Debug($"Boon Increase 2: {BoonIncrease2Bool(boonChance, gBuffs)} && Missing durability: {missingDur}");
                                         if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
                                         {
-                                            IceLogging.Debug($"Should be activating buff...", true);
                                             useAction = true;
                                             if (EzThrottler.Throttle("Boon2 Action Usage"))
                                             {
