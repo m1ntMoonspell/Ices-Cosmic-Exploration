@@ -1,3 +1,4 @@
+using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
@@ -7,9 +8,8 @@ namespace ICE.Scheduler.Handlers
     {
         internal unsafe static void TaskClassChange(Job job)
         {
-            if (job == (Job)PlayerHelper.GetClassJobId())
+            if (job == (Job)PlayerHelper.GetClassJobId() || !EzThrottler.Throttle("Gearset", 250) || !Svc.Condition.OnlyAny(ConditionFlag.NormalConditions))
                 return;
-
             var gearsets = RaptureGearsetModule.Instance();
             foreach (ref var gs in gearsets->Entries)
             {

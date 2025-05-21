@@ -27,7 +27,7 @@ namespace ICE.Scheduler.Tasks
 
         internal static void MakeCraftingTasks()
         {
-            var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+            var (currentScore, bronzeScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
             if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
             {
                 SchedulerMain.State |= IceState.AbortInProgress;
@@ -282,7 +282,7 @@ namespace ICE.Scheduler.Tasks
                     else
                         return false;
                 }
-                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores(); // some scoring checks
+                var (currentScore, bronzeScore, silverScore, goldScore) = MissionHandler.GetCurrentScores(); // some scoring checks
                 var currentMission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
                 var enoughMain = MissionHandler.HaveEnoughMain();
                 if (enoughMain == null || currentMission == null)
@@ -308,7 +308,7 @@ namespace ICE.Scheduler.Tasks
                     P.Artisan.SetEnduranceStatus(false);
                     return true;
                 }
-                else if (targetLevel == 2 && currentMission.TurnInSilver && currentScore >= silverScore && enoughMain.Value)
+                else if (targetLevel == 2 && currentScore >= silverScore && enoughMain.Value)
                 {
                     IceLogging.Debug("[Crafting] [Wait] Silver wanted. Silver reached.", true);
                     SchedulerMain.State |= IceState.ScoringMission;
@@ -316,7 +316,7 @@ namespace ICE.Scheduler.Tasks
                     P.Artisan.SetEnduranceStatus(false);
                     return true;
                 }
-                else if (targetLevel == 1 && enoughMain.Value)
+                else if (targetLevel == 1 && (currentScore >= bronzeScore || bronzeScore == 0) && enoughMain.Value)
                 {
                     IceLogging.Debug("[Crafting] [Wait] Bronze wanted. Turning in.", true);
                     SchedulerMain.State |= IceState.ScoringMission;

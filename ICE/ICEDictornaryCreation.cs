@@ -100,6 +100,9 @@ public sealed partial class ICE
             attributes |= time != 0 ? ProvisionalTimed : None;
             attributes |= previousMissionId != 0 ? ProvisionalSequential : None;
 
+            uint bronze = todo.Unknown2; // Bronze score for Score missions
+            attributes |= bronze > 0 ? ScoreScore : None;
+
             if (CrafterJobList.Contains(JobId))
             {
                 bool preCraftsbool = false;
@@ -368,6 +371,7 @@ public sealed partial class ICE
                     Time = time,
                     Weather = weather,
                     RecipeId = RecipeId,
+                    BronzeRequirement = bronze,
                     SilverRequirement = silver,
                     GoldRequirement = gold,
                     CosmoCredit = Cosmo,

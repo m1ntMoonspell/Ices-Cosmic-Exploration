@@ -47,7 +47,7 @@ namespace ICE.Scheduler.Tasks
         // Version 2 of the gathering task. Trying to improve on it all...
         internal static void MakeGatheringTask()
         {
-            var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+            var (currentScore, bronzeScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
             if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
             {
                 SchedulerMain.State |= IceState.AbortInProgress;
@@ -599,18 +599,6 @@ namespace ICE.Scheduler.Tasks
             }
 
             return false;
-        }
-
-        [Obsolete("Use MissionHandler.HaveEnoughMain instead.")]
-        internal static bool? HaveEnoughMain()
-        {
-            return MissionHandler.HaveEnoughMain();
-        }
-
-        [Obsolete("Use MissionHandler.GetCurrentScores instead.")]
-        internal static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
-        {
-            return MissionHandler.GetCurrentScores();
         }
     }
 }
