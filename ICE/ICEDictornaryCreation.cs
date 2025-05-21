@@ -285,6 +285,44 @@ public sealed partial class ICE
                 }
             }
 
+            if (GatheringJobList.Contains(JobId) && CrafterJobList.Contains(Job2))
+            {
+                var MissionRecipe = item.WKSMissionRecipe;
+                var DualRecipeId = MoonRecipeSheet.GetRow(MissionRecipe).Recipe[0].Value.RowId;
+                var Recipe = RecipeSheet.GetRow(DualRecipeId);
+                var MainItem = Recipe.ItemResult.Value.RowId;
+                var GatherItem = Recipe.Ingredient[0].Value.RowId;
+                var GatherAmount = Recipe.AmountIngredient[0].ToInt();
+
+                MainItems.Add((ushort)DualRecipeId, 1);
+                GatherItems.Add(GatherItem, GatherAmount);
+
+                if (!MoonRecipies.ContainsKey(keyId))
+                {
+                    MoonRecipies[keyId] = new MoonRecipieInfo()
+                    {
+                        MainCraftsDict = MainItems,
+                        PreCrafts = false
+                    };
+                }
+                else
+                {
+                    MoonRecipies[keyId].MainCraftsDict = MainItems;
+                }
+
+                if (GatheringItemDict.ContainsKey(keyId))
+                {
+                    GatheringItemDict[keyId] = new GatheringInfo()
+                    {
+                        MinGatherItems = GatherItems
+                    };
+                }
+                else
+                {
+                    GatheringItemDict[keyId].MinGatherItems = GatherItems;
+                }
+            }
+
             // Col 3 -> Cosmocredits - Unknown 0
             // Col 4 -> Lunar Credits - Unknown 1
             // Col 7 ->  Lv. 1 Type - Unknown 12
