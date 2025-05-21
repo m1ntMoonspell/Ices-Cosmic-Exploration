@@ -78,7 +78,7 @@ public sealed partial class ICE : IDalamudPlugin
         Svc.PluginInterface.UiBuilder.Draw += windowSystem.Draw;
         Svc.PluginInterface.UiBuilder.OpenMainUi += () =>
         {
-            mainWindow.IsOpen = true;
+            mainWindow2.IsOpen = true;
         };
         Svc.PluginInterface.UiBuilder.OpenConfigUi += () =>
         {

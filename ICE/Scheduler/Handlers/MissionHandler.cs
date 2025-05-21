@@ -16,7 +16,7 @@ internal static class MissionHandler
         }
         else if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
         {
-            var (currentScore, _, _) = GetCurrentScores();
+            var (currentScore, _, _, _) = GetCurrentScores();
             if (currentScore == 0)
                 return false;
         }
@@ -71,9 +71,9 @@ internal static class MissionHandler
                 gather = count >= item.Value;
         return (craft, gather);
     }
-    internal unsafe static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
+    internal unsafe static (uint currentScore, uint bronzeScore, uint silverScore, uint goldScore) GetCurrentScores()
     {
-        uint currentScore = 0, silverScore = 0, goldScore = 0;
+        uint currentScore = 0, bronzeScore = 0, silverScore = 0, goldScore = 0;
         if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
         {
             if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
@@ -96,17 +96,14 @@ internal static class MissionHandler
             else
             {
                 string _currentScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[2].String.Value).GetText();
-                string _silverScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[3].String.Value).GetText();
-                string _goldScore = MemoryHelper.ReadSeStringNullTerminated((nint)z.Addon->AtkValues[4].String.Value).GetText();
+                bronzeScore = CosmicHelper.CurrentMissionInfo.BronzeRequirement;
+                silverScore = CosmicHelper.CurrentMissionInfo.SilverRequirement;
+                goldScore = CosmicHelper.CurrentMissionInfo.GoldRequirement;
 
                 // Remove all non-digit characters before parsing
                 _currentScore = new string(_currentScore.Where(char.IsDigit).ToArray());
-                _silverScore = new string(_silverScore.Where(char.IsDigit).ToArray());
-                _goldScore = new string(_goldScore.Where(char.IsDigit).ToArray());
 
                 uint.TryParse(_currentScore, out currentScore);
-                uint.TryParse(_silverScore, out silverScore);
-                uint.TryParse(_goldScore, out goldScore);
             }
         }
         else
@@ -114,14 +111,14 @@ internal static class MissionHandler
             CosmicHelper.OpenStellarMission();
         }
 
-        return (currentScore, silverScore, goldScore);
+        return (currentScore, bronzeScore, silverScore, goldScore);
     }
     internal static void TurnIn(WKSMissionInfomation z, bool abortIfNoReport = false)
     {
         if (IceLogging.ShouldLog("Turning in item", 250))
         {
             P.Artisan.SetEnduranceStatus(false);
-            var (currentScore, silverScore, goldScore) = GetCurrentScores();
+            var (currentScore, bronzeScore, silverScore, goldScore) = GetCurrentScores();
 
             if (!(AddonHelper.IsAddonActive("WKSRecipeNotebook") || AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
             {
@@ -184,24 +181,8 @@ internal static class MissionHandler
                 return true;
             }
 
-            if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady)
-            {
-                IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
-                cr.Addon->FireCallbackInt(-1);
+            if (!ExitCraftGatherUI())
                 return false;
-            }
-            else if (GenericHelpers.TryGetAddonMaster<GatheringMasterpiece>("GatheringMasterpiece", out var gm) && gm.IsAddonReady)
-            {
-                IceLogging.Info("[Score Checker] Player is gathering collectibles, trying to fix", true);
-                gm.Addon->FireCallbackInt(-1);
-                return false;
-            }
-            else if (GenericHelpers.TryGetAddonMaster<Gathering>("Gathering", out var g) && g.IsAddonReady)
-            {
-                IceLogging.Info("[Score Checker] Player is gathering, trying to fix", true);
-                g.Addon->FireCallbackInt(-1);
-                return false;
-            }
 
             if ((Job)PlayerHelper.GetClassJobId() != SchedulerMain.StartClassJob)
             {
@@ -210,21 +191,21 @@ internal static class MissionHandler
             }
 
             if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
+            {
+                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition[ConditionFlag.NormalConditions])
                 {
-                    if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition[ConditionFlag.NormalConditions])
-                    {
-                        var gameObject = Utils.TryGetObjectCollectionPoint();
-                        float gameObjectDistance = 100;
-                        if (gameObject is not null)
-                            gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
-                        //Utils.TargetgameObject(gameObject);
-                        if (gameObjectDistance < 5)
-                            Utils.InteractWithObject(gameObject);
-                        else if (gameObjectDistance < 100)
-                            TaskGather.PathToNode(gameObject.Position);
-                    }
-                    return false;
+                    var gameObject = Utils.TryGetObjectCollectionPoint();
+                    float gameObjectDistance = 100;
+                    if (gameObject is not null)
+                        gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
+                    //Utils.TargetgameObject(gameObject);
+                    if (gameObjectDistance < 5)
+                        Utils.InteractWithObject(gameObject);
+                    else if (gameObjectDistance < 100)
+                        TaskGather.PathToNode(gameObject.Position);
                 }
+                return false;
+            }
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
@@ -239,5 +220,28 @@ internal static class MissionHandler
         }
         else
             return false;
+    }
+
+    public unsafe static bool ExitCraftGatherUI()
+    {
+        if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var cr) && cr.IsAddonReady)
+        {
+            IceLogging.Info("[Score Checker] Player is preparing to craft, trying to fix", true);
+            cr.Addon->FireCallbackInt(-1);
+            return false;
+        }
+        else if (GenericHelpers.TryGetAddonMaster<GatheringMasterpiece>("GatheringMasterpiece", out var gm) && gm.IsAddonReady)
+        {
+            IceLogging.Info("[Score Checker] Player is gathering collectibles, trying to fix", true);
+            gm.Addon->FireCallbackInt(-1);
+            return false;
+        }
+        else if (GenericHelpers.TryGetAddonMaster<Gathering>("Gathering", out var g) && g.IsAddonReady)
+        {
+            IceLogging.Info("[Score Checker] Player is gathering, trying to fix", true);
+            g.Addon->FireCallbackInt(-1);
+            return false;
+        }
+        return true;
     }
 }

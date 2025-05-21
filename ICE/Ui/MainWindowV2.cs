@@ -364,9 +364,7 @@ namespace ICE.Ui
             // ------------------------------------------
             ImGui.NextColumn();
 
-            middlePanelWidth += Utils.missionLength + 20f;
-            middlePanelWidth += Utils.enableColumnLength;
-            middlePanelWidth += Utils.IDLength;
+            middlePanelWidth += 250;
             if (showCredits)
             {
                 middlePanelWidth += Utils.cosmicLength;
@@ -378,16 +376,16 @@ namespace ICE.Ui
             }
             if (showNotes)
             {
-                middlePanelWidth += 200;
+                middlePanelWidth += Utils.MissionNotesLength + 100;
             }
             // Buffer room for the scrollbar
-            middlePanelWidth += 20;
+            middlePanelWidth += 100;
             ImGui.SetColumnWidth(1, middlePanelWidth);
 
             if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
             {
 
-                if (ImGui.Checkbox("Show Unsupported Missions", ref hideUnsupported))
+                if (ImGui.Checkbox("Hide Unsupported Missions", ref hideUnsupported))
                 {
                     C.HideUnsupportedMissions = hideUnsupported;
                     C.Save();
@@ -888,6 +886,13 @@ namespace ICE.Ui
                 float col5Width = ImGui.CalcTextSize("Lunar").X + 5f;
                 float colXPWidth = ImGui.CalcTextSize("III").X + 5f;
 
+                // Updating the column lengths based on the text size
+                Utils.enableColumnLength = col1Width;
+                Utils.IDLength = col2Width;
+                Utils.cosmicLength = col4Width;
+                Utils.lunarLength = col5Width;
+                Utils.XPLength = colXPWidth * 4f;
+
                 ImGui.TableSetupColumn("###EnableCheckbox", ImGuiTableColumnFlags.WidthFixed, col1Width);
                 ImGui.TableSetupColumn("###MissionIDs", ImGuiTableColumnFlags.WidthFixed, col2Width);
                 ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, maxMissionNameWidth);
@@ -970,13 +975,6 @@ namespace ICE.Ui
                         unsupported = true;
                     }
 
-#if RELEASE
-                    if (dualclass)
-                    {
-                        unsupported = true;
-                    }
-#endif
-
                     if (unsupported && hideUnsupported)
                         continue;
 
@@ -984,6 +982,8 @@ namespace ICE.Ui
 
                     var mission = C.Missions.Single(x => x.Id == entry.Key);
                     var isEnabled = mission.Enabled;
+
+                    Utils.missionLength = Math.Max(Utils.missionLength, ImGui.CalcTextSize(mission.Name).X);
 
                     // Column 0: Enable checkbox
                     ImGui.TableSetColumnIndex(0);
@@ -1191,30 +1191,31 @@ namespace ICE.Ui
                         // debug
                         ImGui.TableNextColumn();
                         bool hasPreviousNotes = false;
+                        string notes = "";
                         if (entry.Value.Weather != CosmicWeather.FairSkies)
                         {
                             hasPreviousNotes = true;
-
-                            ImGui.TextWrapped(entry.Value.Weather.ToString());
+                            notes = entry.Value.Weather.ToString();
                         }
                         else if (entry.Value.Time != 0)
                         {
                             hasPreviousNotes = true;
-
-                            ImGui.TextWrapped($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
+                            notes = $"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00";
                         }
                         else if (entry.Value.PreviousMissionID != 0)
                         {
                             hasPreviousNotes = true;
-
                             var (Id, Name) = MissionInfoDict.Where(m => m.Key == entry.Value.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
-                            ImGui.TextWrapped($"[{Id}] {Name}");
+                            notes = $"[{Id}] {Name}";
                         }
                         if (entry.Value.JobId2 != 0)
                         {
                             if (hasPreviousNotes) ImGui.SameLine();
-                            ImGui.TextWrapped($"{jobOptions.Find(job => job.Id == entry.Value.JobId).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2).Name}");
+                            notes += $"{jobOptions.Find(job => job.Id == entry.Value.JobId).Name}/{jobOptions.Find(job => job.Id == entry.Value.JobId2).Name}";
                         }
+                        float NotesLength = Math.Max(Utils.missionLength, ImGui.CalcTextSize(notes).X);
+                        Utils.MissionNotesLength = NotesLength;
+                        ImGui.TextWrapped(notes);
                     }
                 }
 

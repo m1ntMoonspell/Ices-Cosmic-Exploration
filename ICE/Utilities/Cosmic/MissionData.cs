@@ -50,6 +50,7 @@ public static unsafe partial class CosmicHelper
         public uint Time { get; set; }
         public CosmicWeather Weather { get; set; }
         public uint RecipeId { get; set; } = 0;
+        public uint BronzeRequirement { get; set; }
         public uint SilverRequirement { get; set; }
         public uint GoldRequirement { get; set; }
         public uint CosmoCredit { get; set; }

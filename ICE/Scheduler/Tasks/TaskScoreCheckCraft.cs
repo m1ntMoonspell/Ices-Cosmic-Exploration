@@ -23,7 +23,8 @@ namespace ICE.Scheduler.Tasks
 
             IceLogging.Debug($"[Score Checker] Current Scoring Mission Id: {CosmicHelper.CurrentLunarMission}", true);
             var currentMission = C.Missions.Single(x => x.Id == CosmicHelper.CurrentLunarMission);
-            var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+            var (currentScore, bronzeScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+            bool enoughMain = MissionHandler.HaveEnoughMain().Value;
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 if (SchedulerMain.AnimationLockAbandonState && (!AddonHelper.IsAddonActive("WKSRecipeNotebook") || !AddonHelper.IsAddonActive("RecipeNote")) && Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft])
@@ -33,35 +34,7 @@ namespace ICE.Scheduler.Tasks
                     return;
                 }
 
-                bool? enoughMain = MissionHandler.HaveEnoughMain();
-                if (enoughMain == null)
-                {
-                    IceLogging.Error("[Score Checker] Current mission is 0, aborting");
-                    SchedulerMain.State = IceState.GrabMission;
-                    return;
-                }
-
-                if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft) && CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
-                {
-                    var (craft, gather) = MissionHandler.HaveEnoughMainDual();
-                    PlayerHelper.GetItemCount(48233, out int count);
-                    if (gather)
-                    {
-                        SchedulerMain.State &= ~IceState.Gather;
-                        return;
-                    }
-                    else if (count > 0 && !gather && !craft)
-                    {
-                        SchedulerMain.State |= IceState.Gather;
-                        return;
-                    }
-                    else if (count == 0)
-                    {
-                        SchedulerMain.State |= IceState.AbortInProgress;
-                    }
-                }
-
-                if (enoughMain.Value || SchedulerMain.State.HasFlag(IceState.AbortInProgress))
+                if (enoughMain || SchedulerMain.State.HasFlag(IceState.AbortInProgress) || (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft) && CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather)))
                 {
                     uint targetLevel = 0;
                     if (currentMission.TurnInGold)
@@ -70,7 +43,7 @@ namespace ICE.Scheduler.Tasks
                         targetLevel = 2;
                     else if (currentMission.TurnInASAP)
                         targetLevel = 1;
-                    IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore} | Target Level: {targetLevel} | Abort State: {SchedulerMain.State.HasFlag(IceState.AbortInProgress)}", true);
+                    IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Bronze Goal: {bronzeScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore} | Target Level: {targetLevel} | Abort State: {SchedulerMain.State.HasFlag(IceState.AbortInProgress)}", true);
 
                     if (targetLevel == 3)
                     {
@@ -95,15 +68,42 @@ namespace ICE.Scheduler.Tasks
                     }
                     else if (targetLevel <= 1)
                     {
-                        IceLogging.Debug("[Score Checker] Turnin Asap was enabled, and true. Firing off", true);
-                        MissionHandler.TurnIn(z);
-                        return;
+                        if (currentScore >= bronzeScore || bronzeScore == 0)
+                        {
+                            IceLogging.Debug("[Score Checker] Turnin Asap was enabled, and true. Firing off", true);
+                            MissionHandler.TurnIn(z);
+                            return;
+                        }
                     }
                     if (SchedulerMain.State.HasFlag(IceState.AbortInProgress))
                     {
                         IceLogging.Error("[Score Checker] Aborting mission");
                         MissionHandler.TurnIn(z, true);
                         return;
+                    }
+                    if (EzThrottler.Throttle("UI", 250) && CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft) && CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
+                    {
+                        var (craft, gather) = MissionHandler.HaveEnoughMainDual();
+                        PlayerHelper.GetItemCount(48233, out int count);
+                        IceLogging.Error($"[Score Checker] [Dual class] Craft Enough: {craft} | Gather Enough: {gather} | Cosmics: {count}");
+                        if (gather) // Gathering complete
+                        {
+                            SchedulerMain.State &= ~IceState.Gather;
+                            SchedulerMain.State &= ~IceState.ScoringMission;
+                            MissionHandler.ExitCraftGatherUI();
+                            return;
+                        }
+                        else if (count > 0 && !gather && !SchedulerMain.State.HasFlag(IceState.Gather)) // Neither Gathering nor Crafting complete but Cosmic still available.
+                        {
+                            SchedulerMain.State |= IceState.Gather;
+                            SchedulerMain.State &= ~IceState.ScoringMission;
+                            MissionHandler.ExitCraftGatherUI();
+                            return;
+                        }
+                        else if (count == 0) // No cosmics
+                        {
+                            SchedulerMain.State |= IceState.AbortInProgress;
+                        }
                     }
                 }
                 if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.Gathering]) && !P.Artisan.GetEnduranceStatus())

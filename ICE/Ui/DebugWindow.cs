@@ -436,6 +436,29 @@ internal class DebugWindow : Window
             ImGui.SameLine();
             ImGui.Text($"Distance to nearest: {collectionPointDistance}");
 
+            if (ImGui.Button("Print GatheringPoint Info"))
+            {
+                var gatheringPoint = Svc.ClientState.LocalPlayer.TargetObject;
+                if (gatheringPoint is not null)
+                {
+                    var nodeId = gatheringPoint.DataId;
+                    var position = gatheringPoint.Position;
+                    var landZone = gatheringPoint.Position;
+                    var gatheringType = (Job)PlayerHelper.GetClassJobId() == Job.MIN ? 2 : 3;
+                    var currentMission = CosmicHelper.CurrentMissionInfo;
+                    var nodeSet = currentMission?.NodeSet ?? 0;
+
+                    string info = $"new GathNodeInfo\n{{\n    ZoneId = 1237,\n    NodeId = {nodeId},\n    Position = new Vector3({position.X}f, {position.Y}f, {position.Z}f),\n    LandZone = new Vector3({landZone.X}f, {landZone.Y}f, {landZone.Z}f),\n    GatheringType = {gatheringType},\n    NodeSet = {nodeSet}\n}}";
+
+                    ImGui.SetClipboardText(info);
+                    Svc.Chat.Print(info);
+                }
+                else
+                {
+                    Svc.Chat.Print("No GatheringPoint targeted.");
+                }
+            }
+
             if (ImGui.Button("Switch class to CRP"))
             {
                 GearsetHandler.TaskClassChange(Job.CRP);
@@ -444,7 +467,6 @@ internal class DebugWindow : Window
             {
                 GearsetHandler.TaskClassChange(Job.MIN);
             }
-
 
             ImGui.TreePop();
         }
@@ -553,7 +575,7 @@ internal class DebugWindow : Window
                 int _x = MapInfo.GetRow((uint)TableRow).Unknown1.ToInt() - 1024;
                 int _y = MapInfo.GetRow((uint)TableRow).Unknown2.ToInt() - 1024;
                 int _radius = MapInfo.GetRow((uint)TableRow).Unknown3.ToInt();
-                PluginLog.Debug($"X: {_x} Y: {_y} Radius: {_radius}");
+                IceLogging.Debug($"X: {_x} Y: {_y} Radius: {_radius}", true);
 
                 Utils.SetGatheringRing(1237, _x, _y, _radius);
             }
@@ -570,7 +592,7 @@ internal class DebugWindow : Window
                 var agent = AgentMap.Instance();
                 int _x = posX - 1024;
                 int _y = posY - 1024;
-                PluginLog.Debug($"X: {_x} Y: {_y}");
+                IceLogging.Debug($"X: {_x} Y: {_y}", true);
 
                 Utils.SetGatheringRing(agent->CurrentTerritoryId, _x, _y, posRadius);
             }
@@ -670,7 +692,7 @@ internal class DebugWindow : Window
 
                 ImGui.TableNextColumn();
                 ImGui.Text($"{entry.Value.SilverRequirement}");
-                
+
                 ImGui.TableNextColumn();
                 ImGui.Text($"{entry.Value.GoldRequirement}");
 
