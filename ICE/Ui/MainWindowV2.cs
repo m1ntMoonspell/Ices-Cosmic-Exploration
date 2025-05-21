@@ -387,7 +387,7 @@ namespace ICE.Ui
             if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
             {
 
-                if (ImGui.Checkbox("Show Unsupported Missions", ref hideUnsupported))
+                if (ImGui.Checkbox("Hide Unsupported Missions", ref hideUnsupported))
                 {
                     C.HideUnsupportedMissions = hideUnsupported;
                     C.Save();
