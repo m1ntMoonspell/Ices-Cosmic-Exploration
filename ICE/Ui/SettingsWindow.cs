@@ -35,10 +35,10 @@ internal class SettingsWindow : Window
         ImGuiEx.EzTabBar("Ice Cosmic Settings Tab", Kofi.Text 
             ,("Safety Settings", SafetySettings, null, true)
             ,("Gathering Config", GatherSettings, null, true)
-            ,("Gamble Wheel Settings", GambaWheel, null, true)
             ,("Overlay", Overlay, null, true)
             ,("Misc", Misc, null, true)
 #if DEBUG
+            ,("Gamble Wheel Settings", GambaWheel, null, true)
             ,("Debug", Debug, null, true)
 #endif
         );
