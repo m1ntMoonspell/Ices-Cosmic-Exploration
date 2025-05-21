@@ -429,6 +429,31 @@ namespace ICE.Ui
                     ImGui.EndPopup();
                 }
 
+                ImGui.SameLine();
+
+                ImGui.SetNextItemWidth(150);
+                if (ImGui.BeginCombo("Sort By", sortOptions[SortOption].SortOptionName))
+                {
+                    for (int i = 0; i < sortOptions.Count; i++)
+                    {
+                        bool isSelected = (i == SortOption);
+                        if (ImGui.Selectable(sortOptions[i].SortOptionName, isSelected))
+                        {
+                            SortOption = i;
+                        }
+                        if (isSelected)
+                        {
+                            ImGui.SetItemDefaultFocus();
+                        }
+                        if (SortOption != C.TableSortOption)
+                        {
+                            C.TableSortOption = SortOption;
+                            C.Save();
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+
                 ImGui.Dummy(new Vector2(0, 5));
 
                 ImGui.Separator();
