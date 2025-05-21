@@ -970,6 +970,13 @@ namespace ICE.Ui
                         unsupported = true;
                     }
 
+#if RELEASE
+                    if (dualclass)
+                    {
+                        unsupported = true;
+                    }
+#endif
+
                     if (unsupported && hideUnsupported)
                         continue;
 
