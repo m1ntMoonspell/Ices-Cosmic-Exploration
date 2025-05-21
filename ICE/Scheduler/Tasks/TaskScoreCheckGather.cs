@@ -26,7 +26,7 @@ namespace ICE.Scheduler.Tasks
 
             if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
-                var (currentScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+                var (currentScore, _, silverScore, goldScore) = MissionHandler.GetCurrentScores();
                 bool timedMission = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining);
 
                 if (currentScore != 0 && !timedMission) // Base ones that have item counters

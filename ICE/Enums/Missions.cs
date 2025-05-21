@@ -24,11 +24,12 @@ namespace ICE.Enums
         ScoreGatherersBoon = 512, // Gatherers Boon
         ScoreLargestSize = 1024,   // Largest fish caught
         ScoreVariety = 2048,       // Fish Variety
+        ScoreScore = 4096,         // Minimum Score Requirement
 
         // --- Misc ---
-        Critical = 4096,          // Critical Mission
-        ProvisionalTimed = 8192,            // Timed Mission
-        ProvisionalWeather = 16384,          // Weather Mission
-        ProvisionalSequential = 32768,       // Sequential Mission
+        Critical = 8192,          // Critical Mission
+        ProvisionalTimed = 16384,            // Timed Mission
+        ProvisionalWeather = 32768,          // Weather Mission
+        ProvisionalSequential = 65536,       // Sequential Mission
     }
 }
