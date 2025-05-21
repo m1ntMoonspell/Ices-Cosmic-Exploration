@@ -46,47 +46,17 @@ namespace ICE.Scheduler.Handlers
 
         internal static void Tick()
         {
-            if (SchedulerMain.State != IceState.Idle)
+            if (SchedulerMain.State.HasFlag(IceState.Gather))
             {
-                //by Taurenkey https://github.com/PunishXIV/PandorasBox/blob/24a4352f5b01751767c7ca7f1d4b48369be98711/PandorasBox/Features/UI/AutoSelectTurnin.cs
+                var featureEnabled = (P.Pandora.GetFeatureEnabled("Pandora Quick Gather") ?? false);
 
-                var featureEnabled = (P.Pandora.GetFeatureEnabled("Auto-select Turn-ins") ?? false);
-                var configEnabled = (P.Pandora.GetConfigEnabled("Auto-select Turn-ins", "AutoSelect") ?? false);
-
-                var isenabled = featureEnabled && configEnabled;
-
-                if (!isenabled)
+                if (featureEnabled)
                 {
-                    if (featureEnabled && !configEnabled)
+                    if (EzThrottler.Throttle("Disabling Pandora Gathering", 1000))
                     {
-                        if (EzThrottler.Throttle("Enabling AutoSelect", 1000))
-                        {
-                            P.Pandora.PauseFeature("Auto-select Turn-ins", 1100);
-                        }
-                    }
-
-                    if (GenericHelpers.TryGetAddonByName<AddonRequest>("Request", out var addon3))
-                    {
-                        for (var i = 1; i <= addon3->EntryCount; i++)
-                        {
-                            if (SlotsFilled.Contains(addon3->EntryCount)) ConfirmOrAbort(addon3);
-                            if (SlotsFilled.Contains(i)) return;
-                            var val = i;
-                            TaskManager.DelayNext($"ClickTurnin{val}", 10);
-                            TaskManager.Enqueue(() => TryClickItem(addon3, val));
-                        }
-                    }
-                    else
-                    {
-                        SlotsFilled.Clear();
-                        TaskManager.Abort();
+                        P.Pandora.PauseFeature("Pandora Quick Gather", 1000);
                     }
                 }
-            }
-            else
-            {
-                // Clear slots when not ticking to prevent unbounded growth
-                SlotsFilled.Clear();
             }
         }
     }
