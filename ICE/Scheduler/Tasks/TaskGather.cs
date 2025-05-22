@@ -76,7 +76,7 @@ namespace ICE.Scheduler.Tasks
 
                 List<uint> MissionNodes = new List<uint>();
 
-                foreach (var entry in SchedulerMain.PreviousNodeSet)
+                foreach (var entry in SchedulerMain.CurrentNodeSet)
                 {
                     if (MissionInfoDict[currentMission].NodeSet == entry.NodeSet)
                     {

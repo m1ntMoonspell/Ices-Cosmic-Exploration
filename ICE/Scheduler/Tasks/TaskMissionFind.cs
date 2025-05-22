@@ -159,18 +159,25 @@ namespace ICE.Scheduler.Tasks
             {
                 SchedulerMain.State |= IceState.Gather;
                 List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet)];
-                var pathfinder = new GatheringPathfinder();
-                if (SchedulerMain.TSPLength > missionNode.Count)
+
+                if (mission.GatherSetting.Pathfinding == 1)
                 {
+                    var pathfinder = new GatheringPathfinder();
                     missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveOpenEndedTSP(Player.Position, missionNode);
                     SchedulerMain.CurrentIndex = 0;
                 }
-                else
+                else if (mission.GatherSetting.Pathfinding == 2)
                 {
-                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveCyclicalTSP(missionNode, SchedulerMain.TSPLength);
+                    var pathfinder = new GatheringPathfinder();
+                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize);
                 }
 
-                SchedulerMain.PreviousNodeSet = missionNode;
+                SchedulerMain.CurrentNodeSet = missionNode;
+                if (SchedulerMain.PreviousNodeSet != SchedulerMain.CurrentNodeSet)
+                {
+                    SchedulerMain.PreviousNodeSet = SchedulerMain.CurrentNodeSet;
+                    SchedulerMain.CurrentIndex = 0;
+                }
                 SchedulerMain.NodesVisited = 0;
             }
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Fish))
