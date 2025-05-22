@@ -680,7 +680,6 @@ internal class SettingsWindow : Window
         ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
         ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
         ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
-        ImGui.SliderInt("TSP Path Length", ref SchedulerMain.TSPLength, 2, 20);
 
         var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
                 {
