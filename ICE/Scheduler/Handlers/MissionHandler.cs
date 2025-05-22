@@ -192,16 +192,19 @@ internal static class MissionHandler
 
             if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
             {
-                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition[ConditionFlag.NormalConditions])
+                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition.OnlyAny(ConditionFlag.NormalConditions))
                 {
                     var gameObject = Utils.TryGetObjectCollectionPoint();
-                    float gameObjectDistance = 100;
+                    float gameObjectDistance = 999;
                     if (gameObject is not null)
                         gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
                     //Utils.TargetgameObject(gameObject);
-                    if (gameObjectDistance < 5)
+                    if (gameObjectDistance < 2)
+                    {
+                        P.Navmesh.Stop();
                         Utils.InteractWithObject(gameObject);
-                    else if (gameObjectDistance < 100)
+                    }
+                    else if (gameObjectDistance > 999)
                         TaskGather.PathToNode(gameObject.Position);
                 }
                 return false;
