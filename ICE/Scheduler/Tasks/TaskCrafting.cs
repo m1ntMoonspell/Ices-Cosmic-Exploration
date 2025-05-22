@@ -73,6 +73,8 @@ namespace ICE.Scheduler.Tasks
                     var itemId = ExcelHelper.RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
                     var subItem = ExcelHelper.RecipeSheet.GetRow(main.Key).Ingredient[0].Value.RowId; // need to directly reference this in the future
                     var mainNeed = main.Value;
+                    if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather) && CraftMultipleMissionItems == 1) // For Dual Class specifically, if we doing a mult - use it on first loop.
+                        mainNeed *= SchedulerMain.InitialGatheringItemMultiplier;
                     var subItemNeed = ExcelHelper.RecipeSheet.GetRow(main.Key).AmountIngredient[0].ToInt() * main.Value;
 
                     if (!PlayerHelper.GetItemCount((int)itemId, out var currentAmount))
