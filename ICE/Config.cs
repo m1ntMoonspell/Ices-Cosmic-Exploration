@@ -140,6 +140,7 @@ namespace ICE
         public int Pathfinding { get; set; } = 1;
         public int TSPCycleSize { get; set; } = 20;
         public int MinimumGP { get; set; } = -1;
+        public int InitialGatheringItemMultiplier { get; set; } = 1;
         public GatherBuffs Buffs { get; set; } = new();
     }
 
