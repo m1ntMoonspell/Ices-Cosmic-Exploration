@@ -85,7 +85,7 @@ namespace ICE.Scheduler.Tasks
                     {
                         var (craft, gather) = MissionHandler.HaveEnoughMainDual();
                         PlayerHelper.GetItemCount(48233, out int count);
-                        IceLogging.Error($"[Score Checker] [Dual class] Craft Enough: {craft} | Gather Enough: {gather} | Cosmics: {count}");
+                        IceLogging.Debug($"[Score Checker] [Dual class] Craft Enough: {craft} | Gather Enough: {gather} | Cosmics: {count}", true);
                         if (gather) // Gathering complete
                         {
                             SchedulerMain.State &= ~IceState.Gather;
