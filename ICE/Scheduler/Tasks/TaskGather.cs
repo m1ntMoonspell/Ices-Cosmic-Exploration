@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using ICE.Utilities;
 using System.Collections.Generic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ICE.Utilities.CosmicHelper;
@@ -76,7 +77,7 @@ namespace ICE.Scheduler.Tasks
 
                 List<uint> MissionNodes = new List<uint>();
 
-                foreach (var entry in SchedulerMain.PreviousNodeSet)
+                foreach (var entry in SchedulerMain.CurrentNodeSet)
                 {
                     if (MissionInfoDict[currentMission].NodeSet == entry.NodeSet)
                     {
@@ -194,7 +195,6 @@ namespace ICE.Scheduler.Tasks
                                     {
                                         #nullable disable
                                         int boonChance = item.BoonChance;
-                                        IceLogging.Debug($"Boon Increase 2: {BoonIncrease2Bool(boonChance, gBuffs)} && Missing durability: {missingDur}");
                                         if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
                                         {
                                             IceLogging.Debug($"Should be activating buff...", true);
@@ -288,85 +288,84 @@ namespace ICE.Scheduler.Tasks
                                     }
                                     else if (!hasAllItems && item.ItemID == itemToGather)
                                     {
-                                        IceLogging.Debug($"Condion F Met", true);
+                                        IceLogging.Debug($"[Condition F] Mission is aiming to gather: {itemToGather}", true);
+
                                         int boonChance = item.BoonChance;
-                                        IceLogging.Debug($"Boon Increase 2: {BoonIncrease2Bool(boonChance, gBuffs)} && Missing durability: {missingDur}");
                                         if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
                                         {
-                                            IceLogging.Debug($"Should be activating buff...", true);
+                                            IceLogging.Debug("Activating Boon% 2");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Boon2 Action Usage"))
                                             {
-                                                IceLogging.Debug("Activating Boon% 2");
                                                 GatherBuffs(Boon2);
                                             }
                                             return;
                                         }
                                         else if (BoonIncrease1Bool(boonChance, gBuffs) && !missingDur)
                                         {
+                                            IceLogging.Debug("Activating Boon% 1");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Boon1 Action Usage"))
                                             {
-                                                IceLogging.Debug("Activating Boon% 1");
                                                 GatherBuffs(Boon1);
                                             }
                                             return;
                                         }
                                         else if (TidingsBool(gBuffs))
                                         {
+                                            IceLogging.Debug("Activating Bonus Item from Tidings");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Tidings Action Usage") && !missingDur)
                                             {
-                                                IceLogging.Debug("Activating Bonus Item from Tidings");
                                                 GatherBuffs(Tidings);
                                             }
                                             return;
                                         }
-                                        else if (Yield2Bool(gBuffs))
+                                        else if (Yield2Bool(gBuffs) && !missingDur)
                                         {
+                                            IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Yield2 Action Usage") && !missingDur)
                                             {
-                                                IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                                 GatherBuffs(Yield2);
                                             }
                                             return;
                                         }
-                                        else if (Yield1Bool(gBuffs))
+                                        else if (Yield1Bool(gBuffs) && !missingDur)
                                         {
+                                            IceLogging.Debug("Activating Kings Yield I [or equivelent]");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Yield1 Action Usage") && !missingDur)
                                             {
-                                                IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                                 GatherBuffs(Yield1);
                                             }
                                             return;
                                         }
                                         else if (BYield2Bool(gBuffs))
                                         {
+                                            IceLogging.Debug("Activating Bountiful Yield/Harvest II");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Bountiful Yield Action"))
                                             {
-                                                IceLogging.Debug("Activating Bountiful Yield/Harvest II");
                                                 GatherBuffs(BYieldII);
                                             }
                                         }
                                         else if (BonusIntegrityBool(missingDur))
                                         {
+                                            IceLogging.Debug("Activating Bonus Yield Button");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Bonus Intregrity Usage"))
                                             {
-                                                IceLogging.Debug("Activating Bonus Yield Button");
                                                 GatherBuffs(BonusInteg);
                                             }
                                             return;
                                         }
                                         else if (IntegrityBool(missingDur, gBuffs))
                                         {
+                                            IceLogging.Debug("Activing Integrity Increase Button [Hoping for bonus Integ]");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Missing Dur, using action"))
                                             {
-                                                IceLogging.Debug("Activing Integrity Increase Button [Hoping for bonus Integ]");
                                                 GatherBuffs(IntegInc);
                                             }
                                             return;
@@ -581,6 +580,7 @@ namespace ICE.Scheduler.Tasks
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Limited)
                 && SchedulerMain.NodesVisited >= SchedulerMain.PreviousNodeSet.Count)
                 SchedulerMain.State |= IceState.AbortInProgress;
+            SchedulerMain.State |= IceState.ScoringMission;
             return true;
         }
 

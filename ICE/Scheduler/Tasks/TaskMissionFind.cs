@@ -152,29 +152,38 @@ namespace ICE.Scheduler.Tasks
 
         internal static void UpdateStateFlags()
         {
+            CosmicMission mission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft))
                 SchedulerMain.State |= IceState.Craft;
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
             {
                 SchedulerMain.State |= IceState.Gather;
+                SchedulerMain.InitialGatheringItemMultiplier = mission.GatherSetting.InitialGatheringItemMultiplier;
                 List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet)];
-                var pathfinder = new GatheringPathfinder();
-                if (SchedulerMain.TSPLength > missionNode.Count)
+
+                if (mission.GatherSetting.Pathfinding == 1)
                 {
+                    var pathfinder = new GatheringPathfinder();
                     missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveOpenEndedTSP(Player.Position, missionNode);
                     SchedulerMain.CurrentIndex = 0;
                 }
-                else
+                else if (mission.GatherSetting.Pathfinding == 2)
                 {
-                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveCyclicalTSP(missionNode, SchedulerMain.TSPLength);
+                    var pathfinder = new GatheringPathfinder();
+                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize);
                 }
 
-                SchedulerMain.PreviousNodeSet = missionNode;
+                SchedulerMain.CurrentNodeSet = missionNode;
+                if (SchedulerMain.PreviousNodeSet != SchedulerMain.CurrentNodeSet)
+                {
+                    SchedulerMain.PreviousNodeSet = SchedulerMain.CurrentNodeSet;
+                    SchedulerMain.CurrentIndex = 0;
+                }
                 SchedulerMain.NodesVisited = 0;
             }
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Fish))
                 SchedulerMain.State |= IceState.Fish;
-            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode)
+            if (mission.ManualMode || C.OnlyGrabMission)
                 SchedulerMain.State |= IceState.ManualMode;
             SchedulerMain.State |= IceState.ExecutingMission;
             SchedulerMain.State &= ~IceState.GrabMission;
@@ -463,7 +472,12 @@ namespace ICE.Scheduler.Tasks
             if (EzThrottler.Throttle("GrabMission", 250))
             {
                 IceLogging.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
-                if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
+                if (SchedulerMain.Abandon == false && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
+                {
+                    SchedulerMain.State |= IceState.Waiting;
+                    return true;
+                }
+                else if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
                     string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？", "Commence selected mission?", "Ausgewählte Mission wird gestartet.Fortfahren?", "Commencer la mission sélectionnée ?"];
                     if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
@@ -545,6 +559,9 @@ namespace ICE.Scheduler.Tasks
         public static void WaitForNonStandard()
         {
             if (!PlayerHelper.IsInCosmicZone())
+                return;
+
+            if (C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
                 return;
 
             if (HasStandard)
