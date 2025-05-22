@@ -34,6 +34,7 @@ namespace ICE.Scheduler
         internal static uint NodesVisited = 0;
         internal static bool GatherNodeMissing = false;
         internal static int TSPLength = 99;
+        internal static int InitialGatheringItemMultiplier = 1;
 #if DEBUG
         // Debug only settings
         internal static bool DebugOOMMain = false;

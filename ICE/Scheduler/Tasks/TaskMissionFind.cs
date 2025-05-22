@@ -158,6 +158,7 @@ namespace ICE.Scheduler.Tasks
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
             {
                 SchedulerMain.State |= IceState.Gather;
+                SchedulerMain.InitialGatheringItemMultiplier = mission.GatherSetting.InitialGatheringItemMultiplier;
                 List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet)];
 
                 if (mission.GatherSetting.Pathfinding == 1)

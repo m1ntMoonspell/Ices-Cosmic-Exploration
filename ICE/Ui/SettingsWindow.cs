@@ -344,9 +344,9 @@ internal class SettingsWindow : Window
             ImGui.SameLine();
             ImGui.SetNextItemWidth(100);
             int cycle = entry.TSPCycleSize;
-            if (ImGui.SliderInt("Cycle size", ref cycle, 1, 20))
+            if (ImGui.InputInt("Cycle size", ref cycle, 1))
             {
-                entry.TSPCycleSize = cycle;
+                entry.TSPCycleSize = cycle >= 2 ? cycle : 2;
                 C.Save();
             }
         }
@@ -359,6 +359,16 @@ internal class SettingsWindow : Window
             entry.MinimumGP = minGP;
             C.Save();
         }
+
+        // Multiply gathered items on FIRST gather loop only. Should only be used for Dual Class really.
+        int gatherMult = entry.InitialGatheringItemMultiplier;
+        ImGui.SetNextItemWidth(100);
+        if (ImGui.InputInt("Multiply gathered items", ref gatherMult, 1))
+        {
+            entry.InitialGatheringItemMultiplier = gatherMult >= 1 ? gatherMult : 1;
+            C.Save();
+        }
+        ImGuiEx.HelpMarker("This increases how many items you gather before you are 'done' before switching to crafting.\nSet this to however many items you need to craft to reach your target score.\nOnly affects Dual Class missions.");
 
         // Boon Increase 2 (+30% Increase)
         DrawBuffSetting(
