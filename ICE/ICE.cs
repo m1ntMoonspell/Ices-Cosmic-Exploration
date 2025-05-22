@@ -85,6 +85,7 @@ public sealed partial class ICE : IDalamudPlugin
             settingWindow.IsOpen = true;
         };
         DictionaryCreation();
+        TaskGamba.EnsureGambaWeightsInitialized();
     }
 
     private static void Init()
