@@ -163,6 +163,7 @@ namespace ICE
         Orchestrion = 5,
         Housing = 6,
         Dye = 7,
-        Other = 8
+        Other = 8,
+        Materia = 9,
     }
 }
