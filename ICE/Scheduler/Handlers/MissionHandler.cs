@@ -190,7 +190,7 @@ internal static class MissionHandler
                 return false;
             }
 
-            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical) && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
             {
                 if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition.OnlyAny(ConditionFlag.NormalConditions))
                 {
@@ -198,7 +198,6 @@ internal static class MissionHandler
                     float gameObjectDistance = 999;
                     if (gameObject is not null)
                         gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
-                    //Utils.TargetgameObject(gameObject);
                     if (gameObjectDistance < 5)
                     {
                         P.Navmesh.Stop();
@@ -206,6 +205,8 @@ internal static class MissionHandler
                     }
                     else if (gameObjectDistance < 999)
                         TaskGather.PathToNode(gameObject.Position);
+                    else if (SchedulerMain.NearestCollectionPoint is not null)
+                        TaskGather.PathToNode((Vector3)SchedulerMain.NearestCollectionPoint);
                 }
                 return false;
             }

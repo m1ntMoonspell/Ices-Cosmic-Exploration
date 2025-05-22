@@ -153,6 +153,14 @@ namespace ICE.Scheduler.Tasks
         internal static void UpdateStateFlags()
         {
             CosmicMission mission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
+            {
+                Dalamud.Game.ClientState.Objects.Types.IGameObject? gameobject = Utils.TryGetObjectCollectionPoint();
+                if (gameobject is not null)
+                    SchedulerMain.NearestCollectionPoint = gameobject.Position;
+                else
+                    SchedulerMain.NearestCollectionPoint = null;
+            }
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft))
                 SchedulerMain.State |= IceState.Craft;
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
