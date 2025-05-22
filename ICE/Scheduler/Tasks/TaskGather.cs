@@ -579,6 +579,7 @@ namespace ICE.Scheduler.Tasks
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Limited)
                 && SchedulerMain.NodesVisited >= SchedulerMain.PreviousNodeSet.Count)
                 SchedulerMain.State |= IceState.AbortInProgress;
+            SchedulerMain.State |= IceState.ScoringMission;
             return true;
         }
 

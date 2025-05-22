@@ -152,6 +152,7 @@ namespace ICE.Scheduler.Tasks
 
         internal static void UpdateStateFlags()
         {
+            CosmicMission mission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft))
                 SchedulerMain.State |= IceState.Craft;
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
@@ -174,7 +175,7 @@ namespace ICE.Scheduler.Tasks
             }
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Fish))
                 SchedulerMain.State |= IceState.Fish;
-            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).ManualMode)
+            if (mission.ManualMode || C.OnlyGrabMission)
                 SchedulerMain.State |= IceState.ManualMode;
             SchedulerMain.State |= IceState.ExecutingMission;
             SchedulerMain.State &= ~IceState.GrabMission;
