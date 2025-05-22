@@ -137,6 +137,9 @@ namespace ICE
     {
         public int Id { get; set; } // Index being set for quick reference
         public string Name { get; set; } = ""; // Name, moreso for Ui
+        public int Pathfinding { get; set; } = 1;
+        public int TSPCycleSize { get; set; } = 20;
+        public int MinimumGP { get; set; } = -1;
         public GatherBuffs Buffs { get; set; } = new();
     }
 

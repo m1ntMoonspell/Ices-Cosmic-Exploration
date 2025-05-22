@@ -1,8 +1,5 @@
 ﻿using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using ECommons.ExcelServices;
-using ECommons.Funding;
-using ICE.Utilities.Cosmic;
 using System.Collections.Generic;
 
 namespace ICE.Ui;
@@ -331,6 +328,37 @@ internal class SettingsWindow : Window
 
         ImGui.NextColumn();
         ImGui.SetColumnWidth(1, ImGui.GetWindowWidth() - 300);
+
+        // Pathfinding
+        int pathfinding = entry.Pathfinding;
+        string[] modes = ["Simple", "Nearest", "Cyclic"];
+        ImGui.SetNextItemWidth(100);
+        if (ImGui.Combo("Pathfinding mode", ref pathfinding, modes, modes.Length))
+        {
+            entry.Pathfinding = pathfinding;
+            C.Save();
+        }
+        ImGuiEx.HelpMarker("Simple - From 1st node in list until the last.\nNearest - Always go to Nearest node then find a path that minimises distance through all remaining nodes.\nCyclic - Find nodes that are close together and stick to those nodes only.");
+        if (pathfinding == 2)
+        {
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(100);
+            int cycle = entry.TSPCycleSize;
+            if (ImGui.SliderInt("Cycle size", ref cycle, 1, 20))
+            {
+                entry.TSPCycleSize = cycle;
+                C.Save();
+            }
+        }
+
+        // GP Settings
+        int minGP = entry.MinimumGP;
+        ImGui.SetNextItemWidth(100);
+        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, 1000))
+        {
+            entry.MinimumGP = minGP;
+            C.Save();
+        }
 
         // Boon Increase 2 (+30% Increase)
         DrawBuffSetting(
