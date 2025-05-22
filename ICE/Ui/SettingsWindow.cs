@@ -407,7 +407,8 @@ internal class SettingsWindow : Window
             minGpLimit: 500,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Increases the number of items obtained when gathering by 2",
+            ActionInfo: "Increases the number of items obtained when gathering by 2\n" +
+                        "Will only apply when the gathering node has full durability",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.YieldII = newVal;
@@ -429,7 +430,8 @@ internal class SettingsWindow : Window
             minGpLimit: 400,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Increases the number of items obtained when gathering by 1",
+            ActionInfo: "Increases the number of items obtained when gathering by 1\n" +
+                        "Will only apply when the gathering node has full durability",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.YieldI = newVal;

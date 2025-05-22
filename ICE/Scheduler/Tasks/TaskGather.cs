@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using ICE.Utilities;
 using System.Collections.Generic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using static ICE.Utilities.CosmicHelper;
@@ -292,79 +293,79 @@ namespace ICE.Scheduler.Tasks
                                         int boonChance = item.BoonChance;
                                         if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
                                         {
+                                            IceLogging.Debug("Activating Boon% 2");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Boon2 Action Usage"))
                                             {
-                                                IceLogging.Debug("Activating Boon% 2");
                                                 GatherBuffs(Boon2);
                                             }
                                             return;
                                         }
                                         else if (BoonIncrease1Bool(boonChance, gBuffs) && !missingDur)
                                         {
+                                            IceLogging.Debug("Activating Boon% 1");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Boon1 Action Usage"))
                                             {
-                                                IceLogging.Debug("Activating Boon% 1");
                                                 GatherBuffs(Boon1);
                                             }
                                             return;
                                         }
                                         else if (TidingsBool(gBuffs))
                                         {
+                                            IceLogging.Debug("Activating Bonus Item from Tidings");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Tidings Action Usage") && !missingDur)
                                             {
-                                                IceLogging.Debug("Activating Bonus Item from Tidings");
                                                 GatherBuffs(Tidings);
                                             }
                                             return;
                                         }
-                                        else if (Yield2Bool(gBuffs))
+                                        else if (Yield2Bool(gBuffs) && !missingDur)
                                         {
+                                            IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Yield2 Action Usage") && !missingDur)
                                             {
-                                                IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                                 GatherBuffs(Yield2);
                                             }
                                             return;
                                         }
-                                        else if (Yield1Bool(gBuffs))
+                                        else if (Yield1Bool(gBuffs) && !missingDur)
                                         {
+                                            IceLogging.Debug("Activating Kings Yield I [or equivelent]");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Yield1 Action Usage") && !missingDur)
                                             {
-                                                IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                                 GatherBuffs(Yield1);
                                             }
                                             return;
                                         }
                                         else if (BYield2Bool(gBuffs))
                                         {
+                                            IceLogging.Debug("Activating Bountiful Yield/Harvest II");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Bountiful Yield Action"))
                                             {
-                                                IceLogging.Debug("Activating Bountiful Yield/Harvest II");
                                                 GatherBuffs(BYieldII);
                                             }
                                         }
                                         else if (BonusIntegrityBool(missingDur))
                                         {
+                                            IceLogging.Debug("Activating Bonus Yield Button");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Using Bonus Intregrity Usage"))
                                             {
-                                                IceLogging.Debug("Activating Bonus Yield Button");
                                                 GatherBuffs(BonusInteg);
                                             }
                                             return;
                                         }
                                         else if (IntegrityBool(missingDur, gBuffs))
                                         {
+                                            IceLogging.Debug("Activing Integrity Increase Button [Hoping for bonus Integ]");
                                             useAction = true;
                                             if (EzThrottler.Throttle("Missing Dur, using action"))
                                             {
-                                                IceLogging.Debug("Activing Integrity Increase Button [Hoping for bonus Integ]");
                                                 GatherBuffs(IntegInc);
                                             }
                                             return;
