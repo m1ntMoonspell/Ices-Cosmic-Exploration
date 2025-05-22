@@ -58,6 +58,9 @@ namespace ICE.Scheduler.Handlers
                     }
                 }
             }
+            if (EzThrottler.Throttle("DelayedTick"))
+                if (AddonHelper.IsAddonActive("WKSLottery") && C.GambaEnabled && SchedulerMain.State == IceState.Idle)
+                    SchedulerMain.EnablePlugin();
         }
     }
 }
