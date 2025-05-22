@@ -3,10 +3,8 @@ using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using ICE.Utilities;
 using System.Collections.Generic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
-using static ICE.Utilities.CosmicHelper;
 
 namespace ICE.Scheduler.Tasks
 {
@@ -79,7 +77,7 @@ namespace ICE.Scheduler.Tasks
 
                 foreach (var entry in SchedulerMain.CurrentNodeSet)
                 {
-                    if (MissionInfoDict[currentMission].NodeSet == entry.NodeSet)
+                    if (CosmicHelper.MissionInfoDict[currentMission].NodeSet == entry.NodeSet)
                     {
                         MissionNodes.Add(entry.NodeId);
                     }
@@ -164,12 +162,12 @@ namespace ICE.Scheduler.Tasks
                             BYieldII = GatheringUtil.GathActionDict["BountifulYieldII"].MinActionId;
                         }
 
-                        bool Collectable = MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.Collectables);
-                        bool Reducable = MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.ReducedItems);
+                        bool Collectable = CosmicHelper.MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.Collectables);
+                        bool Reducable = CosmicHelper.MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.ReducedItems);
 
                         if (!(Collectable || Reducable) && x.TotalIntegrity != 0)
                         {
-                            var DictEntry = GatheringItemDict[currentMission].MinGatherItems;
+                            var DictEntry = CosmicHelper.GatheringItemDict[currentMission].MinGatherItems;
                             bool hasAllItems = true;
                             uint itemToGather = 0;
 
@@ -185,189 +183,16 @@ namespace ICE.Scheduler.Tasks
                             if (!Svc.Condition[ConditionFlag.ExecutingGatheringAction])
                             {
                                 var profileId = C.Missions.Where(x => x.Id == currentMission).FirstOrDefault().GatherSettingId;
-                                var gBuffs = C.GatherSettings.Where(g => g.Id == profileId).FirstOrDefault();
+                                var gBuffs = C.GatherSettings.Where(g => g.Id == profileId).First();
                                 bool missingDur = x.CurrentIntegrity < x.TotalIntegrity;
-                                bool useAction = false;
 
                                 foreach (var item in x.GatheredItems)
                                 {
-                                    if (hasAllItems && item.ItemID != 0)
-                                    {
-                                        #nullable disable
-                                        int boonChance = item.BoonChance;
-                                        if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
-                                        {
-                                            IceLogging.Debug($"Should be activating buff...", true);
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Boon2 Action Usage"))
-                                            {
-                                                IceLogging.Debug("Activating Boon% 2");
-                                                GatherBuffs(Boon2);
-                                            }
-                                            return;
-                                        }
-                                        else if (BoonIncrease1Bool(boonChance, gBuffs) && !missingDur)
-                                        {
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Boon1 Action Usage"))
-                                            {
-                                                IceLogging.Debug("Activating Boon% 1");
-                                                GatherBuffs(Boon1);
-                                            }
-                                            return;
-                                        }
-                                        else if (TidingsBool(gBuffs) && !missingDur)
-                                        {
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Tidings Action Usage"))
-                                            {
-                                                IceLogging.Debug("Activating Bonus Item from Tidings");
-                                                GatherBuffs(Tidings);
-                                            }
-                                            return;
-                                        }
-                                        else if (Yield2Bool(gBuffs) && !missingDur)
-                                        {
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Yield2 Action Usage"))
-                                            {
-                                                IceLogging.Debug("Activating Kings Yield II [or equivelent]");
-                                                GatherBuffs(Yield2);
-                                            }
-                                            return;
-                                        }
-                                        else if (Yield1Bool(gBuffs))
-                                        {
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Yield1 Action Usage") && !missingDur)
-                                            {
-                                                IceLogging.Debug("Activating Kings Yield II [or equivelent]");
-                                                GatherBuffs(Yield1);
-                                            }
-                                            return;
-                                        }
-                                        else if (BYield2Bool(gBuffs))
-                                        {
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Bountiful Yield Action"))
-                                            {
-                                                IceLogging.Debug("Activating Bountiful Yield/Harvest II");
-                                                GatherBuffs(BYieldII);
-                                            }
-                                        }
-                                        else if (BonusIntegrityBool(missingDur))
-                                        {
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Bonus Intregrity Usage"))
-                                            {
-                                                IceLogging.Debug("Activating Bonus Yield Button");
-                                                GatherBuffs(BonusInteg);
-                                            }
-                                            return;
-                                        }
-                                        else if (IntegrityBool(missingDur, gBuffs))
-                                        {
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Missing Dur, using action"))
-                                            {
-                                                IceLogging.Debug("Activing Integrity Increase Button [Hoping for bonus Integ]");
-                                                GatherBuffs(IntegInc);
-                                            }
-                                            return;
-                                        }
-                                        else
-                                        {
-                                            IceLogging.Info($"HasAllItems: {hasAllItems} \n" +
-                                                $"Found Item: {item.ItemID} | {item.ItemName}", true);
-                                            if (EzThrottler.Throttle($"Gathering: {item.ItemName}"))
-                                            {
-                                                IceLogging.Info($"Telling it to item: {item.ItemName}");
-                                                GatherItem(item);
-                                            }
-                                        }
-                                    }
-                                    else if (!hasAllItems && item.ItemID == itemToGather)
+                                    if ((!hasAllItems && item.ItemID == itemToGather) || (hasAllItems && item.ItemID != 0))
                                     {
                                         IceLogging.Debug($"[Condition F] Mission is aiming to gather: {itemToGather}", true);
-
-                                        int boonChance = item.BoonChance;
-                                        if (BoonIncrease2Bool(boonChance, gBuffs) && !missingDur)
+                                        if (ApplyGatheringBuffs(item, gBuffs, missingDur, Boon1, Boon2, Tidings, Yield1, Yield2, IntegInc, BonusInteg, BYieldII))
                                         {
-                                            IceLogging.Debug("Activating Boon% 2");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Boon2 Action Usage"))
-                                            {
-                                                GatherBuffs(Boon2);
-                                            }
-                                            return;
-                                        }
-                                        else if (BoonIncrease1Bool(boonChance, gBuffs) && !missingDur)
-                                        {
-                                            IceLogging.Debug("Activating Boon% 1");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Boon1 Action Usage"))
-                                            {
-                                                GatherBuffs(Boon1);
-                                            }
-                                            return;
-                                        }
-                                        else if (TidingsBool(gBuffs) && !missingDur)
-                                        {
-                                            IceLogging.Debug("Activating Bonus Item from Tidings");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Tidings Action Usage"))
-                                            {
-                                                GatherBuffs(Tidings);
-                                            }
-                                            return;
-                                        }
-                                        else if (Yield2Bool(gBuffs) && !missingDur)
-                                        {
-                                            IceLogging.Debug("Activating Kings Yield II [or equivelent]");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Yield2 Action Usage"))
-                                            {
-                                                GatherBuffs(Yield2);
-                                            }
-                                            return;
-                                        }
-                                        else if (Yield1Bool(gBuffs) && !missingDur)
-                                        {
-                                            IceLogging.Debug("Activating Kings Yield I [or equivelent]");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Yield1 Action Usage"))
-                                            {
-                                                GatherBuffs(Yield1);
-                                            }
-                                            return;
-                                        }
-                                        else if (BYield2Bool(gBuffs))
-                                        {
-                                            IceLogging.Debug("Activating Bountiful Yield/Harvest II");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Bountiful Yield Action"))
-                                            {
-                                                GatherBuffs(BYieldII);
-                                            }
-                                        }
-                                        else if (BonusIntegrityBool(missingDur))
-                                        {
-                                            IceLogging.Debug("Activating Bonus Yield Button");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Using Bonus Intregrity Usage"))
-                                            {
-                                                GatherBuffs(BonusInteg);
-                                            }
-                                            return;
-                                        }
-                                        else if (IntegrityBool(missingDur, gBuffs))
-                                        {
-                                            IceLogging.Debug("Activing Integrity Increase Button [Hoping for bonus Integ]");
-                                            useAction = true;
-                                            if (EzThrottler.Throttle("Missing Dur, using action"))
-                                            {
-                                                GatherBuffs(IntegInc);
-                                            }
                                             return;
                                         }
                                         else
@@ -381,7 +206,6 @@ namespace ICE.Scheduler.Tasks
                                             }
                                         }
                                     }
-#nullable enable
                                 }
                             }
                         }
@@ -389,14 +213,63 @@ namespace ICE.Scheduler.Tasks
                         {
                             P.TaskManager.Enqueue(() => IntegrityCheck(x));
                         }
-
                     }
-
                 }
-
                 // Check the score
                 P.TaskManager.Enqueue(() => SchedulerMain.State |= IceState.ScoringMission, "Checking score");
             }
+        }
+
+        private static bool CanUseGatheringAction(string actionName, GatherBuffProfile gatherBuffs, bool missingDur, int? boonChance = null)
+        {
+            var actionInfo = GatheringUtil.GathActionDict[actionName];
+            bool hasStatus = PlayerHelper.HasStatusId(actionInfo.StatusId);
+            bool hasGp = PlayerHelper.GetGp() >= actionInfo.RequiredGp;
+
+            return actionName switch
+            {
+                "BoonIncrease1" => gatherBuffs.Buffs.BoonIncrease1 && boonChance < 100 && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease1Gp,
+                "BoonIncrease2" => gatherBuffs.Buffs.BoonIncrease2 && boonChance < 100 && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease2Gp,
+                "Tidings" => gatherBuffs.Buffs.TidingsBool && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.TidingsGp,
+                "YieldI" => gatherBuffs.Buffs.YieldI && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIGp,
+                "YieldII" => gatherBuffs.Buffs.YieldII && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIIGp,
+                "IntegrityIncrease" => gatherBuffs.Buffs.BonusIntegrity && missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BonusIntegrityGp,
+                "BonusIntegrityChance" => hasStatus && missingDur,
+                "BountifulYieldII" => gatherBuffs.Buffs.BountifulYieldII && !hasStatus && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BountifulYieldIIGp,
+                _ => false,
+            };
+
+        }
+
+        private static bool ApplyGatheringBuffs(Gathering.GatheredItem item, GatherBuffProfile gBuffs, bool missingDur, uint Boon1, uint Boon2, uint Tidings, uint Yield1, uint Yield2, uint IntegInc, uint BonusInteg, uint BYieldII)
+        {
+            int boonChance = item.BoonChance;
+
+            var buffsToApply = new (uint actionId, System.Func<bool> condition, string debugMessage)[]
+            {
+                (Boon2, () => CanUseGatheringAction("BoonIncrease2", gBuffs, missingDur, boonChance), "Boon 2"),
+                (Boon1, () => CanUseGatheringAction("BoonIncrease1", gBuffs, missingDur, boonChance), "Boon 1"),
+                (Tidings, () => CanUseGatheringAction("Tidings", gBuffs, missingDur), "Tidings"),
+                (Yield2, () => CanUseGatheringAction("YieldII", gBuffs, missingDur), "Kings Yield 2"),
+                (Yield1, () => CanUseGatheringAction("YieldI", gBuffs, missingDur), "Kings Yield 1"),
+                (BYieldII, () => CanUseGatheringAction("BountifulYieldII", gBuffs, missingDur), "Bountiful Yield/Harvest 2"),
+                (BonusInteg, () => CanUseGatheringAction("BonusIntegrityChance", gBuffs, missingDur), "Wise of the World"),
+                (IntegInc, () => CanUseGatheringAction("IntegrityIncrease", gBuffs, missingDur), "Ageless Words")
+            };
+
+            foreach (var (actionId, condition, debugMessage) in buffsToApply)
+            {
+                if (condition())
+                {
+                    IceLogging.Debug("[ICE] Applying Buff: " + debugMessage, true);
+                    if (EzThrottler.Throttle("Gather Buffs"))
+                    {
+                        GatherBuffs(actionId);
+                    }
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -498,87 +371,16 @@ namespace ICE.Scheduler.Tasks
             P.TaskManager.Enqueue(() => !Svc.Condition[ConditionFlag.ExecutingGatheringAction], "Waiting for gathering attempt");
         }
 
-        private static bool BoonIncrease1Bool(int boonChance, GatherBuffProfile gatherBuffs)
-        {
-            return gatherBuffs.Buffs.BoonIncrease1
-                && boonChance < 100
-                && !PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["BoonIncrease1"].StatusId)
-                && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["BoonIncrease1"].RequiredGp
-                && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease1Gp;
-        }
-
-        public static bool BoonIncrease2Bool(int boonChance, GatherBuffProfile gatherBuffs)
-        {
-            return gatherBuffs.Buffs.BoonIncrease2
-                && boonChance < 100
-                && !PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["BoonIncrease2"].StatusId)
-                && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["BoonIncrease2"].RequiredGp
-                && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease2Gp;
-        }
-
-        public static bool TidingsBool(GatherBuffProfile gatherBuffs)
-        {
-            return gatherBuffs.Buffs.TidingsBool
-                && !PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["Tidings"].StatusId)
-                && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["Tidings"].RequiredGp
-                && PlayerHelper.GetGp() >= gatherBuffs.Buffs.TidingsGp;
-        }
-
-        public static bool Yield1Bool(GatherBuffProfile gatherBuffs)
-        {
-            return gatherBuffs.Buffs.YieldI
-                && !PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["YieldI"].StatusId)
-                && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["YieldI"].RequiredGp
-                && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIGp;
-        }
-
-        public static bool Yield2Bool(GatherBuffProfile gatherBuffs)    
-        {
-            return gatherBuffs.Buffs.YieldII
-                && !PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["YieldII"].StatusId)
-                && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["YieldII"].RequiredGp
-                && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIIGp;
-        }
-
-        public static bool IntegrityBool(bool durMissing, GatherBuffProfile gatherBuffs)
-        {
-            return gatherBuffs.Buffs.BonusIntegrity
-                && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["IntegrityIncrease"].RequiredGp
-                && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BonusIntegrityGp
-                && durMissing;
-        }
-
-        public static bool BonusIntegrityBool(bool durMissing)
-        {
-            return PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["BonusIntegrityChance"].StatusId)
-                && durMissing;
-        }
-
-        public static bool BYield2Bool(GatherBuffProfile gatherBuffs)
-        {
-            return gatherBuffs.Buffs.BountifulYieldII
-                   && !PlayerHelper.HasStatusId(GatheringUtil.GathActionDict["BountifulYieldII"].StatusId)
-                   && PlayerHelper.GetGp() >= GatheringUtil.GathActionDict["BountifulYieldII"].RequiredGp
-                   && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BountifulYieldIIGp;
-        }
 
         internal unsafe static bool? UpdateIndex(List<uint> MissionNodes)
         {
+            SchedulerMain.NodesVisited++;
             if (SchedulerMain.CurrentIndex < MissionNodes.Count - 1)
-            {
-                IceLogging.Debug($"Mission count: {MissionNodes.Count}");
-                IceLogging.Debug($"Current index: {SchedulerMain.CurrentIndex}. Adding +1 to it");
-                SchedulerMain.CurrentIndex += 1;
-                SchedulerMain.NodesVisited += 1;
-                IceLogging.Debug($"New index value: {SchedulerMain.CurrentIndex}");
-            }
+                SchedulerMain.CurrentIndex++;
             else
-            {
-                IceLogging.Debug($"Resetting index value to 0");
                 SchedulerMain.CurrentIndex = 0;
-            }
-            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Limited)
-                && SchedulerMain.NodesVisited >= SchedulerMain.PreviousNodeSet.Count)
+
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Limited) && SchedulerMain.NodesVisited >= SchedulerMain.PreviousNodeSet.Count)
                 SchedulerMain.State |= IceState.AbortInProgress;
             SchedulerMain.State |= IceState.ScoringMission;
             return true;
