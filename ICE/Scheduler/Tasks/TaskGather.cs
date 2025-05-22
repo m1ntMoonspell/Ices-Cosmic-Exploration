@@ -216,20 +216,20 @@ namespace ICE.Scheduler.Tasks
                                             }
                                             return;
                                         }
-                                        else if (TidingsBool(gBuffs))
+                                        else if (TidingsBool(gBuffs) && !missingDur)
                                         {
                                             useAction = true;
-                                            if (EzThrottler.Throttle("Tidings Action Usage") && !missingDur)
+                                            if (EzThrottler.Throttle("Tidings Action Usage"))
                                             {
                                                 IceLogging.Debug("Activating Bonus Item from Tidings");
                                                 GatherBuffs(Tidings);
                                             }
                                             return;
                                         }
-                                        else if (Yield2Bool(gBuffs))
+                                        else if (Yield2Bool(gBuffs) && !missingDur)
                                         {
                                             useAction = true;
-                                            if (EzThrottler.Throttle("Using Yield2 Action Usage") && !missingDur)
+                                            if (EzThrottler.Throttle("Using Yield2 Action Usage"))
                                             {
                                                 IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                                 GatherBuffs(Yield2);
@@ -311,11 +311,11 @@ namespace ICE.Scheduler.Tasks
                                             }
                                             return;
                                         }
-                                        else if (TidingsBool(gBuffs))
+                                        else if (TidingsBool(gBuffs) && !missingDur)
                                         {
                                             IceLogging.Debug("Activating Bonus Item from Tidings");
                                             useAction = true;
-                                            if (EzThrottler.Throttle("Tidings Action Usage") && !missingDur)
+                                            if (EzThrottler.Throttle("Tidings Action Usage"))
                                             {
                                                 GatherBuffs(Tidings);
                                             }
@@ -325,7 +325,7 @@ namespace ICE.Scheduler.Tasks
                                         {
                                             IceLogging.Debug("Activating Kings Yield II [or equivelent]");
                                             useAction = true;
-                                            if (EzThrottler.Throttle("Using Yield2 Action Usage") && !missingDur)
+                                            if (EzThrottler.Throttle("Using Yield2 Action Usage"))
                                             {
                                                 GatherBuffs(Yield2);
                                             }
@@ -335,7 +335,7 @@ namespace ICE.Scheduler.Tasks
                                         {
                                             IceLogging.Debug("Activating Kings Yield I [or equivelent]");
                                             useAction = true;
-                                            if (EzThrottler.Throttle("Using Yield1 Action Usage") && !missingDur)
+                                            if (EzThrottler.Throttle("Using Yield1 Action Usage"))
                                             {
                                                 GatherBuffs(Yield1);
                                             }

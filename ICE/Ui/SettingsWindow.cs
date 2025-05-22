@@ -127,6 +127,12 @@ internal class SettingsWindow : Window
     private bool SelfRepairGather = C.SelfRepairGather;
     private float SelfRepairPercent = C.RepairPercent;
     private bool SelfSpiritbondGather = C.SelfSpiritbondGather;
+    private bool AutoCordial = C.AutoCordial;
+    private bool InverseCordialPrio = C.inverseCordialPrio;
+    private bool UseOnFisher = C.UseOnFisher;
+    private bool PreventOvercap = C.PreventOvercap;
+    private int CordialMinGp = C.CordialMinGp;
+    private bool useOnlyInMission = C.UseOnlyInMission;
     private string newProfileName = "";
 
     private string[] MissionTypes = ["Limited Nodes", "Gather x Amount", "Time Attack", "Chained Scoring", "Boon Scoring", "Chain + Boon Scoring", "Dual Class"];
@@ -199,6 +205,47 @@ internal class SettingsWindow : Window
             {
                 C.SelfSpiritbondGather = SelfSpiritbondGather;
                 C.Save();
+            }
+        }
+        if (ImGui.Checkbox("Auto Cordial", ref AutoCordial))
+        {
+            C.AutoCordial = AutoCordial;
+            C.Save();
+        }
+        ImGuiEx.HelpMarker("Will only work while using ICE and not manual mode\n" +
+                           "Will also pause pandora cordial usage while on the moon");
+        if (AutoCordial)
+        {
+            if (ImGui.TreeNode("Cordial Settings"))
+            {
+                if (ImGui.Checkbox("Inverse Priority (Watered -> Regular -> Hi)", ref InverseCordialPrio))
+                {
+                    C.inverseCordialPrio = InverseCordialPrio;
+                    C.Save();
+                }
+                if (ImGui.Checkbox("Prevent Overcap", ref PreventOvercap))
+                {
+                    C.PreventOvercap = PreventOvercap;
+                    C.Save();
+                }
+                if (ImGui.Checkbox("Use on Fisher", ref UseOnFisher))
+                {
+                    C.UseOnFisher = UseOnFisher;
+                    C.Save();
+                }
+                if (ImGui.Checkbox("Only use in mission", ref useOnlyInMission))
+                {
+                    C.UseOnlyInMission = useOnlyInMission;
+                    C.Save();
+                }
+                ImGui.SetNextItemWidth(200);
+                if (ImGui.SliderInt("Gp Threshold", ref CordialMinGp, 0, maxGp))
+                {
+                    C.CordialMinGp = CordialMinGp;
+                    C.Save();
+                }
+
+                ImGui.TreePop();
             }
         }
 

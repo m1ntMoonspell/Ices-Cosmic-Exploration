@@ -1,5 +1,6 @@
 ﻿using ECommons.Automation.LegacyTaskManager;
 using ECommons.UIHelpers.AddonMasterImplementations;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ namespace ICE.Scheduler.Handlers
     {
         internal static TaskManager taskManager = new();
         static TaskManager TaskManager => taskManager;
-        private static List<int> SlotsFilled { get; set; } = new();
         private static bool? ConfirmOrAbort(AddonRequest* addon)
         {
             if (addon->HandOverButton != null && addon->HandOverButton->IsEnabled)
@@ -20,41 +20,116 @@ namespace ICE.Scheduler.Handlers
             }
             return false;
         }
-        private static bool? TryClickItem(AddonRequest* addon, int i)
+        private static bool WillOvercap(int recoveryGP)
         {
-            if (SlotsFilled.Contains(i)) return true;
-
-            var contextMenu = (AtkUnitBase*)Svc.GameGui.GetAddonByName("ContextIconMenu", 1);
-
-            if (contextMenu is null || !contextMenu->IsVisible)
-            {
-                var slot = i - 1;
-                var unk = (44 * i) + (i - 1);
-
-                ECommons.Automation.Callback.Fire(&addon->AtkUnitBase, false, 2, slot, 0, 0);
-
+            return ((PlayerHelper.GetGp() + recoveryGP) > PlayerHelper.MaxGp());
+        }
+        private static bool UseCordial()
+        {
+            if (Svc.ClientState.LocalPlayer is null)
                 return false;
-            }
-            else
+
+            if ((!CosmicHelper.GatheringJobList.Contains((int)PlayerHelper.GetClassJobId()))
+             || (PlayerHelper.GetClassJobId() == 18 && !C.UseOnFisher)
+             || (PlayerHelper.GetGp() >= C.CordialMinGp))
+                return false;
+            else 
             {
-                ECommons.Automation.Callback.Fire(contextMenu, false, 0, 0, 1021003, 0, 0);
-                Svc.Log.Debug($"Filled slot {i}");
-                SlotsFilled.Add(i);
                 return true;
             }
         }
 
         internal static void Tick()
         {
-            if (SchedulerMain.State.HasFlag(IceState.Gather) && !SchedulerMain.State.HasFlag(IceState.ManualMode))
+            if (!SchedulerMain.State.HasFlag(IceState.ManualMode))
             {
-                var featureEnabled = (P.Pandora.GetFeatureEnabled("Pandora Quick Gather") ?? false);
-
-                if (featureEnabled)
+                if (SchedulerMain.State.HasFlag(IceState.Gather))
                 {
-                    if (EzThrottler.Throttle("Disabling Pandora Gathering", 1000))
+                    var featureEnabled = (P.Pandora.GetFeatureEnabled("Pandora Quick Gather") ?? false);
+
+                    if (featureEnabled)
                     {
-                        P.Pandora.PauseFeature("Pandora Quick Gather", 1000);
+                        if (EzThrottler.Throttle("Disabling Pandora Gathering", 1000))
+                        {
+                            P.Pandora.PauseFeature("Pandora Quick Gather", 1000);
+                        }
+                    }
+                }
+
+                bool CosmicZone = PlayerHelper.IsInCosmicZone();
+                if (C.AutoCordial && CosmicZone)
+                {
+                    var pandoraCordial = (P.Pandora.GetFeatureEnabled("Auto-Cordial") ?? false);
+                    if (pandoraCordial && (C.UseOnlyInMission && SchedulerMain.State.HasFlag(IceState.Gather)))
+                    {
+                        if (EzThrottler.Throttle("Disabling Pandora Cordial", 1000))
+                        {
+                            P.Pandora.PauseFeature("Auto-Cordial", 1000);
+                        }
+                    }
+                    else if (pandoraCordial)
+                    {
+                        if (EzThrottler.Throttle("Disabling Pandora Cordial", 1000))
+                        {
+                            P.Pandora.PauseFeature("Auto-Cordial", 1000);
+                        }
+                    }
+
+                    bool useCordial = true;
+                    if (Svc.ClientState.LocalPlayer == null)
+                    {
+                        // IceLogging.Debug("Player was null");
+                        useCordial = false;
+                    }
+                    if (PlayerHelper.GetClassJobId() is not 16 or 17 or 18)
+                    {
+                        // IceLogging.Debug("Player is not a gathering job");
+                        useCordial = false;
+                    }
+                    if (PlayerHelper.GetClassJobId() == 18 && !C.UseOnFisher)
+                    {
+                        // IceLogging.Debug("Player is a fisher, but fishing job not enabled");
+                        useCordial = false;
+                    }
+                    if (C.CordialMinGp >= PlayerHelper.GetGp())
+                    {
+                        // IceLogging.Debug($"Current GP: {C.CordialMinGp} is < {PlayerHelper.GetGp()}");
+                        useCordial = false;
+                    }
+                    if (!PlayerHelper.IsInCosmicZone())
+                    {
+                        // IceLogging.Debug("Player is not in cosmic zone");
+                        useCordial = false;
+                    }
+                    if (C.UseOnlyInMission && !SchedulerMain.State.HasFlag(IceState.Gather))
+                    {
+                        // IceLogging.Debug("Use only in mission, but mission doesn't have gathering state");
+                        useCordial = false;
+                    }
+
+                    if (useCordial)
+                    {
+                        Dictionary<uint, int> cordials = new()
+                            {
+                                { 12669, 400}, // Hi
+                                { 6141, 350}, // Regular
+                                { 16911, 200} // Watered
+                            };
+
+                        foreach (var cordial in C.inverseCordialPrio ? cordials.Reverse() : cordials)
+                        {
+                            if (PlayerHelper.GetItemCount((int)cordial.Key, out var amount) && amount > 0)
+                            {
+                                if (ActionManager.Instance()->GetActionStatus(ActionType.Item, cordial.Key) == 0)
+                                {
+                                    if (!C.PreventOvercap || (C.PreventOvercap && !WillOvercap(cordial.Value)))
+                                    {
+                                        ActionManager.Instance()->UseAction(ActionType.Item, cordial.Key, extraParam: 65535);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

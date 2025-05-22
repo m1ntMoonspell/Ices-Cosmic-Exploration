@@ -71,6 +71,12 @@ namespace ICE
         {
             new GatherBuffProfile { Id = 0, Name = "Default"},
         };
+        public bool AutoCordial { get; set; } = false;
+        public bool inverseCordialPrio { get; set; } = false;
+        public int CordialMinGp { get; set; } = 0;
+        public bool UseOnFisher { get; set; } = false;
+        public bool PreventOvercap { get; set; } = false;
+        public bool UseOnlyInMission { get; set; } = false;
 
         // Gamba settings
         public List<Gamba> GambaItemWeights { get; set; } = new();
