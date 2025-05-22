@@ -46,7 +46,7 @@ namespace ICE.Scheduler.Handlers
 
         internal static void Tick()
         {
-            if (SchedulerMain.State.HasFlag(IceState.Gather))
+            if (SchedulerMain.State.HasFlag(IceState.Gather) && !SchedulerMain.State.HasFlag(IceState.ManualMode))
             {
                 var featureEnabled = (P.Pandora.GetFeatureEnabled("Pandora Quick Gather") ?? false);
 
