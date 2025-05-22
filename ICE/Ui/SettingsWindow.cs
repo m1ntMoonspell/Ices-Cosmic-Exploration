@@ -1,8 +1,5 @@
 ﻿using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using ECommons.ExcelServices;
-using ECommons.Funding;
-using ICE.Utilities.Cosmic;
 using System.Collections.Generic;
 
 namespace ICE.Ui;
@@ -352,6 +349,15 @@ internal class SettingsWindow : Window
                 entry.TSPCycleSize = cycle;
                 C.Save();
             }
+        }
+
+        // GP Settings
+        int minGP = entry.MinimumGP;
+        ImGui.SetNextItemWidth(100);
+        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, 1000))
+        {
+            entry.MinimumGP = minGP;
+            C.Save();
         }
 
         // Boon Increase 2 (+30% Increase)

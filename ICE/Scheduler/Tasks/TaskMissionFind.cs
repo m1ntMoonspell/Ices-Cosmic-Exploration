@@ -471,7 +471,12 @@ namespace ICE.Scheduler.Tasks
             if (EzThrottler.Throttle("GrabMission", 250))
             {
                 IceLogging.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
-                if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
+                if (SchedulerMain.Abandon == false && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
+                {
+                    SchedulerMain.State |= IceState.Waiting;
+                    return true;
+                }
+                else if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
                     string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？", "Commence selected mission?", "Ausgewählte Mission wird gestartet.Fortfahren?", "Commencer la mission sélectionnée ?"];
                     if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
@@ -553,6 +558,9 @@ namespace ICE.Scheduler.Tasks
         public static void WaitForNonStandard()
         {
             if (!PlayerHelper.IsInCosmicZone())
+                return;
+
+            if (C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
                 return;
 
             if (HasStandard)
