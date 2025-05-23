@@ -172,13 +172,13 @@ namespace ICE.Scheduler.Tasks
                 if (mission.GatherSetting.Pathfinding == 1)
                 {
                     var pathfinder = new GatheringPathfinder();
-                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveOpenEndedTSP(Player.Position, missionNode);
+                    missionNode = [.. pathfinder.SolveOpenEndedTSP(Player.Position, missionNode)];
                     SchedulerMain.CurrentIndex = 0;
                 }
                 else if (mission.GatherSetting.Pathfinding == 2)
                 {
                     var pathfinder = new GatheringPathfinder();
-                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize);
+                    missionNode = [.. pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize)];
                 }
 
                 SchedulerMain.CurrentNodeSet = missionNode;
