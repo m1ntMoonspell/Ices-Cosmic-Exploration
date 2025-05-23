@@ -481,7 +481,7 @@ namespace ICE.Scheduler.Tasks
             if (EzThrottler.Throttle("GrabMission", 250))
             {
                 IceLogging.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
-                if (SchedulerMain.Abandon == false && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
+                if (SchedulerMain.Abandon == false && CosmicHelper.MissionInfoDict[MissionId].Attributes.HasFlag(MissionAttributes.Gather) && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
                 {
                     SchedulerMain.State |= IceState.Waiting;
                     return true;
@@ -570,7 +570,7 @@ namespace ICE.Scheduler.Tasks
             if (!PlayerHelper.IsInCosmicZone())
                 return;
 
-            if (C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
+            if (CosmicHelper.MissionInfoDict[MissionId].Attributes.HasFlag(MissionAttributes.Gather) && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
                 return;
 
             if (HasStandard)
