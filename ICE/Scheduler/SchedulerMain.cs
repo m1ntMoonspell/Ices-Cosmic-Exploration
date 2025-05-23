@@ -29,8 +29,8 @@ namespace ICE.Scheduler
         internal static bool AnimationLockAbandonState = false;
         internal static uint PossiblyStuck = 0;
         internal static bool StopBeforeGrab = false;
-        internal static System.Collections.Generic.List<GatheringUtil.GathNodeInfo> PreviousNodeSet = [];
-        internal static System.Collections.Generic.List<GatheringUtil.GathNodeInfo> CurrentNodeSet = [];
+        internal static uint PreviousNodeSetId = 0;
+        internal static List<GatheringUtil.GathNodeInfo> CurrentNodeSet = [];
         internal static int CurrentIndex = 0;
         internal static uint NodesVisited = 0;
         internal static bool GatherNodeMissing = false;

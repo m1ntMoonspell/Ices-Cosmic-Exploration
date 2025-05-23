@@ -168,25 +168,28 @@ namespace ICE.Scheduler.Tasks
                 SchedulerMain.State |= IceState.Gather;
                 SchedulerMain.InitialGatheringItemMultiplier = mission.GatherSetting.InitialGatheringItemMultiplier;
                 SchedulerMain.GathererBuffsUsed = [];
-                List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet)];
+                uint missionNodeSetId = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet;
+                List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == missionNodeSetId)];
 
-                if (mission.GatherSetting.Pathfinding == 1)
+                if (mission.GatherSetting.Pathfinding == 0 && missionNodeSetId != SchedulerMain.PreviousNodeSetId)
+                {
+                    SchedulerMain.CurrentNodeSet = missionNode;
+                    SchedulerMain.CurrentIndex = 0;
+                    SchedulerMain.PreviousNodeSetId = missionNodeSetId;
+                }
+                else if (mission.GatherSetting.Pathfinding == 1)
                 {
                     var pathfinder = new GatheringPathfinder();
-                    missionNode = [.. pathfinder.SolveOpenEndedTSP(Player.Position, missionNode)];
+                    SchedulerMain.CurrentNodeSet = [.. pathfinder.SolveOpenEndedTSP(Player.Position, missionNode)];
                     SchedulerMain.CurrentIndex = 0;
+                    SchedulerMain.PreviousNodeSetId = missionNodeSetId;
                 }
-                else if (mission.GatherSetting.Pathfinding == 2)
+                else if (mission.GatherSetting.Pathfinding == 2 && missionNodeSetId != SchedulerMain.PreviousNodeSetId)
                 {
                     var pathfinder = new GatheringPathfinder();
-                    missionNode = [.. pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize)];
-                }
-
-                SchedulerMain.CurrentNodeSet = missionNode;
-                if (SchedulerMain.PreviousNodeSet != SchedulerMain.CurrentNodeSet)
-                {
-                    SchedulerMain.PreviousNodeSet = SchedulerMain.CurrentNodeSet;
+                    SchedulerMain.CurrentNodeSet = [.. pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize)];
                     SchedulerMain.CurrentIndex = 0;
+                    SchedulerMain.PreviousNodeSetId = missionNodeSetId;
                 }
                 SchedulerMain.NodesVisited = 0;
             }

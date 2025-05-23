@@ -38,7 +38,7 @@ internal static class MissionHandler
         else if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
         {
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Limited)
-            && SchedulerMain.NodesVisited >= SchedulerMain.PreviousNodeSet.Count)
+            && SchedulerMain.NodesVisited >= SchedulerMain.CurrentNodeSet.Count)
             {
                 SchedulerMain.State |= IceState.AbortInProgress;
                 return true;
