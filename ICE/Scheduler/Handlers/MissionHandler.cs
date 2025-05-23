@@ -1,5 +1,6 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Memory;
+using ECommons.GameHelpers;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 internal static class MissionHandler
@@ -192,7 +193,7 @@ internal static class MissionHandler
 
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical) && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
             {
-                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition.OnlyAny(ConditionFlag.NormalConditions))
+                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && !Player.IsBusy)
                 {
                     var gameObject = Utils.TryGetObjectCollectionPoint();
                     float gameObjectDistance = 999;
