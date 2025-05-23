@@ -8,8 +8,6 @@ namespace ICE.Utilities;
 /// </summary>
 public class GatheringPathfinder
 {
-    private readonly Random _rng = new Random(); // Used for random selections in cyclical TSP
-
     /// <summary>
     /// Calculates the Euclidean distance between two GathNodeInfo objects based on their positions.
     /// </summary>
@@ -62,6 +60,68 @@ public class GatheringPathfinder
     }
 
     /// <summary>
+    /// Normalizes a cyclical path by rotating it so that the node with the smallest NodeId is at the beginning.
+    /// This ensures a consistent starting point for equivalent cycles.
+    /// </summary>
+    /// <param name="path">The cyclical path to normalize.</param>
+    /// <returns>The normalized cyclical path.</returns>
+    private List<GathNodeInfo> NormalizeCyclicalPath(List<GathNodeInfo> path)
+    {
+        if (path == null || path.Count <= 1)
+        {
+            return [.. path];
+        }
+
+        // Helper to normalize a path by rotating it to start with the smallest NodeId
+        List<GathNodeInfo> RotateToSmallestId(List<GathNodeInfo> p)
+        {
+            if (p.Count <= 1) return [.. p];
+
+            int minNodeIndex = 0;
+            uint minNodeId = p[0].NodeId;
+            for (int i = 1; i < p.Count; i++)
+            {
+                if (p[i].NodeId < minNodeId)
+                {
+                    minNodeId = p[i].NodeId;
+                    minNodeIndex = i;
+                }
+            }
+
+            List<GathNodeInfo> rotatedPath = [];
+            for (int i = 0; i < p.Count; i++)
+            {
+                rotatedPath.Add(p[(minNodeIndex + i) % p.Count]);
+            }
+            return rotatedPath;
+        }
+
+        // 1. Get the forward normalized path
+        List<GathNodeInfo> forwardNormalizedPath = RotateToSmallestId(path);
+
+        // 2. Get the reversed path and then its normalized version
+        List<GathNodeInfo> reversedPath = [.. path];
+        reversedPath.Reverse();
+        List<GathNodeInfo> reversedNormalizedPath = RotateToSmallestId(reversedPath);
+
+        // 3. Compare the two normalized paths lexicographically
+        for (int i = 0; i < forwardNormalizedPath.Count; i++)
+        {
+            if (forwardNormalizedPath[i].NodeId < reversedNormalizedPath[i].NodeId)
+            {
+                return forwardNormalizedPath;
+            }
+            else if (reversedNormalizedPath[i].NodeId < forwardNormalizedPath[i].NodeId)
+            {
+                return reversedNormalizedPath;
+            }
+        }
+
+        // If paths are identical (e.g., A-B-A), return one of them
+        return forwardNormalizedPath;
+    }
+
+    /// <summary>
     /// Applies the 2-Opt local search algorithm to improve a given path.
     /// It repeatedly swaps two non-adjacent edges if doing so reduces the total path length.
     /// </summary>
@@ -71,9 +131,9 @@ public class GatheringPathfinder
     private List<GathNodeInfo> TwoOpt(List<GathNodeInfo> path, bool isCyclical)
     {
         // 2-Opt requires at least 3 nodes to perform a meaningful swap.
-        if (path.Count < 3) return new List<GathNodeInfo>(path);
+        if (path.Count < 3) return [.. path];
 
-        List<GathNodeInfo> bestPath = new List<GathNodeInfo>(path);
+        List<GathNodeInfo> bestPath = [.. path];
         double bestDistance = CalculatePathLength(bestPath, isCyclical);
         bool improved = true;
 
@@ -90,7 +150,7 @@ public class GatheringPathfinder
                 for (int k = i + 1; k < bestPath.Count; k++)
                 {
                     // Create a new path by reversing the segment between i and k
-                    List<GathNodeInfo> newPath = new List<GathNodeInfo>(bestPath);
+                    List<GathNodeInfo> newPath = [.. bestPath];
                     newPath.Reverse(i, k - i + 1); // Reverses the segment from index i to k (inclusive)
 
                     double newDistance = CalculatePathLength(newPath, isCyclical);
@@ -119,13 +179,13 @@ public class GatheringPathfinder
     {
         if (nodes == null || !nodes.Any())
         {
-            return Enumerable.Empty<GathNodeInfo>();
+            return [];
         }
 
         List<GathNodeInfo> allNodes = nodes.ToList();
         if (allNodes.Count == 1)
         {
-            return new List<GathNodeInfo> { allNodes.First() };
+            return [allNodes.First()];
         }
 
         // 1. Find the closest node to the player's starting position. This will be the first node in our path.
@@ -144,12 +204,12 @@ public class GatheringPathfinder
         // This should not happen if allNodes is not empty.
         if (initialStartNode == null)
         {
-            return Enumerable.Empty<GathNodeInfo>();
+            return [];
         }
 
         // 2. Build an initial path using the Nearest Neighbor heuristic.
-        List<GathNodeInfo> nnPath = new List<GathNodeInfo>();
-        HashSet<uint> visitedNodeIds = new HashSet<uint>();
+        List<GathNodeInfo> nnPath = [];
+        HashSet<uint> visitedNodeIds = [];
 
         nnPath.Add(initialStartNode);
         visitedNodeIds.Add(initialStartNode.NodeId);
@@ -209,10 +269,10 @@ public class GatheringPathfinder
     {
         if (nodes == null || !nodes.Any() || n <= 0)
         {
-            return Enumerable.Empty<GathNodeInfo>();
+            return [];
         }
 
-        List<GathNodeInfo> allNodes = nodes.ToList();
+        List<GathNodeInfo> allNodes = [.. nodes];
         if (n > allNodes.Count)
         {
             // Cannot select more nodes than available, so cap N at the total number of nodes.
@@ -222,27 +282,18 @@ public class GatheringPathfinder
         // If only one node is requested, just return any single node.
         if (n == 1)
         {
-            return new List<GathNodeInfo> { allNodes.First() };
+            return [allNodes.First()];
         }
 
         List<GathNodeInfo> bestSubsetPath = null;
         double minTotalDistance = double.MaxValue;
 
-        // Heuristic: Perform multiple trials to find a good subset and path.
-        // The number of trials can be adjusted for performance vs. accuracy.
-        // Capped at 1000 trials or a number related to the square of nodes for smaller sets.
-        int numTrials = Math.Min(1000, allNodes.Count * (allNodes.Count - 1) / 2 + 1);
-        if (numTrials == 0 && allNodes.Count > 0) numTrials = 1; // Ensure at least one trial if nodes exist.
-
-        for (int trial = 0; trial < numTrials; trial++)
+        // To make it deterministic and exhaustive, iterate through all possible starting nodes.
+        foreach (var startNode in allNodes)
         {
-            // 1. Select a random starting node for this trial's subset.
-            GathNodeInfo startNode = allNodes[_rng.Next(allNodes.Count)];
-
-            List<GathNodeInfo> currentSubset = new List<GathNodeInfo>();
-            currentSubset.Add(startNode);
-            HashSet<uint> visitedInSubset = new HashSet<uint>();
-            visitedInSubset.Add(startNode.NodeId);
+            // 1. Select a starting node for this trial's subset.
+            List<GathNodeInfo> currentSubset = [startNode];
+            HashSet<uint> visitedInSubset = [startNode.NodeId];
 
             GathNodeInfo currentNode = startNode;
 
@@ -299,6 +350,7 @@ public class GatheringPathfinder
         }
 
         // Return the best subset path found across all trials, or an empty enumerable if no path was found.
-        return bestSubsetPath ?? Enumerable.Empty<GathNodeInfo>();
+        // Normalize the path to ensure consistent output order for cyclical paths.
+        return bestSubsetPath != null ? NormalizeCyclicalPath(bestSubsetPath) : Enumerable.Empty<GathNodeInfo>();
     }
 }

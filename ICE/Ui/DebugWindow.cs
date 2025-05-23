@@ -52,6 +52,7 @@ internal class DebugWindow : Window
             ImGui.SameLine();
             ImGui.AlignTextToFramePadding();
             ImGui.Text($"{Player.Position}");
+            ImGui.Text($"GP: {PlayerHelper.GetGp()}");
 
             ImGui.TreePop();
         }

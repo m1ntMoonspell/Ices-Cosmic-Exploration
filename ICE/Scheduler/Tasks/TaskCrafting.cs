@@ -28,17 +28,18 @@ namespace ICE.Scheduler.Tasks
         internal static void MakeCraftingTasks()
         {
             var (currentScore, bronzeScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+
+            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+            {
+                IceLogging.Debug("Failed to get scores, aborting");
+                return;
+            }
+
             if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
             {
                 SchedulerMain.State |= IceState.AbortInProgress;
                 return;
             }
-
-            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
-                {
-                    IceLogging.Debug("Failed to get scores, aborting");
-                    return;
-                }
 
             if (currentScore >= goldScore)
             {
