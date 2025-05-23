@@ -164,6 +164,7 @@ namespace ICE.Scheduler
                 TaskMissionFind.UpdateStateFlags();
                 if (State.HasFlag(Craft) && P.Artisan.IsBusy())
                     State |= Waiting;
+                State |= ScoringMission;
             }
             else if (AddonHelper.IsAddonActive("WKSLottery"))
                 State = Gambling;
