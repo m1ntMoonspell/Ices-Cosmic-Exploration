@@ -1,5 +1,6 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Memory;
+using ECommons.GameHelpers;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 internal static class MissionHandler
@@ -37,7 +38,7 @@ internal static class MissionHandler
         else if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
         {
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Limited)
-            && SchedulerMain.NodesVisited >= SchedulerMain.PreviousNodeSet.Count)
+            && SchedulerMain.NodesVisited >= SchedulerMain.CurrentNodeSet.Count)
             {
                 SchedulerMain.State |= IceState.AbortInProgress;
                 return true;
@@ -190,15 +191,14 @@ internal static class MissionHandler
                 return false;
             }
 
-            if (C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission).Type == MissionType.Critical && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical) && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
             {
-                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && Svc.Condition.OnlyAny(ConditionFlag.NormalConditions))
+                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && !Player.IsBusy)
                 {
                     var gameObject = Utils.TryGetObjectCollectionPoint();
                     float gameObjectDistance = 999;
                     if (gameObject is not null)
                         gameObjectDistance = PlayerHelper.GetDistanceToPlayer(gameObject);
-                    //Utils.TargetgameObject(gameObject);
                     if (gameObjectDistance < 5)
                     {
                         P.Navmesh.Stop();
@@ -206,6 +206,8 @@ internal static class MissionHandler
                     }
                     else if (gameObjectDistance < 999)
                         TaskGather.PathToNode(gameObject.Position);
+                    else if (SchedulerMain.NearestCollectionPoint is not null)
+                        TaskGather.PathToNode((Vector3)SchedulerMain.NearestCollectionPoint);
                 }
                 return false;
             }

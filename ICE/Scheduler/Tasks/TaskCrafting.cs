@@ -28,17 +28,18 @@ namespace ICE.Scheduler.Tasks
         internal static void MakeCraftingTasks()
         {
             var (currentScore, bronzeScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
+
+            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
+            {
+                IceLogging.Debug("Failed to get scores, aborting");
+                return;
+            }
+
             if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
             {
                 SchedulerMain.State |= IceState.AbortInProgress;
                 return;
             }
-
-            if (currentScore == 0 && silverScore == 0 && goldScore == 0)
-                {
-                    IceLogging.Debug("Failed to get scores, aborting");
-                    return;
-                }
 
             if (currentScore >= goldScore)
             {
@@ -73,6 +74,8 @@ namespace ICE.Scheduler.Tasks
                     var itemId = ExcelHelper.RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
                     var subItem = ExcelHelper.RecipeSheet.GetRow(main.Key).Ingredient[0].Value.RowId; // need to directly reference this in the future
                     var mainNeed = main.Value;
+                    if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather) && CraftMultipleMissionItems == 1) // For Dual Class specifically, if we doing a mult - use it on first loop.
+                        mainNeed *= SchedulerMain.InitialGatheringItemMultiplier;
                     var subItemNeed = ExcelHelper.RecipeSheet.GetRow(main.Key).AmountIngredient[0].ToInt() * main.Value;
 
                     if (!PlayerHelper.GetItemCount((int)itemId, out var currentAmount))

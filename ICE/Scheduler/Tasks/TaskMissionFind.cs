@@ -152,32 +152,44 @@ namespace ICE.Scheduler.Tasks
 
         internal static void UpdateStateFlags()
         {
-            CosmicMission mission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
+            CosmicMission? mission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
+            if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
+            {
+                Dalamud.Game.ClientState.Objects.Types.IGameObject? gameobject = Utils.TryGetObjectCollectionPoint();
+                if (gameobject is not null)
+                    SchedulerMain.NearestCollectionPoint = gameobject.Position;
+                else
+                    SchedulerMain.NearestCollectionPoint = null;
+            }
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Craft))
                 SchedulerMain.State |= IceState.Craft;
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Gather))
             {
                 SchedulerMain.State |= IceState.Gather;
                 SchedulerMain.InitialGatheringItemMultiplier = mission.GatherSetting.InitialGatheringItemMultiplier;
-                List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet)];
+                SchedulerMain.GathererBuffsUsed = [];
+                uint missionNodeSetId = CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet;
+                List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == missionNodeSetId)];
 
-                if (mission.GatherSetting.Pathfinding == 1)
+                if (mission.GatherSetting.Pathfinding == 0 && missionNodeSetId != SchedulerMain.PreviousNodeSetId)
+                {
+                    SchedulerMain.CurrentNodeSet = missionNode;
+                    SchedulerMain.CurrentIndex = 0;
+                    SchedulerMain.PreviousNodeSetId = missionNodeSetId;
+                }
+                else if (mission.GatherSetting.Pathfinding == 1)
                 {
                     var pathfinder = new GatheringPathfinder();
-                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveOpenEndedTSP(Player.Position, missionNode);
+                    SchedulerMain.CurrentNodeSet = [.. pathfinder.SolveOpenEndedTSP(Player.Position, missionNode)];
                     SchedulerMain.CurrentIndex = 0;
+                    SchedulerMain.PreviousNodeSetId = missionNodeSetId;
                 }
-                else if (mission.GatherSetting.Pathfinding == 2)
+                else if (mission.GatherSetting.Pathfinding == 2 && missionNodeSetId != SchedulerMain.PreviousNodeSetId)
                 {
                     var pathfinder = new GatheringPathfinder();
-                    missionNode = (List<GatheringUtil.GathNodeInfo>)pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize);
-                }
-
-                SchedulerMain.CurrentNodeSet = missionNode;
-                if (SchedulerMain.PreviousNodeSet != SchedulerMain.CurrentNodeSet)
-                {
-                    SchedulerMain.PreviousNodeSet = SchedulerMain.CurrentNodeSet;
+                    SchedulerMain.CurrentNodeSet = [.. pathfinder.SolveCyclicalTSP(missionNode, mission.GatherSetting.TSPCycleSize)];
                     SchedulerMain.CurrentIndex = 0;
+                    SchedulerMain.PreviousNodeSetId = missionNodeSetId;
                 }
                 SchedulerMain.NodesVisited = 0;
             }
@@ -472,7 +484,7 @@ namespace ICE.Scheduler.Tasks
             if (EzThrottler.Throttle("GrabMission", 250))
             {
                 IceLogging.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
-                if (SchedulerMain.Abandon == false && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
+                if (SchedulerMain.Abandon == false && CosmicHelper.MissionInfoDict[MissionId].Attributes.HasFlag(MissionAttributes.Gather) && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
                 {
                     SchedulerMain.State |= IceState.Waiting;
                     return true;
@@ -561,7 +573,7 @@ namespace ICE.Scheduler.Tasks
             if (!PlayerHelper.IsInCosmicZone())
                 return;
 
-            if (C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
+            if (CosmicHelper.MissionInfoDict[MissionId].Attributes.HasFlag(MissionAttributes.Gather) && C.Missions.SingleOrDefault(x => x.Id == MissionId).GatherSetting.MinimumGP > PlayerHelper.GetGp())
                 return;
 
             if (HasStandard)

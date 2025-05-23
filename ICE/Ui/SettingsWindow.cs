@@ -127,6 +127,12 @@ internal class SettingsWindow : Window
     private bool SelfRepairGather = C.SelfRepairGather;
     private float SelfRepairPercent = C.RepairPercent;
     private bool SelfSpiritbondGather = C.SelfSpiritbondGather;
+    private bool AutoCordial = C.AutoCordial;
+    private bool InverseCordialPrio = C.inverseCordialPrio;
+    private bool UseOnFisher = C.UseOnFisher;
+    private bool PreventOvercap = C.PreventOvercap;
+    private int CordialMinGp = C.CordialMinGp;
+    private bool useOnlyInMission = C.UseOnlyInMission;
     private string newProfileName = "";
 
     private string[] MissionTypes = ["Limited Nodes", "Gather x Amount", "Time Attack", "Chained Scoring", "Boon Scoring", "Chain + Boon Scoring", "Dual Class"];
@@ -134,7 +140,7 @@ internal class SettingsWindow : Window
 
     private void GatherSettings()
     {
-        void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, string ActionInfo, Action<bool> onEnabledChange, Action<int> onMinGpChange)
+        void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, string ActionInfo, Action<bool> onEnabledChange, Action<int> onMinGpChange, int currentMaxUse, Action<int> onMaxUseChange)
         {
             bool enabled = currentEnabled;
             if (ImGui.Checkbox($"{label}###Enable{uniqueId}", ref enabled))
@@ -159,6 +165,16 @@ internal class SettingsWindow : Window
                     {
                         if (minGp != currentMinGp)
                             onMinGpChange(minGp);
+                    }
+                    int maxUse = currentMaxUse;
+                    ImGui.AlignTextToFramePadding();
+                    ImGui.Text("Maximum use count");
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(100);
+                    if (ImGui.InputInt($"###Slider{uniqueId}{entryName}_1", ref maxUse, 1))
+                    {
+                        if (maxUse != currentMaxUse)
+                            onMaxUseChange(maxUse);
                     }
 
                     ImGui.TreePop();
@@ -199,6 +215,47 @@ internal class SettingsWindow : Window
             {
                 C.SelfSpiritbondGather = SelfSpiritbondGather;
                 C.Save();
+            }
+        }
+        if (ImGui.Checkbox("Auto Cordial", ref AutoCordial))
+        {
+            C.AutoCordial = AutoCordial;
+            C.Save();
+        }
+        ImGuiEx.HelpMarker("Will only work while using ICE and not manual mode\n" +
+                           "Will also pause pandora cordial usage while on the moon");
+        if (AutoCordial)
+        {
+            if (ImGui.TreeNode("Cordial Settings"))
+            {
+                if (ImGui.Checkbox("Inverse Priority (Watered -> Regular -> Hi)", ref InverseCordialPrio))
+                {
+                    C.inverseCordialPrio = InverseCordialPrio;
+                    C.Save();
+                }
+                if (ImGui.Checkbox("Prevent Overcap", ref PreventOvercap))
+                {
+                    C.PreventOvercap = PreventOvercap;
+                    C.Save();
+                }
+                if (ImGui.Checkbox("Use on Fisher", ref UseOnFisher))
+                {
+                    C.UseOnFisher = UseOnFisher;
+                    C.Save();
+                }
+                if (ImGui.Checkbox("Only use in mission", ref useOnlyInMission))
+                {
+                    C.UseOnlyInMission = useOnlyInMission;
+                    C.Save();
+                }
+                ImGui.SetNextItemWidth(200);
+                if (ImGui.SliderInt("Gp Threshold", ref CordialMinGp, 0, maxGp))
+                {
+                    C.CordialMinGp = CordialMinGp;
+                    C.Save();
+                }
+
+                ImGui.TreePop();
             }
         }
 
@@ -354,7 +411,7 @@ internal class SettingsWindow : Window
         // GP Settings
         int minGP = entry.MinimumGP;
         ImGui.SetNextItemWidth(100);
-        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, 1000))
+        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, maxGp))
         {
             entry.MinimumGP = minGP;
             C.Save();
@@ -389,6 +446,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.BoonIncrease2Gp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.BoonIncrease2MaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BoonIncrease2MaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -411,6 +474,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.BoonIncrease1Gp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.BoonIncrease1MaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BoonIncrease1MaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -432,6 +501,12 @@ internal class SettingsWindow : Window
             onMinGpChange: newVal =>
             {
                 entry.Buffs.TidingsGp = newVal;
+                C.Save();
+            },
+            currentMaxUse: entry.Buffs.TidingsMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.TidingsMaxUse = newVal;
                 C.Save();
             }
         );
@@ -456,6 +531,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.YieldIIGp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.YieldIIMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.YieldIIMaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -478,6 +559,12 @@ internal class SettingsWindow : Window
             onMinGpChange: newVal =>
             {
                 entry.Buffs.YieldIGp = newVal;
+                C.Save();
+            },
+            currentMaxUse: entry.Buffs.YieldIMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.YieldIMaxUse = newVal;
                 C.Save();
             }
         );
@@ -502,6 +589,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.BonusIntegrityGp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.BonusIntegrityMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BonusIntegrityMaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -524,6 +617,12 @@ internal class SettingsWindow : Window
             onMinGpChange: newVal =>
             {
                 entry.Buffs.BountifulYieldIIGp = newVal;
+                C.Save();
+            },
+            currentMaxUse: entry.Buffs.BountifulYieldIIMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BountifulYieldIIMaxUse = newVal;
                 C.Save();
             }
         );
@@ -633,7 +732,6 @@ internal class SettingsWindow : Window
         ImGui.Checkbox("Force OOM Main", ref SchedulerMain.DebugOOMMain);
         ImGui.Checkbox("Force OOM Sub", ref SchedulerMain.DebugOOMSub);
         ImGui.Checkbox("Legacy Failsafe WKSRecipe Select", ref C.FailsafeRecipeSelect);
-        ImGui.SliderInt("TSP Path Length", ref SchedulerMain.TSPLength, 2, 20);
 
         var missionMap = new List<(string name, Func<byte> get, Action<byte> set)>
                 {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using static ICE.Enums.IceState;
 
@@ -28,13 +29,14 @@ namespace ICE.Scheduler
         internal static bool AnimationLockAbandonState = false;
         internal static uint PossiblyStuck = 0;
         internal static bool StopBeforeGrab = false;
-        internal static System.Collections.Generic.List<GatheringUtil.GathNodeInfo> PreviousNodeSet = [];
-        internal static System.Collections.Generic.List<GatheringUtil.GathNodeInfo> CurrentNodeSet = [];
+        internal static uint PreviousNodeSetId = 0;
+        internal static List<GatheringUtil.GathNodeInfo> CurrentNodeSet = [];
         internal static int CurrentIndex = 0;
         internal static uint NodesVisited = 0;
         internal static bool GatherNodeMissing = false;
-        internal static int TSPLength = 99;
+        internal static List<uint> GathererBuffsUsed = [];
         internal static int InitialGatheringItemMultiplier = 1;
+        internal static Vector3? NearestCollectionPoint = null;
 #if DEBUG
         // Debug only settings
         internal static bool DebugOOMMain = false;
@@ -164,6 +166,7 @@ namespace ICE.Scheduler
                 TaskMissionFind.UpdateStateFlags();
                 if (State.HasFlag(Craft) && P.Artisan.IsBusy())
                     State |= Waiting;
+                State |= ScoringMission;
             }
             else if (AddonHelper.IsAddonActive("WKSLottery"))
                 State = Gambling;

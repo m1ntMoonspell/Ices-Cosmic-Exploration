@@ -11,7 +11,7 @@ namespace ICE.Utilities;
 public class PlayerHelper
 {
 
-    public static uint? GetClassJobId() => Svc.ClientState.LocalPlayer?.ClassJob.RowId;
+    public static uint? GetClassJobId() => Svc.ClientState.LocalPlayer?.ClassJob.RowId ;
     public static bool UsingSupportedJob()
     {
         var jobId = GetClassJobId();
@@ -67,6 +67,12 @@ public class PlayerHelper
     {
         var gp = Svc.ClientState.LocalPlayer?.CurrentGp ?? 0;
         return (int)gp;
+    }
+
+    public static int MaxGp()
+    {
+        var maxGp = Svc.ClientState.LocalPlayer?.MaxGp ?? 0;
+        return (int)maxGp;
     }
 
     internal static unsafe float GetDistanceToPlayer(Vector3 v3) => Vector3.Distance(v3, Player.GameObject->Position);
