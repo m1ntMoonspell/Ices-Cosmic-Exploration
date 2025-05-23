@@ -140,7 +140,7 @@ internal class SettingsWindow : Window
 
     private void GatherSettings()
     {
-        void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, string ActionInfo, Action<bool> onEnabledChange, Action<int> onMinGpChange)
+        void DrawBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, string ActionInfo, Action<bool> onEnabledChange, Action<int> onMinGpChange, int currentMaxUse, Action<int> onMaxUseChange)
         {
             bool enabled = currentEnabled;
             if (ImGui.Checkbox($"{label}###Enable{uniqueId}", ref enabled))
@@ -165,6 +165,16 @@ internal class SettingsWindow : Window
                     {
                         if (minGp != currentMinGp)
                             onMinGpChange(minGp);
+                    }
+                    int maxUse = currentMaxUse;
+                    ImGui.AlignTextToFramePadding();
+                    ImGui.Text("Maximum use count");
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(100);
+                    if (ImGui.InputInt($"###Slider{uniqueId}{entryName}_1", ref maxUse, 1))
+                    {
+                        if (maxUse != currentMaxUse)
+                            onMaxUseChange(maxUse);
                     }
 
                     ImGui.TreePop();
@@ -401,7 +411,7 @@ internal class SettingsWindow : Window
         // GP Settings
         int minGP = entry.MinimumGP;
         ImGui.SetNextItemWidth(100);
-        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, 1000))
+        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, maxGp))
         {
             entry.MinimumGP = minGP;
             C.Save();
@@ -436,6 +446,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.BoonIncrease2Gp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.BoonIncrease2MaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BoonIncrease2MaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -458,6 +474,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.BoonIncrease1Gp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.BoonIncrease1MaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BoonIncrease1MaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -479,6 +501,12 @@ internal class SettingsWindow : Window
             onMinGpChange: newVal =>
             {
                 entry.Buffs.TidingsGp = newVal;
+                C.Save();
+            },
+            currentMaxUse: entry.Buffs.TidingsMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.TidingsMaxUse = newVal;
                 C.Save();
             }
         );
@@ -503,6 +531,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.YieldIIGp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.YieldIIMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.YieldIIMaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -525,6 +559,12 @@ internal class SettingsWindow : Window
             onMinGpChange: newVal =>
             {
                 entry.Buffs.YieldIGp = newVal;
+                C.Save();
+            },
+            currentMaxUse: entry.Buffs.YieldIMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.YieldIMaxUse = newVal;
                 C.Save();
             }
         );
@@ -549,6 +589,12 @@ internal class SettingsWindow : Window
             {
                 entry.Buffs.BonusIntegrityGp = newVal;
                 C.Save();
+            },
+            currentMaxUse: entry.Buffs.BonusIntegrityMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BonusIntegrityMaxUse = newVal;
+                C.Save();
             }
         );
 
@@ -571,6 +617,12 @@ internal class SettingsWindow : Window
             onMinGpChange: newVal =>
             {
                 entry.Buffs.BountifulYieldIIGp = newVal;
+                C.Save();
+            },
+            currentMaxUse: entry.Buffs.BountifulYieldIIMaxUse,
+            onMaxUseChange: newVal =>
+            {
+                entry.Buffs.BountifulYieldIIMaxUse = newVal;
                 C.Save();
             }
         );

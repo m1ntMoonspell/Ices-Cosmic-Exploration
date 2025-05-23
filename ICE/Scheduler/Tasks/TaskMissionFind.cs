@@ -152,7 +152,7 @@ namespace ICE.Scheduler.Tasks
 
         internal static void UpdateStateFlags()
         {
-            CosmicMission mission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
+            CosmicMission? mission = C.Missions.SingleOrDefault(x => x.Id == CosmicHelper.CurrentLunarMission);
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
             {
                 Dalamud.Game.ClientState.Objects.Types.IGameObject? gameobject = Utils.TryGetObjectCollectionPoint();
@@ -167,6 +167,7 @@ namespace ICE.Scheduler.Tasks
             {
                 SchedulerMain.State |= IceState.Gather;
                 SchedulerMain.InitialGatheringItemMultiplier = mission.GatherSetting.InitialGatheringItemMultiplier;
+                SchedulerMain.GathererBuffsUsed = [];
                 List<GatheringUtil.GathNodeInfo> missionNode = [.. GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == CosmicHelper.MissionInfoDict[CosmicHelper.CurrentLunarMission].NodeSet)];
 
                 if (mission.GatherSetting.Pathfinding == 1)

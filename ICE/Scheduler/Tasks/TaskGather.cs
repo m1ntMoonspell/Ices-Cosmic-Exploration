@@ -224,19 +224,21 @@ namespace ICE.Scheduler.Tasks
         private static bool CanUseGatheringAction(string actionName, GatherBuffProfile gatherBuffs, bool missingDur, int? boonChance = null)
         {
             var actionInfo = GatheringUtil.GathActionDict[actionName];
+            uint actionId = PlayerHelper.GetClassJobId() == 16 ? actionInfo.MinActionId : actionInfo.BtnActionId;
+            uint used = (uint)SchedulerMain.GathererBuffsUsed.Count(x => x == actionId);
             bool hasStatus = PlayerHelper.HasStatusId(actionInfo.StatusId);
             bool hasGp = PlayerHelper.GetGp() >= actionInfo.RequiredGp;
 
             return actionName switch
             {
-                "BoonIncrease1" => gatherBuffs.Buffs.BoonIncrease1 && boonChance < 100 && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease1Gp,
-                "BoonIncrease2" => gatherBuffs.Buffs.BoonIncrease2 && boonChance < 100 && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease2Gp,
-                "Tidings" => gatherBuffs.Buffs.TidingsBool && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.TidingsGp,
-                "YieldI" => gatherBuffs.Buffs.YieldI && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIGp,
-                "YieldII" => gatherBuffs.Buffs.YieldII && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIIGp,
-                "IntegrityIncrease" => gatherBuffs.Buffs.BonusIntegrity && missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BonusIntegrityGp,
+                "BoonIncrease1" => gatherBuffs.Buffs.BoonIncrease1 && boonChance < 100 && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease1Gp && (gatherBuffs.Buffs.BoonIncrease1MaxUse == -1 || gatherBuffs.Buffs.BoonIncrease1MaxUse > used),
+                "BoonIncrease2" => gatherBuffs.Buffs.BoonIncrease2 && boonChance < 100 && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BoonIncrease2Gp && (gatherBuffs.Buffs.BoonIncrease2MaxUse == -1 || gatherBuffs.Buffs.BoonIncrease2MaxUse > used),
+                "Tidings" => gatherBuffs.Buffs.TidingsBool && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.TidingsGp && (gatherBuffs.Buffs.TidingsMaxUse == -1 || gatherBuffs.Buffs.TidingsMaxUse > used),
+                "YieldI" => gatherBuffs.Buffs.YieldI && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIGp && (gatherBuffs.Buffs.YieldIMaxUse == -1 || gatherBuffs.Buffs.YieldIMaxUse > used),
+                "YieldII" => gatherBuffs.Buffs.YieldII && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIIGp && (gatherBuffs.Buffs.YieldIIMaxUse == -1 || gatherBuffs.Buffs.YieldIIMaxUse > used),
+                "IntegrityIncrease" => gatherBuffs.Buffs.BonusIntegrity && missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BonusIntegrityGp && (gatherBuffs.Buffs.BonusIntegrityMaxUse == -1 || gatherBuffs.Buffs.BonusIntegrityMaxUse > used),
                 "BonusIntegrityChance" => hasStatus && missingDur,
-                "BountifulYieldII" => gatherBuffs.Buffs.BountifulYieldII && !hasStatus && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BountifulYieldIIGp,
+                "BountifulYieldII" => gatherBuffs.Buffs.BountifulYieldII && !hasStatus && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BountifulYieldIIGp && (gatherBuffs.Buffs.BountifulYieldIIMaxUse == -1 || gatherBuffs.Buffs.BountifulYieldIIMaxUse > used),
                 _ => false,
             };
 
@@ -349,8 +351,9 @@ namespace ICE.Scheduler.Tasks
                 return false;
             }
 
-            P.TaskManager.Enqueue(() => UseBuffs(), "Applying buffs to character");
+            P.TaskManager.Enqueue(UseBuffs, "Applying buffs to character");
             P.TaskManager.Enqueue(() => !Svc.Condition[ConditionFlag.ExecutingGatheringAction], "Waiting for gather buffs");
+            P.TaskManager.Enqueue(() => SchedulerMain.GathererBuffsUsed.Add(actionId));
         }
 
         private unsafe static void GatherItem(Gathering.GatheredItem item)

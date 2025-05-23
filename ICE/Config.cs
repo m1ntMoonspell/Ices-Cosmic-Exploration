@@ -124,19 +124,25 @@ namespace ICE
     {
         public bool BoonIncrease2 { get; set; } = false;
         public int BoonIncrease2Gp { get; set; } = 100;
+        public int BoonIncrease2MaxUse { get; set; } = -1;
         public bool BoonIncrease1 { get; set; } = false;
         public int BoonIncrease1Gp { get; set; } = 50;
+        public int BoonIncrease1MaxUse { get; set; } = -1;
         public bool TidingsBool { get; set; } = false;
         public int TidingsGp { get; set; } = 200;
+        public int TidingsMaxUse { get; set; } = -1;
         public bool YieldII { get; set; } = false;
         public int YieldIIGp { get; set; } = 500;
+        public int YieldIIMaxUse { get; set; } = -1;
         public bool YieldI { get; set; } = false;
         public int YieldIGp { get; set; } = 400;
+        public int YieldIMaxUse { get; set; } = -1;
         public bool BountifulYieldII { get; set; } = false;
         public int BountifulYieldIIGp { get; set; } = 100;
+        public int BountifulYieldIIMaxUse { get; set; } = -1;
         public bool BonusIntegrity { get; set; } = false;
         public int BonusIntegrityGp { get; set; } = 300;
-        public bool IntegrityBool { get; set; } = true;
+        public int BonusIntegrityMaxUse { get; set; } = -1;
     }
 
     public class GatherBuffProfile

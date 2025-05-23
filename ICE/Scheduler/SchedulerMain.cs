@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Dalamud.Game.ClientState.Conditions;
 using static ICE.Enums.IceState;
 
@@ -33,6 +34,7 @@ namespace ICE.Scheduler
         internal static int CurrentIndex = 0;
         internal static uint NodesVisited = 0;
         internal static bool GatherNodeMissing = false;
+        internal static List<uint> GathererBuffsUsed = [];
         internal static int InitialGatheringItemMultiplier = 1;
         internal static Vector3? NearestCollectionPoint = null;
 #if DEBUG
