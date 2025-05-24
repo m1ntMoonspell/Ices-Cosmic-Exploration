@@ -4,11 +4,14 @@ using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Utility.Table;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using ICE.Enums;
 using ICE.Utilities.Cosmic;
+using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Channels;
+using System.Xml.Schema;
 using static ICE.Utilities.CosmicHelper;
 
 namespace ICE.Ui
@@ -118,7 +121,8 @@ namespace ICE.Ui
             (5, "Research I", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "I").FirstOrDefault().Amount)),
             (6, "Research II", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "II").FirstOrDefault().Amount)),
             (7, "Research III", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "III").FirstOrDefault().Amount)),
-            (8, "Research IV", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount))
+            (8, "Research IV", missions => missions.OrderByDescending(x => x.Value.ExperienceRewards.Where(exp => CosmicHelper.ExpDictionary[exp.Type] == "IV").FirstOrDefault().Amount)),
+            (9, "Map Marker", missions => missions.OrderByDescending(x => x.Value.MarkerId)),
         };
 
         // Right Column stuff
@@ -312,49 +316,7 @@ namespace ICE.Ui
 
                 ImGui.Dummy(new Vector2(0, 5));
 
-#if DEBUG
-                ImGui.Text($"Show following missions");
-                if (ImGui.Checkbox($"Critical", ref showCritical))
-                {
-                    C.showCritical = showCritical;
-                    C.Save();
-                }
-                if (ImGui.Checkbox($"Sequential", ref showSequential))
-                {
-                    C.showSequential = showSequential;
-                    C.Save();
-                }
-                if (ImGui.Checkbox($"Weather", ref showWeather))
-                {
-                    C.showWeather = showWeather;
-                    C.Save();
-                }
-                if (ImGui.Checkbox($"Time Restricted", ref showTimeRestricted))
-                {
-                    C.showTimeRestricted = showTimeRestricted;
-                    C.Save();
-                }
-                if (ImGui.Checkbox($"Class A", ref showClassA))
-                {
-                    C.showClassA = showClassA;
-                    C.Save();
-                }
-                if (ImGui.Checkbox($"Class B", ref showClassB))
-                {
-                    C.showClassB = showClassB;
-                    C.Save();
-                }
-                if (ImGui.Checkbox($"Class C", ref showClassC))
-                {
-                    C.showClassC = showClassC;
-                    C.Save();
-                }
-                if (ImGui.Checkbox($"Class D", ref showClassD))
-                {
-                    C.showClassD = showClassD;
-                    C.Save();
-                }
-#endif
+                RelicXP();
             }
 
             ImGui.EndChild();
@@ -784,12 +746,14 @@ namespace ICE.Ui
 
             if (ImGui.ImageButton(icon.GetWrapOrEmpty().ImGuiHandle, size, uv0, uv1))
             {
-                if (!autoPickCurrentJob)
+                if (autoPickCurrentJob)
                 {
-                    C.SelectedJob = jobId;
-                    selectedJob = jobId;
-                    C.Save();
+                    autoPickCurrentJob = false;
+                    C.AutoPickCurrentJob = autoPickCurrentJob;
                 }
+                C.SelectedJob = jobId;
+                selectedJob = jobId;
+                C.Save();
             }
 
             // Pop style variables and colors
@@ -1343,6 +1307,129 @@ namespace ICE.Ui
 
                 C.Save();
             }
+        }
+
+        private float current = 25f;
+
+        private class XPType
+        {
+            public uint CurrentXP { get; set; }
+            public uint NeededXP { get; set; }
+            public uint MaxXP { get; set; }
+        }
+
+        private unsafe void RelicXP()
+        {
+            var wksManager = WKSManager.Instance();
+            if (wksManager == null || wksManager->Research == null || !wksManager->Research->IsLoaded)
+                return;
+
+            var job = selectedJob;
+            var toolClassId = (byte)(job - 7);
+            var stage = wksManager->Research->CurrentStages[toolClassId - 1];
+            var nextstate = wksManager->Research->UnlockedStages[toolClassId - 1];
+
+            if (Svc.Data.GetExcelSheet<WKSCosmoToolClass>().TryGetRow(toolClassId, out var row))
+            {
+
+            }
+
+            Dictionary<uint, XPType> XPTable = new Dictionary<uint, XPType>();
+
+            for (byte type = 1; type <= 4; type++)
+            {
+                if (!wksManager->Research->IsTypeAvailable(toolClassId, type))
+                    break;
+
+                var neededXP = wksManager->Research->GetNeededAnalysis(toolClassId, type);
+
+                var maxXP = wksManager->Research->GetMaxAnalysis(toolClassId, type);
+
+                var currentXp = wksManager->Research->GetCurrentAnalysis(toolClassId, type);
+                if (!XPTable.ContainsKey(type))
+                {
+                    XPTable[type] = new XPType()
+                    {
+                        CurrentXP = currentXp,
+                        NeededXP = neededXP,
+                        MaxXP = maxXP,
+                    };
+                }
+            }
+
+            ImGui.Text($"Stage: {stage}");
+
+            foreach (var type in XPTable)
+            {
+                uint current = type.Value.CurrentXP;
+                uint needed = type.Value.NeededXP;
+                uint max = type.Value.MaxXP;
+                float fraction = Math.Clamp(current / max, 0f, 1f);
+                float windowSize = ImGui.GetWindowSize().X - 20;
+                Vector2 size = new Vector2(windowSize, 10);
+
+                string overlay = $"ID: {current} / {max}";
+                string xpType = "";
+                if (type.Key == 1)
+                    xpType = "I";
+                else if (type.Key == 2)
+                    xpType = "II";
+                else if (type.Key == 3)
+                    xpType = "III";
+                else if (type.Key == 4)
+                    xpType = "IV";
+                else
+                    xpType = "???";
+
+                DrawXPBar($"Type: {xpType}", current, needed, size, max);
+            }
+        }
+
+        void DrawXPBar(string label, uint currentXP, uint neededXP, Vector2 size, uint maxXP = 0)
+        {
+            // Handle capped and invalid data
+            float fraction;
+            if (neededXP == 0)
+            {
+                fraction = Math.Clamp((float)currentXP / (float)maxXP, 0f, 1f);
+            }
+            else
+            {
+                fraction = Math.Clamp((float)currentXP / (float)neededXP, 0f, 1f);
+            }
+
+            // Display correct text
+            string displayText = (neededXP == 0 && maxXP > 0)
+                ? $"{label}: {currentXP} / {maxXP}"
+                : $"{label}: {currentXP} / {neededXP}";
+
+            ImGui.Text(displayText);
+
+            // Draw bar
+            var pos = ImGui.GetCursorScreenPos();
+            var drawList = ImGui.GetWindowDrawList();
+
+            var barStart = pos;
+            var barEnd = new Vector2(pos.X + size.X, pos.Y + size.Y);
+
+            drawList.AddRectFilled(barStart, barEnd, ImGui.GetColorU32(new Vector4(0.15f, 0.15f, 0.15f, 1f)));
+
+            float filledWidth = size.X * fraction;
+            if (filledWidth > 0f)
+            {
+                var filledEnd = new Vector2(pos.X + filledWidth, pos.Y + size.Y);
+
+                drawList.AddRectFilledMultiColor(
+                    barStart,
+                    filledEnd,
+                    ImGui.GetColorU32(new Vector4(0.2f, 0.6f, 1f, 1f)), // left
+                    ImGui.GetColorU32(new Vector4(0.6f, 1f, 0.8f, 1f)), // right
+                    ImGui.GetColorU32(new Vector4(0.6f, 1f, 0.8f, 1f)), // right
+                    ImGui.GetColorU32(new Vector4(0.2f, 0.6f, 1f, 1f))  // left
+                );
+            }
+
+            ImGui.Dummy(new Vector2(size.X, size.Y + 5));
         }
 
         #region Table Tools
