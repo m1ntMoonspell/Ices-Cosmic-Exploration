@@ -176,6 +176,8 @@ internal class SettingsWindow : Window
                         if (maxUse != currentMaxUse)
                             onMaxUseChange(maxUse);
                     }
+                    ImGuiEx.HelpMarker("Set to -1 to allow for infinite uses \n" +
+                                       "Set to 1-> X to set maximum amount of uses per mission");
 
                     ImGui.TreePop();
                 }

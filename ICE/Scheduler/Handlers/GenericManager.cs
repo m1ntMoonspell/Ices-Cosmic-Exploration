@@ -91,7 +91,7 @@ namespace ICE.Scheduler.Handlers
                         // IceLogging.Debug("Player is a fisher, but fishing job not enabled");
                         useCordial = false;
                     }
-                    if (C.CordialMinGp >= PlayerHelper.GetGp())
+                    if (C.CordialMinGp <= PlayerHelper.GetGp())
                     {
                         // IceLogging.Debug($"Current GP: {C.CordialMinGp} is < {PlayerHelper.GetGp()}");
                         useCordial = false;
