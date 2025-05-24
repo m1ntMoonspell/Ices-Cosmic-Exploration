@@ -746,12 +746,14 @@ namespace ICE.Ui
 
             if (ImGui.ImageButton(icon.GetWrapOrEmpty().ImGuiHandle, size, uv0, uv1))
             {
-                if (!autoPickCurrentJob)
+                if (autoPickCurrentJob)
                 {
-                    C.SelectedJob = jobId;
-                    selectedJob = jobId;
-                    C.Save();
+                    autoPickCurrentJob = false;
+                    C.AutoPickCurrentJob = autoPickCurrentJob;
                 }
+                C.SelectedJob = jobId;
+                selectedJob = jobId;
+                C.Save();
             }
 
             // Pop style variables and colors
@@ -1309,19 +1311,6 @@ namespace ICE.Ui
 
         private float current = 25f;
 
-        private void TestRelicXP()
-        {
-            ImGui.DragFloat("###Test XP", ref current, 1);
-            float max = 100f;
-            float fraction = Math.Clamp(current / max, 0f, 1f);
-            float windowSize = ImGui.GetWindowSize().X - 20;
-            Vector2 size = new Vector2(windowSize, 20);
-
-            string overlay = $"{current} / {max}";
-
-            ImGui.ProgressBar(fraction, size, overlay);
-        }
-
         private class XPType
         {
             public uint CurrentXP { get; set; }
@@ -1442,9 +1431,6 @@ namespace ICE.Ui
 
             ImGui.Dummy(new Vector2(size.X, size.Y + 5));
         }
-
-
-
 
         #region Table Tools
 
