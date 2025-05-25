@@ -81,7 +81,7 @@ namespace ICE.Scheduler.Handlers
                         // IceLogging.Debug("Player was null");
                         useCordial = false;
                     }
-                    if (PlayerHelper.GetClassJobId() is not 16 or 17 or 18)
+                    if (PlayerHelper.GetClassJobId() is not (16 or 17 or 18))
                     {
                         // IceLogging.Debug("Player is not a gathering job");
                         useCordial = false;
