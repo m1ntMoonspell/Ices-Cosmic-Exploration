@@ -22,7 +22,7 @@ namespace ICE.Scheduler.Handlers
         }
         private static bool WillOvercap(int recoveryGP)
         {
-            return ((PlayerHelper.GetGp() + recoveryGP) > PlayerHelper.MaxGp());
+            return ((PlayerHelper.GetGp() + recoveryGP) < PlayerHelper.MaxGp());
         }
         private static bool UseCordial()
         {

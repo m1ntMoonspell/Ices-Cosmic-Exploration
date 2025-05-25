@@ -163,14 +163,21 @@ namespace ICE.Scheduler.Tasks
                             BYieldII = GatheringUtil.GathActionDict["BountifulYieldII"].MinActionId;
                         }
 
-                        bool Collectable = CosmicHelper.MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.Collectables);
-                        bool Reducable = CosmicHelper.MissionInfoDict[currentMission].Attributes.HasFlag(MissionAttributes.ReducedItems);
+                        var mission = CosmicHelper.MissionInfoDict[currentMission];
+
+                        bool Collectable = mission.Attributes.HasFlag(MissionAttributes.Collectables);
+                        bool Reducable = mission.Attributes.HasFlag(MissionAttributes.ReducedItems);
+                        bool DualClass = mission.Attributes.HasFlag(MissionAttributes.Gather) && mission.Attributes.HasFlag(MissionAttributes.Craft);
 
                         if (!(Collectable || Reducable) && x.TotalIntegrity != 0)
                         {
                             var DictEntry = CosmicHelper.GatheringItemDict[currentMission].MinGatherItems;
+                            var profileId = C.Missions.Where(x => x.Id == currentMission).FirstOrDefault().GatherSettingId;
+                            var gBuffs = C.GatherSettings.Where(g => g.Id == profileId).First();
+
                             bool hasAllItems = true;
                             uint itemToGather = 0;
+                            bool gather1More = true;
 
                             foreach (var item in DictEntry)
                             {
@@ -178,13 +185,19 @@ namespace ICE.Scheduler.Tasks
                                 {
                                     hasAllItems = false;
                                     itemToGather = item.Key;
+                                    if (DualClass)
+                                    {
+                                        // Checking to see if the amount you need is < Minimum amount have bountiful set to
+                                        // Ex. if (need) 1 < 2
+                                        if (item.Value - count < gBuffs.Buffs.BountifulMinItem)
+                                            gather1More = false;
+                                    }
+                                    break;
                                 }
                             }
 
                             if (!Svc.Condition[ConditionFlag.ExecutingGatheringAction])
                             {
-                                var profileId = C.Missions.Where(x => x.Id == currentMission).FirstOrDefault().GatherSettingId;
-                                var gBuffs = C.GatherSettings.Where(g => g.Id == profileId).First();
                                 bool missingDur = x.CurrentIntegrity < x.TotalIntegrity;
 
                                 foreach (var item in x.GatheredItems)
@@ -192,7 +205,7 @@ namespace ICE.Scheduler.Tasks
                                     if ((!hasAllItems && item.ItemID == itemToGather) || (hasAllItems && item.ItemID != 0))
                                     {
                                         IceLogging.Debug($"[Condition F] Mission is aiming to gather: {itemToGather}", true);
-                                        if (ApplyGatheringBuffs(item, gBuffs, missingDur, Boon1, Boon2, Tidings, Yield1, Yield2, IntegInc, BonusInteg, BYieldII))
+                                        if (ApplyGatheringBuffs(item, gBuffs, missingDur, Boon1, Boon2, Tidings, Yield1, Yield2, IntegInc, BonusInteg, BYieldII, gather1More))
                                         {
                                             return;
                                         }
@@ -221,7 +234,7 @@ namespace ICE.Scheduler.Tasks
             }
         }
 
-        private static bool CanUseGatheringAction(string actionName, GatherBuffProfile gatherBuffs, bool missingDur, int? boonChance = null)
+        private static bool CanUseGatheringAction(string actionName, GatherBuffProfile gatherBuffs, bool missingDur, int? boonChance = null, bool gather1More = true)
         {
             var actionInfo = GatheringUtil.GathActionDict[actionName];
             uint actionId = PlayerHelper.GetClassJobId() == 16 ? actionInfo.MinActionId : actionInfo.BtnActionId;
@@ -238,13 +251,13 @@ namespace ICE.Scheduler.Tasks
                 "YieldII" => gatherBuffs.Buffs.YieldII && !hasStatus && !missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.YieldIIGp && (gatherBuffs.Buffs.YieldIIMaxUse == -1 || gatherBuffs.Buffs.YieldIIMaxUse > used),
                 "IntegrityIncrease" => gatherBuffs.Buffs.BonusIntegrity && missingDur && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BonusIntegrityGp && (gatherBuffs.Buffs.BonusIntegrityMaxUse == -1 || gatherBuffs.Buffs.BonusIntegrityMaxUse > used),
                 "BonusIntegrityChance" => hasStatus && missingDur,
-                "BountifulYieldII" => gatherBuffs.Buffs.BountifulYieldII && !hasStatus && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BountifulYieldIIGp && (gatherBuffs.Buffs.BountifulYieldIIMaxUse == -1 || gatherBuffs.Buffs.BountifulYieldIIMaxUse > used),
+                "BountifulYieldII" => gatherBuffs.Buffs.BountifulYieldII && !hasStatus && hasGp && PlayerHelper.GetGp() >= gatherBuffs.Buffs.BountifulYieldIIGp && (gatherBuffs.Buffs.BountifulYieldIIMaxUse == -1 || gatherBuffs.Buffs.BountifulYieldIIMaxUse > used) && gather1More == true,
                 _ => false,
             };
 
         }
 
-        private static bool ApplyGatheringBuffs(Gathering.GatheredItem item, GatherBuffProfile gBuffs, bool missingDur, uint Boon1, uint Boon2, uint Tidings, uint Yield1, uint Yield2, uint IntegInc, uint BonusInteg, uint BYieldII)
+        private static bool ApplyGatheringBuffs(Gathering.GatheredItem item, GatherBuffProfile gBuffs, bool missingDur, uint Boon1, uint Boon2, uint Tidings, uint Yield1, uint Yield2, uint IntegInc, uint BonusInteg, uint BYieldII, bool gather1More)
         {
             int boonChance = item.BoonChance;
 
@@ -255,7 +268,7 @@ namespace ICE.Scheduler.Tasks
                 (Tidings, () => CanUseGatheringAction("Tidings", gBuffs, missingDur), "Tidings"),
                 (Yield2, () => CanUseGatheringAction("YieldII", gBuffs, missingDur), "Kings Yield 2"),
                 (Yield1, () => CanUseGatheringAction("YieldI", gBuffs, missingDur), "Kings Yield 1"),
-                (BYieldII, () => CanUseGatheringAction("BountifulYieldII", gBuffs, missingDur), "Bountiful Yield/Harvest 2"),
+                (BYieldII, () => CanUseGatheringAction("BountifulYieldII", gBuffs, missingDur, gather1More: gather1More), "Bountiful Yield/Harvest 2"),
                 (BonusInteg, () => CanUseGatheringAction("BonusIntegrityChance", gBuffs, missingDur), "Wise of the World"),
                 (IntegInc, () => CanUseGatheringAction("IntegrityIncrease", gBuffs, missingDur), "Ageless Words")
             };

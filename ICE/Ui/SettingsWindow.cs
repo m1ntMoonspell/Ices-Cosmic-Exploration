@@ -185,6 +185,64 @@ internal class SettingsWindow : Window
             }
         }
 
+        void DrawCustomBuffSetting(string label, string uniqueId, bool currentEnabled, int currentMinGp, int minGpLimit, int maxGpLimit, string entryName, string ActionInfo, Action<bool> onEnabledChange, Action<int> onMinGpChange, int currentMaxUse, Action<int> onMaxUseChange, int MinItemUsage, Action<int> onMinItemMaxUseChange)
+        {
+            bool enabled = currentEnabled;
+            if (ImGui.Checkbox($"{label}###Enable{uniqueId}", ref enabled))
+            {
+                if (enabled != currentEnabled)
+                    onEnabledChange(enabled);
+            }
+            ImGuiEx.HelpMarker(ActionInfo);
+
+            if (enabled)
+            {
+                ImGui.Indent(15);
+
+                if (ImGui.TreeNode($"{label} Settings###Tree{uniqueId}{entryName}"))
+                {
+                    int minGp = currentMinGp;
+                    ImGui.AlignTextToFramePadding();
+                    ImGui.Text("Minimum GP");
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(200);
+                    if (ImGui.SliderInt($"###Slider{uniqueId}{entryName}", ref minGp, minGpLimit, maxGpLimit))
+                    {
+                        if (minGp != currentMinGp)
+                            onMinGpChange(minGp);
+                    }
+                    int maxUse = currentMaxUse;
+                    ImGui.AlignTextToFramePadding();
+                    ImGui.Text("Maximum use count");
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(100);
+                    if (ImGui.InputInt($"###Slider{uniqueId}{entryName}_1", ref maxUse, 1))
+                    {
+                        if (maxUse != currentMaxUse)
+                            onMaxUseChange(maxUse);
+                    }
+                    ImGuiEx.HelpMarker("Set to -1 to allow for infinite uses \n" +
+                                       "Set to 1-> X to set maximum amount of uses per mission");
+
+                    int MinItem = MinItemUsage;
+                    ImGui.Text($"Minimum BYII Item");
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(100);
+                    if (ImGui.SliderInt($"###MinItemsBYII{uniqueId}{entryName}_1", ref MinItem, 2, 4))
+                    {
+                        if (MinItem != MinItemUsage)
+                            onMinItemMaxUseChange(MinItem);
+                    }
+                    ImGuiEx.HelpMarker($"Set the minimum amount of items that you want BYII to activate on\n" +
+                                       $"Ex. Setting it to 2 will make it to where if you only activate if you need need 2 or more items\n" +
+                                       $"Useful if you're trying to save gp on gather x amount or dual class missions");
+
+                    ImGui.TreePop();
+                }
+                ImGui.Unindent(15);
+            }
+        }
+
         int maxGp = 1200;
 
         if (ImGui.Checkbox("Self Repair on Gather", ref SelfRepairGather))
@@ -601,7 +659,7 @@ internal class SettingsWindow : Window
         );
 
         // Bountiful Yield/Harvest II (+Amount based on gathering)
-        DrawBuffSetting(
+        DrawCustomBuffSetting(
             label: "Bountiful Yield II / Bountiful Harvest II",
             uniqueId: $"Bountiful Yield II {entry.Id}",
             currentEnabled: entry.Buffs.BountifulYieldII,
@@ -625,6 +683,12 @@ internal class SettingsWindow : Window
             onMaxUseChange: newVal =>
             {
                 entry.Buffs.BountifulYieldIIMaxUse = newVal;
+                C.Save();
+            },
+            entry.Buffs.BountifulMinItem,
+            onMinItemMaxUseChange: newVal =>
+            {
+                entry.Buffs.BountifulMinItem = newVal;
                 C.Save();
             }
         );

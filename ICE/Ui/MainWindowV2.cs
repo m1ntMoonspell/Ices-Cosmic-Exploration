@@ -1,4 +1,5 @@
-﻿using Dalamud.Interface;
+﻿using Dalamud.Game.Text;
+using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility.Raii;
@@ -9,7 +10,10 @@ using ICE.Enums;
 using ICE.Utilities.Cosmic;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using System.Xml.Schema;
 using static ICE.Utilities.CosmicHelper;
@@ -1359,29 +1363,50 @@ namespace ICE.Ui
 
             ImGui.Text($"Stage: {stage}");
 
-            foreach (var type in XPTable)
+            if (stage != 9)
             {
-                uint current = type.Value.CurrentXP;
-                uint needed = type.Value.NeededXP;
-                uint max = type.Value.MaxXP;
-                float fraction = Math.Clamp(current / max, 0f, 1f);
+                foreach (var type in XPTable)
+                {
+                    uint current = type.Value.CurrentXP;
+                    uint needed = type.Value.NeededXP;
+                    uint max = type.Value.MaxXP;
+                    float windowSize = ImGui.GetWindowSize().X - 20;
+                    Vector2 size = new Vector2(windowSize, 10);
+
+                    string overlay = $"ID: {current} / {max}";
+                    string xpType = "";
+                    if (type.Key == 1)
+                        xpType = "I";
+                    else if (type.Key == 2)
+                        xpType = "II";
+                    else if (type.Key == 3)
+                        xpType = "III";
+                    else if (type.Key == 4)
+                        xpType = "IV";
+                    else
+                        xpType = "???";
+
+                    DrawXPBar($"Type: {xpType}", current, needed, size, max);
+                }
+            }
+            else
+            {
                 float windowSize = ImGui.GetWindowSize().X - 20;
                 Vector2 size = new Vector2(windowSize, 10);
 
-                string overlay = $"ID: {current} / {max}";
-                string xpType = "";
-                if (type.Key == 1)
-                    xpType = "I";
-                else if (type.Key == 2)
-                    xpType = "II";
-                else if (type.Key == 3)
-                    xpType = "III";
-                else if (type.Key == 4)
-                    xpType = "IV";
-                else
-                    xpType = "???";
+                var wksManagerEx = (WKSManagerEx*)wksManager;
+                var scores =
+                    MemoryMarshal.CreateSpan(
+                        ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
 
-                DrawXPBar($"Type: {xpType}", current, needed, size, max);
+                int classScore = scores[(int)selectedJob - 8];
+                var cappedClassScore = Math.Min(500_000, classScore);
+
+                int totalScores = 0;
+                for (int i = 0; i < scores.Length; ++i)
+                    totalScores += Math.Min(500_000, scores[i]);
+
+                DrawXPBar("Score", (uint)classScore, 0, size, 500_000);
             }
         }
 
@@ -1400,8 +1425,8 @@ namespace ICE.Ui
 
             // Display correct text
             string displayText = (neededXP == 0 && maxXP > 0)
-                ? $"{label}: {currentXP} / {maxXP}"
-                : $"{label}: {currentXP} / {neededXP}";
+                ? $"{label}: {currentXP:N0} / {maxXP:N0}"
+                : $"{label}: {currentXP:N0} / {neededXP:N0}";
 
             ImGui.Text(displayText);
 
@@ -1430,6 +1455,55 @@ namespace ICE.Ui
             }
 
             ImGui.Dummy(new Vector2(size.X, size.Y + 5));
+        }
+
+        void DrawScore()
+        {
+            try
+            {
+                unsafe
+                {
+                    var wksManager = WKSManager.Instance();
+                    var currentMissionId = wksManager->CurrentMissionUnitRowId;
+
+                    uint? classId;
+                    if (currentMissionId > 0 &&
+                        CosmicHelper.MissionInfoDict.TryGetValue(currentMissionId, out var missionInfo))
+                        classId = missionInfo.JobId;
+                    else
+                        classId = Svc.ClientState.LocalPlayer?.ClassJob.RowId;
+
+                    if (classId is >= 8 and <= 18)
+                    {
+                        var wksManagerEx = (WKSManagerEx*)wksManager;
+                        var scores =
+                            MemoryMarshal.CreateSpan(
+                                ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
+
+                        int classScore = scores[(int)classId - 8];
+                        var cappedClassScore = Math.Min(500_000, classScore);
+
+                        int totalScores = 0;
+                        for (int i = 0; i < scores.Length; ++i)
+                            totalScores += Math.Min(500_000, scores[i]);
+
+                        ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
+                            $"{Svc.Data.GetExcelSheet<ClassJob>().GetRow(classId.Value).Abbreviation}: {(float)cappedClassScore / 500_000:P} ({classScore:N0})"));
+                        ImGui.SameLine();
+                        using (ImRaii.Disabled())
+                        {
+                            ImGui.TextUnformatted("--");
+                            ImGui.SameLine();
+                            ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
+                                $"All: {(float)totalScores / 11 / 500_000:P} ({SeIconChar.CrossWorld.ToIconChar()} {11 * 500_000 - totalScores:N0})"));
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // meh
+            }
         }
 
         #region Table Tools

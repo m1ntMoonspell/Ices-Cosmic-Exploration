@@ -140,6 +140,7 @@ namespace ICE
         public bool BountifulYieldII { get; set; } = false;
         public int BountifulYieldIIGp { get; set; } = 100;
         public int BountifulYieldIIMaxUse { get; set; } = -1;
+        public int BountifulMinItem {  get; set; } = 4;
         public bool BonusIntegrity { get; set; } = false;
         public int BonusIntegrityGp { get; set; } = 300;
         public int BonusIntegrityMaxUse { get; set; } = -1;
