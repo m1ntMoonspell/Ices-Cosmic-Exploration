@@ -20,9 +20,14 @@ namespace ICE.Scheduler.Handlers
             }
             return false;
         }
+        /// <summary>
+        /// Checks to see if CurrentGP + Cordial usage is > MaxGP
+        /// </summary>
+        /// <param name="recoveryGP"></param>
+        /// <returns>Bool true/false</returns>
         private static bool WillOvercap(int recoveryGP)
         {
-            return ((PlayerHelper.GetGp() + recoveryGP) < PlayerHelper.MaxGp());
+            return ((PlayerHelper.GetGp() + recoveryGP) > PlayerHelper.MaxGp());
         }
         private static bool UseCordial()
         {
