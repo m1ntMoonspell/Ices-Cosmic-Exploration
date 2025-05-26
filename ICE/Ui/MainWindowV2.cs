@@ -86,6 +86,8 @@ namespace ICE.Ui
         private int cosmicCap = C.CosmoCreditsCap;
         private bool stopLunar = C.StopOnceHitLunarCredits;
         private int lunarCap = C.LunarCreditsCap;
+        private bool stopScore = C.StopOnceHitCosmicScore;
+        private int scoreCap = C.CosmicScoreCap;
         private bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private bool stopWhenLevel = C.StopWhenLevel;
         private int targetLevel = C.TargetLevel;
@@ -221,9 +223,26 @@ namespace ICE.Ui
                 {
                     ImGui.Indent(15);
                     ImGui.SetNextItemWidth(-1);
-                    if (ImGui.SliderInt("###LunarStop", ref  lunarCap, 0, 10000))
+                    if (ImGui.SliderInt("###LunarStop", ref lunarCap, 0, 10000))
                     {
                         C.LunarCreditsCap = lunarCap;
+                        C.Save();
+                    }
+                    ImGui.Unindent(15);
+                }
+
+                if (ImGui.Checkbox($"Stop at Cosmic Score", ref stopScore))
+                {
+                    C.StopOnceHitCosmicScore = stopScore;
+                    C.Save();
+                }
+                if (stopScore)
+                {
+                    ImGui.Indent(15);
+                    ImGui.SetNextItemWidth(-1);
+                    if (ImGui.InputInt("###ScoreStop", ref scoreCap, 10000, 50000))
+                    {
+                        C.CosmicScoreCap = scoreCap >= 0 ? scoreCap : 0;
                         C.Save();
                     }
                     ImGui.Unindent(15);

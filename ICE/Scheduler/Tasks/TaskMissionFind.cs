@@ -82,6 +82,17 @@ namespace ICE.Scheduler.Tasks
                 }
             }
 
+            if (C.StopOnceHitCosmicScore)
+            {
+                var (classScore, _, _, _) = MissionHandler.GetCosmicClassScores();
+                if (classScore >= C.CosmicScoreCap)
+                {
+                    DuoLog.Information($"Stopping the plugin as you have {classScore} Cosmic Score");
+                    SchedulerMain.DisablePlugin();
+                    return;
+                }
+            }
+
             if (Player.Level >= C.TargetLevel && C.StopWhenLevel)
             {
                 SchedulerMain.StopBeforeGrab = true;

@@ -1,6 +1,10 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Memory;
 using ECommons.GameHelpers;
+using FFXIVClientStructs.FFXIV.Client.Game.WKS;
+using ICE.Utilities.Cosmic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 internal static class MissionHandler
@@ -69,7 +73,7 @@ internal static class MissionHandler
         }
         foreach (var item in CosmicHelper.GatheringItemDict[CosmicHelper.CurrentLunarMission].MinGatherItems)
             if (PlayerHelper.GetItemCount((int)item.Key, out int count))
-                gather = craft ? count  >= item.Value : count >= item.Value * SchedulerMain.InitialGatheringItemMultiplier;
+                gather = craft ? count >= item.Value : count >= item.Value * SchedulerMain.InitialGatheringItemMultiplier;
         return (craft, gather);
     }
     internal unsafe static (uint currentScore, uint bronzeScore, uint silverScore, uint goldScore) GetCurrentScores()
@@ -113,6 +117,40 @@ internal static class MissionHandler
         }
 
         return (currentScore, bronzeScore, silverScore, goldScore);
+    }
+
+    internal static unsafe (int classScore, int cappedClassScore, int totalScores, uint classId) GetCosmicClassScores()
+    {
+        int classScore = 0;
+        int cappedClassScore = 0;
+        int totalScores = 0;
+        var wksManager = WKSManager.Instance();
+        var currentMissionId = wksManager->CurrentMissionUnitRowId;
+
+        uint classId;
+        if (currentMissionId > 0 &&
+            CosmicHelper.MissionInfoDict.TryGetValue(currentMissionId, out var missionInfo))
+            classId = missionInfo.JobId;
+        else
+            classId = (uint)(Svc.ClientState.LocalPlayer?.ClassJob.RowId);
+
+        if (classId is >= 8 and <= 18)
+        {
+            var wksManagerEx = (WKSManagerEx*)wksManager;
+            var scores =
+                MemoryMarshal.CreateSpan(
+                    ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
+
+            classScore = scores[(int)classId - 8];
+            cappedClassScore = Math.Min(500_000, classScore);
+
+            totalScores = 0;
+            for (int i = 0; i < scores.Length; ++i)
+                totalScores += Math.Min(500_000, scores[i]);
+        }
+
+
+        return (classScore, cappedClassScore, totalScores, classId);
     }
     internal static void TurnIn(WKSMissionInfomation z, bool abortIfNoReport = false)
     {
