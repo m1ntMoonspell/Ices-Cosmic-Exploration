@@ -117,14 +117,18 @@ namespace ICE.Scheduler.Handlers
                         Dictionary<uint, int> cordials = new()
                             {
                                 { 12669, 400}, // Hi
-                                { 6141, 350}, // Regular
-                                { 16911, 200} // Watered
+                                { 1006141, 350}, // HQ Regular
+                                { 6141, 300}, // NQ Regular
+                                { 1016911, 200}, // HQ Watered
+                                { 16911, 150} // HQ Watered
                             };
 
                         foreach (var cordial in C.inverseCordialPrio ? cordials.Reverse() : cordials)
                         {
-                            if (PlayerHelper.GetItemCount((int)cordial.Key, out var amount) && amount > 0)
+                            bool hq = cordial.Key >= 1_000_000;
+                            if (PlayerHelper.GetItemCount((int)cordial.Key, out var amount, hq, !hq) && amount > 0)
                             {
+                                IceLogging.Error($"Cordial {cordial.Key} | {cordial.Value} | Count {amount}");
                                 if (ActionManager.Instance()->GetActionStatus(ActionType.Item, cordial.Key) == 0)
                                 {
                                     if (!C.PreventOvercap || (C.PreventOvercap && !WillOvercap(cordial.Value)))
