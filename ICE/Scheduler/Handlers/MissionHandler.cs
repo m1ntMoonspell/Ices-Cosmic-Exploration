@@ -247,7 +247,7 @@ internal static class MissionHandler
 
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical) && !SchedulerMain.State.HasFlag(IceState.AbortInProgress))
             {
-                if (EzThrottler.Throttle("Interacting with checkpoint", 250) && !Player.IsBusy)
+                if (EzThrottler.Throttle("Interacting with checkpoint", 250))
                 {
                     var gameObject = Utils.TryGetObjectCollectionPoint();
                     float gameObjectDistance = 999;
@@ -258,9 +258,9 @@ internal static class MissionHandler
                         P.Navmesh.Stop();
                         Utils.InteractWithObject(gameObject);
                     }
-                    else if (gameObjectDistance < 999)
+                    else if (gameObjectDistance < 999 && !Player.IsBusy)
                         TaskGather.PathToNode(gameObject.Position);
-                    else if (SchedulerMain.NearestCollectionPoint is not null)
+                    else if (SchedulerMain.NearestCollectionPoint is not null && !Player.IsBusy)
                         TaskGather.PathToNode((Vector3)SchedulerMain.NearestCollectionPoint);
                 }
                 return false;
