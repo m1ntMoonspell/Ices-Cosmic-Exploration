@@ -14,7 +14,7 @@ internal static class MissionHandler
         if (CosmicHelper.CurrentLunarMission == 0)
             return null;
 
-        if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains(" 00:00") || AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains(" 0:00")) //  == Clock symbol
+        if (IsMissionTimedOut())
         {
             SchedulerMain.State |= IceState.AbortInProgress;
             return true;
@@ -81,7 +81,7 @@ internal static class MissionHandler
         uint currentScore = 0, bronzeScore = 0, silverScore = 0, goldScore = 0;
         if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
         {
-            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains(" 00:00") || AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains(" 0:00")) //  == Clock symbol
+            if (IsMissionTimedOut())
                 SchedulerMain.State |= IceState.AbortInProgress;
 
             if (CosmicHelper.CurrentMissionInfo.Attributes.HasFlag(MissionAttributes.Critical))
@@ -117,6 +117,22 @@ internal static class MissionHandler
         }
 
         return (currentScore, bronzeScore, silverScore, goldScore);
+    }
+
+    internal unsafe static bool IsMissionTimedOut()
+    {
+        if (GenericHelpers.TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
+        {
+            if (AddonHelper.GetAtkTextNode("WKSMissionInfomation", 23)->IsVisible())
+            {
+                return true;
+            }
+        }
+        else
+        {
+            CosmicHelper.OpenStellarMission();
+        }
+        return false;
     }
 
     internal static unsafe (int classScore, int cappedClassScore, int totalScores, uint classId) GetCosmicClassScores()
