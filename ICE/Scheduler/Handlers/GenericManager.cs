@@ -128,7 +128,6 @@ namespace ICE.Scheduler.Handlers
                             bool hq = cordial.Key >= 1_000_000;
                             if (PlayerHelper.GetItemCount((int)cordial.Key, out var amount, hq, !hq) && amount > 0)
                             {
-                                IceLogging.Error($"Cordial {cordial.Key} | {cordial.Value} | Count {amount}");
                                 if (ActionManager.Instance()->GetActionStatus(ActionType.Item, cordial.Key) == 0)
                                 {
                                     if (!C.PreventOvercap || (C.PreventOvercap && !WillOvercap(cordial.Value)))
