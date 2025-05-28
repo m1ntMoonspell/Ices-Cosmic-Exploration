@@ -54,7 +54,7 @@ namespace ICE.Scheduler.Tasks
                 return;
             }
 
-            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
+            if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains(" 00:00") || AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains(" 0:00")) //  == Clock symbol
             {
                 SchedulerMain.State |= IceState.AbortInProgress;
                 return;
