@@ -1,10 +1,7 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Memory;
 using ECommons.GameHelpers;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
-using ICE.Utilities.Cosmic;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 internal static class MissionHandler
@@ -135,7 +132,7 @@ internal static class MissionHandler
         return false;
     }
 
-    internal static unsafe (int classScore, int cappedClassScore, int totalScores, uint classId) GetCosmicClassScores()
+    internal unsafe static (int classScore, int cappedClassScore, int totalScores, uint classId) GetCosmicClassScores()
     {
         int classScore = 0;
         int cappedClassScore = 0;
@@ -152,10 +149,7 @@ internal static class MissionHandler
 
         if (classId is >= 8 and <= 18)
         {
-            var wksManagerEx = (WKSManagerEx*)wksManager;
-            var scores =
-                MemoryMarshal.CreateSpan(
-                    ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
+            var scores = wksManager->Scores;
 
             classScore = scores[(int)classId - 8];
             cappedClassScore = Math.Min(500_000, classScore);

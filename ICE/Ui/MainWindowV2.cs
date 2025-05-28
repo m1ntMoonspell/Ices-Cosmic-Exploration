@@ -1413,17 +1413,7 @@ namespace ICE.Ui
                 float windowSize = ImGui.GetWindowSize().X - 20;
                 Vector2 size = new Vector2(windowSize, 10);
 
-                var wksManagerEx = (WKSManagerEx*)wksManager;
-                var scores =
-                    MemoryMarshal.CreateSpan(
-                        ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
-
-                int classScore = scores[(int)selectedJob - 8];
-                var cappedClassScore = Math.Min(500_000, classScore);
-
-                int totalScores = 0;
-                for (int i = 0; i < scores.Length; ++i)
-                    totalScores += Math.Min(500_000, scores[i]);
+                var (classScore, cappedClassScore, totalScores, classId) = MissionHandler.GetCosmicClassScores();
 
                 DrawXPBar("Score", (uint)classScore, 0, size, 500_000);
             }
@@ -1476,54 +1466,6 @@ namespace ICE.Ui
             ImGui.Dummy(new Vector2(size.X, size.Y + 5));
         }
 
-        void DrawScore()
-        {
-            try
-            {
-                unsafe
-                {
-                    var wksManager = WKSManager.Instance();
-                    var currentMissionId = wksManager->CurrentMissionUnitRowId;
-
-                    uint? classId;
-                    if (currentMissionId > 0 &&
-                        CosmicHelper.MissionInfoDict.TryGetValue(currentMissionId, out var missionInfo))
-                        classId = missionInfo.JobId;
-                    else
-                        classId = Svc.ClientState.LocalPlayer?.ClassJob.RowId;
-
-                    if (classId is >= 8 and <= 18)
-                    {
-                        var wksManagerEx = (WKSManagerEx*)wksManager;
-                        var scores =
-                            MemoryMarshal.CreateSpan(
-                                ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
-
-                        int classScore = scores[(int)classId - 8];
-                        var cappedClassScore = Math.Min(500_000, classScore);
-
-                        int totalScores = 0;
-                        for (int i = 0; i < scores.Length; ++i)
-                            totalScores += Math.Min(500_000, scores[i]);
-
-                        ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
-                            $"{Svc.Data.GetExcelSheet<ClassJob>().GetRow(classId.Value).Abbreviation}: {(float)cappedClassScore / 500_000:P} ({classScore:N0})"));
-                        ImGui.SameLine();
-                        using (ImRaii.Disabled())
-                        {
-                            ImGui.TextUnformatted("--");
-                            ImGui.SameLine();
-                            ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
-                                $"All: {(float)totalScores / 11 / 500_000:P} ({SeIconChar.CrossWorld.ToIconChar()} {11 * 500_000 - totalScores:N0})"));
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // meh
-            }
-        }
 
         #region Table Tools
 
