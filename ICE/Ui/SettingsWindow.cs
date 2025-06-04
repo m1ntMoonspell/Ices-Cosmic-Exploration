@@ -480,7 +480,7 @@ internal class SettingsWindow : Window
         // Multiply gathered items on FIRST gather loop only. Should only be used for Dual Class really.
         int gatherMult = entry.InitialGatheringItemMultiplier;
         ImGui.SetNextItemWidth(100);
-        if (ImGui.InputInt("Multiply gathered items", ref gatherMult, 1))
+        if (ImGui.InputInt("Dual Class Craft Amount", ref gatherMult, 1))
         {
             entry.InitialGatheringItemMultiplier = gatherMult >= 1 ? gatherMult : 1;
             C.Save();
