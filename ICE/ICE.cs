@@ -22,6 +22,7 @@ public sealed partial class ICE : IDalamudPlugin
     internal MainWindow mainWindow;
     internal MainWindowV2 mainWindow2;
     internal SettingsWindow settingWindow;
+    internal SettingsWindowV2 settingsWindowV2;
     internal OverlayWindow overlayWindow;
     internal DebugWindow debugWindow;
 
@@ -56,6 +57,7 @@ public sealed partial class ICE : IDalamudPlugin
         mainWindow = new();
         mainWindow2 = new();
         settingWindow = new();
+        settingsWindowV2 = new();
         overlayWindow = new();
         debugWindow = new();
 
@@ -146,6 +148,10 @@ public sealed partial class ICE : IDalamudPlugin
         {
             settingWindow.IsOpen = !settingWindow.IsOpen;
             return;
+        }
+        else if (firstArg.ToLower() == "s2")
+        {
+            settingsWindowV2.IsOpen = !settingsWindowV2.IsOpen;
         }
         else if (firstArg.ToLower() == "clear")
         {

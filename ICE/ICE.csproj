@@ -17,6 +17,10 @@
   <ItemGroup>
     <Content Include="ICE.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
 	
   <ItemGroup>
       <ProjectReference Include="..\ECommons\ECommons\ECommons.csproj" />
