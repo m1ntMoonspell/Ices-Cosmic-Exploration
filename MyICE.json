@@ -1,0 +1,24 @@
+[
+ {
+    "Author": "Ice",
+    "Name": "Ice's Cosmic Exploration (ICE)",
+    "Punchline": "Welcome to, the dark side of, the MOOOON",
+    "Description": "*-insert a quirky description here later... hopefully-*",
+    "Tags": [
+      "Gatherers"
+    ],
+    "InternalName": "ICE",
+    "RepoUrl": "https://github.com/m1ntMoonspell/Ices-Cosmic-Exploration",
+    "LastUpdate": 1746716838030,
+    "DownloadLinkInstall": "https://raw.githubusercontent.com/m1ntMoonspell/Ices-Cosmic-Exploration/refs/heads/main/ICE-latest.zip.zip",
+    "DownloadLinkUpdate": "https://raw.githubusercontent.com/m1ntMoonspell/Ices-Cosmic-Exploration/refs/heads/main/ICE-latest.zip.zip",
+    "AssemblyVersion": "0.0.0.33",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": "12",
+    "Changelog": "-> Fixed unsupported missions not be able to be launched (gathering is included, sorry bout that)\n-> Minor bug fixes otherwise ",
+    "TestingAssemblyVersion": "0.0.0.46",
+    "DownloadLinkTesting": "https://raw.githubusercontent.com/m1ntMoonspell/Ices-Cosmic-Exploration/refs/heads/main/ICE-latest.zip.zip",
+    "TestingDalamudApiLevel": "12",
+    "IconUrl": "https://s3.puni.sh/media/plugin/70/icon-6mts8v53o8x.png"
+  }
+]
