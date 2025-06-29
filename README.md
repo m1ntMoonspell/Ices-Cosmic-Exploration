@@ -1,2 +1,2 @@
 # Ices Cosmic Exploration (ICE)
-CN Cilent and Chinese Localization
+Made for CN Cilent and Chinese Localization
