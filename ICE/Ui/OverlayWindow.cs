@@ -22,7 +22,7 @@ namespace ICE.Ui
 
         public override void Draw()
         {
-            ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
+            ImGui.Text($"当前状态: " + SchedulerMain.State.ToString());
 #if DEBUG
             if (CosmicHelper.CurrentLunarMission != 0)
             {
@@ -40,17 +40,17 @@ namespace ICE.Ui
 
             if (currentWeather != null)
             {
-                ImGui.Text($"Weather: {currentWeather} -> {nextWeather} in [{nextWeatherTime}]");
+                ImGui.Text($"天气: {currentWeather} -> {nextWeather} in [{nextWeatherTime}]");
             }
 
             (var currentTimedBonus, var nextTimedBonus) = PlayerHandlers.GetTimedJob();
             if (currentTimedBonus.Value == null)
             {
-                ImGui.Text($"Timed Mission(s): None -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
+                ImGui.Text($"限时任务(s): None -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
             }
             else
             {
-                ImGui.Text($"Timed Mission(s): {string.Join(", ", currentTimedBonus.Value)} -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
+                ImGui.Text($"限时任务(s): {string.Join(", ", currentTimedBonus.Value)} -> {string.Join(", ", nextTimedBonus.Value)} [{nextTimedBonus.Key.start:D2}:00]");
             }
 
             (string type, var locations) = AnnouncementHandlers.CheckForRedAlert();
@@ -102,7 +102,7 @@ namespace ICE.Ui
             // Start button (disabled while already ticking).
             using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !PlayerHelper.UsingSupportedJob()))
             {
-                if (ImGui.Button("Start"))
+                if (ImGui.Button("开始"))
                 {
                     SchedulerMain.EnablePlugin();
                 }
@@ -113,13 +113,13 @@ namespace ICE.Ui
             // Stop button (disabled while not ticking).
             using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle))
             {
-                if (ImGui.Button("Stop"))
+                if (ImGui.Button("停止"))
                 {
                     SchedulerMain.DisablePlugin();
                 }
             }
             ImGui.SameLine();
-            ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+            ImGui.Checkbox("在完成当前任务后停止", ref SchedulerMain.StopBeforeGrab);
             //    //    Type = Dalamud.Game.Text.XivChatType.Debug,
             //    //});
             //}

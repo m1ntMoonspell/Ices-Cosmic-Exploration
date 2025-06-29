@@ -496,7 +496,7 @@ namespace ICE.Scheduler.Tasks
                 }
                 else if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
-                    string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？", "Commence selected mission?", "Ausgewählte Mission wird gestartet.Fortfahren?", "Commencer la mission sélectionnée ?"];
+                    string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？", "Commence selected mission?", "Ausgewählte Mission wird gestartet.Fortfahren?", "Commencer la mission sélectionnée ?","确定要开始此任务吗？"];
                     if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
                         IceLogging.Debug($"Expected Commence window: {select.Text}");
@@ -545,7 +545,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
-                    string[] abandonStrings = ["受注中のミッションを破棄します。", "Abandon mission?", "Aktuelle Mission abbrechen?", "Êtes-vous sûre de vouloir abandonner la mission en cours ?"];
+                    string[] abandonStrings = ["受注中のミッションを破棄します。", "Abandon mission?", "Aktuelle Mission abbrechen?", "Êtes-vous sûre de vouloir abandonner la mission en cours ?","确定要放弃已领取的任务吗？"];
                     if (abandonStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
                         IceLogging.Debug($"[Abandoning Mission] Expected Abandon window: {select.Text}");

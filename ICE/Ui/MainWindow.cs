@@ -155,13 +155,13 @@ namespace ICE.Ui
                 return;
 
             // Title text for the run controls.
-            ImGui.Text("Run");
+            ImGui.Text("运行");
             // Help marker explaining how missions are selected and run.
             ImGuiEx.HelpMarker(
-                "Please note: this will try and run based off of every rank that it can.\n" +
-                "So if you have both C & D checkmarks, it will check C first -> Check D for potential Missions.\n" +
-                "It will cycle through missions until it finds one that you have selected.\n" +
-                "Unsupported missions will be disabled and shown in red; check 'Hide unsupported missions' to filter them out."
+                "请注意：运行时会基于所有能运行的项目\n" +
+                "如果你同时勾选了C和D级的任务，运行时会先检查C级任务然后再检查D级任务\n" +
+                "运行时会循环检查所有任务直到插件找到一个你已经选中的任务\n" +
+                "不支持的任务会被禁用并以红色标出，勾选'隐藏不支持的任务'可以过滤掉这些任务"
             );
 
             ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
@@ -172,7 +172,7 @@ namespace ICE.Ui
             // Start button (disabled while already ticking).
             using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !usingSupportedJob))
             {
-                if (ImGui.Button("Start"))
+                if (ImGui.Button("开始"))
                 {
                     SchedulerMain.EnablePlugin();
                 }
@@ -183,14 +183,14 @@ namespace ICE.Ui
             // Stop button (disabled while not ticking).
             using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle))
             {
-                if (ImGui.Button("Stop"))
+                if (ImGui.Button("停止"))
                 {
                     SchedulerMain.DisablePlugin();
                 }
             }
 
             ImGui.SameLine();
-            ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+            ImGui.Checkbox("在完成当前任务后停止", ref SchedulerMain.StopBeforeGrab);
 
             ImGui.SameLine();
             ImGui.NewLine();
@@ -228,7 +228,7 @@ namespace ICE.Ui
             ImGui.Spacing();
 
             ImGui.SetNextItemWidth(150);
-            if (ImGui.BeginCombo("Sort By", sortOptions[SortOption].SortOptionName))
+            if (ImGui.BeginCombo("分类", sortOptions[SortOption].SortOptionName))
             {
                 for (int i = 0; i < sortOptions.Count; i++)
                 {
@@ -357,10 +357,10 @@ namespace ICE.Ui
                     if (showCredits)
                     {
                         // Fourth column: Rewards
-                        ImGui.TableSetupColumn("Cosmocredits");
+                        ImGui.TableSetupColumn("宇宙信用点");
                         columnIndex++;
 
-                        ImGui.TableSetupColumn("Lunar Credits");
+                        ImGui.TableSetupColumn("月球信用点");
                         columnIndex++;
                     }
 
@@ -377,12 +377,12 @@ namespace ICE.Ui
                     }
 
                     // Settings column
-                    ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
+                    ImGui.TableSetupColumn("提交", ImGuiTableColumnFlags.WidthFixed, 100);
 
                     if (showGatherConfig)
                     {
-                        float columnWidth = ImGui.CalcTextSize("Gather Config").X + 5;
-                        ImGui.TableSetupColumn("Gather Config", ImGuiTableColumnFlags.WidthFixed, columnWidth);
+                        float columnWidth = ImGui.CalcTextSize("采集配置").X + 5;
+                        ImGui.TableSetupColumn("采集配置", ImGuiTableColumnFlags.WidthFixed, columnWidth);
                     }
 
                     // Final column: Notes
@@ -481,7 +481,7 @@ namespace ICE.Ui
                             ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), MissionName);
                             if (ImGui.IsItemHovered())
                             {
-                                ImGui.SetTooltip("Currently can only be done in manual mode");
+                                ImGui.SetTooltip("当前任务仅能在手动模式下完成");
                             }
                         }
                         else
@@ -531,12 +531,12 @@ namespace ICE.Ui
                         bool[] selectedModes;
                         if (unsupported)
                         {
-                            modes = ["Manual"];
+                            modes = ["手动"];
                             selectedModes = [mission.ManualMode];
                         }
                         else
                         {
-                            modes = ["Gold", "Silver", "Bronze", "Manual"];
+                            modes = ["金牌", "银牌", "铜牌", "手动"];
                             selectedModes =
                             [
                                 mission.TurnInGold,
@@ -649,44 +649,44 @@ namespace ICE.Ui
 
             DrawLink("Say no to global warming, support Ice today: ", "https://ko-fi.com/ice643269", "https://ko-fi.com/ice643269");
 
-            if (ImGui.CollapsingHeader("Safety Settings"))
+            if (ImGui.CollapsingHeader("安全设置"))
             {
-                if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref animationLockAbandon))
+                if (ImGui.Checkbox("[实验性功能] 解除动画锁", ref animationLockAbandon))
                 {
                     C.AnimationLockAbandon = animationLockAbandon;
                     C.Save();
                 }
-                ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
+                ImGui.Checkbox("[实验性功能] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
 
-                if (ImGui.Checkbox("Stop on Errors", ref stopOnAbort))
+                if (ImGui.Checkbox("报错时停止", ref stopOnAbort))
                 {
                     C.StopOnAbort = stopOnAbort;
                     C.Save();
                 }
                 ImGuiEx.HelpMarker(
-                    "Warning! This is a safety feature to stop if something goes wrong!\n" +
-                    "You have been warned. Disable at your own risk."
+                    "警告！这是在遇到错误时的安全措施！\n" +
+                    "在此警告之后，禁用带来的风险由你自己承担。"
                 );
 
-                if (ImGui.Checkbox("Ignore non-Cosmic prompts", ref rejectUnknownYesNo))
+                if (ImGui.Checkbox("忽略非宇宙探索提示", ref rejectUnknownYesNo))
                 {
                     C.RejectUnknownYesno = rejectUnknownYesNo;
                     C.Save();
                 }
                 ImGuiEx.HelpMarker(
-                    "Warning! This is a safety feature to avoid joining random parties!\n" +
-                    "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
-                    "You have been warned. Disable at your own risk."
+                    "警告！这是避免加入别人队伍的安全措施！\n" +
+                    "如果不激活此选项，你会接受来自别人的组队邀请。\n" +
+                    "在此警告之后，禁用带来的风险由你自己承担。"
                 );
-                if (ImGui.Checkbox("Add delay to mission menu", ref delayGrabMission))
+                if (ImGui.Checkbox("在任务界面增加延迟", ref delayGrabMission))
                 {
                     C.DelayGrabMission = delayGrabMission;
                     C.Save();
                 }
                 ImGuiEx.HelpMarker(
-                    "This is here for safety! If you want to decrease the delay between missions be my guest.\n" +
-                    "Safety is around... 250? If you're having animation locks you can absolutely increase it higher\n" +
-                    "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+                    "这项功能是为了安全而存在的！如果你想降低接取任务间的延迟，请便。\n" +
+                    "安全范围大概是在250ms左右？如果你有动画锁的话你可以适当增加延迟。\n" +
+                    "或者如果你不怕死的话拉到多低都没问题。I'm not your dad (will tell dad jokes though.");
                 if (delayGrabMission)
                 {
                     ImGui.SetNextItemWidth(150);
@@ -700,15 +700,15 @@ namespace ICE.Ui
                         }
                     }
                 }
-                if (ImGui.Checkbox("Add delay to crafting menu", ref delayCraft))
+                if (ImGui.Checkbox("在生产界面增加延迟", ref delayCraft))
                 {
                     C.DelayCraft = delayCraft;
                     C.Save();
                 }
                 ImGuiEx.HelpMarker(
-                    "This is here for safety! If you want to decrease the delay before turnin be my guest.\n" +
-                    "Safety is around... 2500? If you're having animation locks you can absolutely increase it higher\n" +
-                    "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+                    "这项功能是为了安全而存在的！如果你想降低提交物品前的延迟，请便。\n" +
+                    "安全范围大概是在2500ms左右？如果你有动画锁的话你可以适当增加延迟。\n" +
+                    "或者如果你不怕死的话拉到多低都没问题。 I'm not your dad (will tell dad jokes though.");
                 if (delayCraft)
                 {
                     ImGui.SetNextItemWidth(150);
@@ -724,14 +724,14 @@ namespace ICE.Ui
                 }
             }
 
-            if (ImGui.CollapsingHeader("Mission Settings"))
+            if (ImGui.CollapsingHeader("任务设置"))
             {
-                if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
+                if (ImGui.Checkbox("仅接取任务", ref onlyGrabMission))
                 {
                     C.OnlyGrabMission = onlyGrabMission;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Stop @ Cosmocredits", ref stopOnceHitCosmoCredits))
+                if (ImGui.Checkbox("在指定数量宇宙信用点时停止", ref stopOnceHitCosmoCredits))
                 {
                     C.StopOnceHitCosmoCredits = stopOnceHitCosmoCredits;
                     C.Save();
@@ -749,7 +749,7 @@ namespace ICE.Ui
                         }
                     }
                 }
-                if (ImGui.Checkbox("Stop @ Lunar Credits", ref stopOnceHitLunarCredits))
+                if (ImGui.Checkbox("在指定数量月球信用点时停止", ref stopOnceHitLunarCredits))
                 {
                     C.StopOnceHitLunarCredits = stopOnceHitLunarCredits;
                     C.Save();
@@ -767,7 +767,7 @@ namespace ICE.Ui
                         }
                     }
                 }
-                if (ImGui.Checkbox("Stop after @ level", ref stopWhenLevel))
+                if (ImGui.Checkbox("在到达指定等级后停止", ref stopWhenLevel))
                 {
                     C.StopWhenLevel = stopWhenLevel;
                     C.Save();
@@ -1148,15 +1148,15 @@ namespace ICE.Ui
                 }
             }
 #endif
-            if (ImGui.CollapsingHeader("Overlay Settings"))
+            if (ImGui.CollapsingHeader("悬浮窗设置"))
             {
-                if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+                if (ImGui.Checkbox("显示悬浮窗", ref showOverlay))
                 {
                     C.ShowOverlay = showOverlay;
                     C.Save();
                 }
 
-                if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
+                if (ImGui.Checkbox("显示秒数", ref ShowSeconds))
                 {
                     C.ShowSeconds = ShowSeconds;
                     C.Save();
@@ -1166,12 +1166,12 @@ namespace ICE.Ui
             if (ImGui.CollapsingHeader("Table Settings"))
             {
                 // Checkbox: Hide unsupported missions.
-                if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
+                if (ImGui.Checkbox("隐藏不支持的任务", ref hideUnsupported))
                 {
                     C.HideUnsupportedMissions = hideUnsupported;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
+                if (ImGui.Checkbox("自动选择当前职业b", ref autoPickCurrentJob))
                 {
                     C.AutoPickCurrentJob = autoPickCurrentJob;
                     C.Save();
@@ -1188,9 +1188,9 @@ namespace ICE.Ui
                 }
             }
 
-            if (ImGui.CollapsingHeader("Misc Settings"))
+            if (ImGui.CollapsingHeader("其他设置"))
             {
-                if (ImGui.Checkbox("Enable Auto Sprint", ref EnableAutoSprint))
+                if (ImGui.Checkbox("自动冲刺", ref EnableAutoSprint))
                 {
                     C.EnableAutoSprint = EnableAutoSprint;
                     C.Save();

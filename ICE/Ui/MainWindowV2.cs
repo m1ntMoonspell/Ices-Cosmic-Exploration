@@ -164,7 +164,7 @@ namespace ICE.Ui
 
                 using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !usingSupportedJob))
                 {
-                    if (ImGui.Button("Start", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                    if (ImGui.Button("开始", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                     {
                         SchedulerMain.EnablePlugin();
                     }
@@ -172,17 +172,17 @@ namespace ICE.Ui
 
                 using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle))
                 {
-                    if (ImGui.Button("Stop", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                    if (ImGui.Button("停止", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                     {
                         SchedulerMain.DisablePlugin();
                     }
                 }
-                if (ImGui.Button("Settings", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
+                if (ImGui.Button("设置", new Vector2(ImGui.GetContentRegionAvail().X, textLineHeight * 1.5f)))
                 {
                     P.settingWindow.IsOpen = !P.settingWindow.IsOpen;
                 }
 
-                if (ImGui.Checkbox($"Only grab mission", ref onlyGrabMission))
+                if (ImGui.Checkbox($"仅接取任务", ref onlyGrabMission))
                 {
                     C.OnlyGrabMission = onlyGrabMission;
                     C.Save();
@@ -196,8 +196,8 @@ namespace ICE.Ui
 
                 ImGui.Spacing();
 
-                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
-                if (ImGui.Checkbox($"Stop at Cosmic Credits", ref stopCosmic))
+                ImGui.Checkbox("在完成当前任务后停止", ref SchedulerMain.StopBeforeGrab);
+                if (ImGui.Checkbox($"获取指定数量宇宙信用点后停止", ref stopCosmic))
                 {
                     C.StopOnceHitCosmoCredits = stopCosmic;
                     C.Save();
@@ -214,7 +214,7 @@ namespace ICE.Ui
                     ImGui.Unindent(15);
                 }
 
-                if (ImGui.Checkbox($"Stop at Lunar Credits", ref stopLunar))
+                if (ImGui.Checkbox($"获取指定数量月球信用点后停止", ref stopLunar))
                 {
                     C.StopOnceHitLunarCredits = stopLunar;
                     C.Save();
@@ -231,7 +231,7 @@ namespace ICE.Ui
                     ImGui.Unindent(15);
                 }
 
-                if (ImGui.Checkbox($"Stop at Cosmic Score", ref stopScore))
+                if (ImGui.Checkbox($"达到指定职业技巧点后停止", ref stopScore))
                 {
                     C.StopOnceHitCosmicScore = stopScore;
                     C.Save();
@@ -248,7 +248,7 @@ namespace ICE.Ui
                     ImGui.Unindent(15);
                 }
 
-                if (ImGui.Checkbox($"Stop at Level", ref stopWhenLevel))
+                if (ImGui.Checkbox($"达到指定等级后停止", ref stopWhenLevel))
                 {
                     C.StopWhenLevel = stopWhenLevel;
                     C.Save();
@@ -270,7 +270,7 @@ namespace ICE.Ui
                 ImGui.Separator();
 
                 ImGui.Dummy(new(0, 10));
-                if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
+                if (ImGui.Checkbox("自动选择当前职业", ref autoPickCurrentJob))
                 {
                     C.AutoPickCurrentJob = autoPickCurrentJob;
                     C.Save();
@@ -328,7 +328,7 @@ namespace ICE.Ui
 
                 ImGui.Dummy(new Vector2(0, 5));
 
-                ImGui.Text("Quick Mission Apply");
+                ImGui.Text("快速任务设定");
 
                 ImGui.Dummy(new Vector2(0, 5));
                 UpdateMissions();
@@ -370,7 +370,7 @@ namespace ICE.Ui
             if (ImGui.BeginChild("###MissionList", new Vector2(0, childHeight), true))
             {
 
-                if (ImGui.Checkbox("Hide Unsupported Missions", ref hideUnsupported))
+                if (ImGui.Checkbox("隐藏不支持的任务", ref hideUnsupported))
                 {
                     C.HideUnsupportedMissions = hideUnsupported;
                     C.Save();
@@ -378,27 +378,27 @@ namespace ICE.Ui
 
                 ImGui.SameLine();
 
-                if (ImGui.Button("Open Table Settings"))
+                if (ImGui.Button("UI表格设置"))
                 {
-                    ImGui.OpenPopup("Open Table Settings");
+                    ImGui.OpenPopup("UI表格设置");
                 }
 
-                if (ImGui.BeginPopup("Open Table Settings"))
+                if (ImGui.BeginPopup("UI表格设置"))
                 {
                     ImGui.Text("Toggle Configs");
                     ImGui.Separator();
 
-                    if (ImGui.Checkbox("Show Credit Column", ref showCredits))
+                    if (ImGui.Checkbox("显示信用点获取量", ref showCredits))
                     {
                         C.ShowCreditsColumn = showCredits;
                         C.Save();
                     }
-                    if (ImGui.Checkbox("Show XP Amounts", ref showExp))
+                    if (ImGui.Checkbox("显示宇宙研究数据获取量", ref showExp))
                     {
                         C.ShowExpColums = showExp;
                         C.Save();
                     }
-                    if (ImGui.Checkbox("Show Notes", ref showNotes))
+                    if (ImGui.Checkbox("显示备注", ref showNotes))
                     {
                         C.ShowNotes = showNotes;
                         C.Save();
@@ -415,7 +415,7 @@ namespace ICE.Ui
                 ImGui.SameLine();
 
                 ImGui.SetNextItemWidth(150);
-                if (ImGui.BeginCombo("Sort By", sortOptions[SortOption].SortOptionName))
+                if (ImGui.BeginCombo("排序", sortOptions[SortOption].SortOptionName))
                 {
                     for (int i = 0; i < sortOptions.Count; i++)
                     {
@@ -897,17 +897,17 @@ namespace ICE.Ui
                     }
                 }
                 // Settings column
-                ImGui.TableSetupColumn("Turn In", ImGuiTableColumnFlags.WidthFixed, 100);
+                ImGui.TableSetupColumn("提交", ImGuiTableColumnFlags.WidthFixed, 100);
 
                 if (showGatherConfig)
                 {
-                    float columnWidth = ImGui.CalcTextSize("Gather Config").X + 5;
-                    ImGui.TableSetupColumn("Gather Config", ImGuiTableColumnFlags.WidthFixed, columnWidth);
+                    float columnWidth = ImGui.CalcTextSize("采集设置").X + 5;
+                    ImGui.TableSetupColumn("采集设置", ImGuiTableColumnFlags.WidthFixed, columnWidth);
                 }
 
                 if (showNotes)
                 {
-                    ImGui.TableSetupColumn("Mission Notes", ImGuiTableColumnFlags.WidthStretch);
+                    ImGui.TableSetupColumn("任务备注", ImGuiTableColumnFlags.WidthStretch);
                 }
 
                 // Render the header row (static headers get drawn here)
@@ -1028,7 +1028,7 @@ namespace ICE.Ui
                         ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), MissionName);
                         if (ImGui.IsItemHovered())
                         {
-                            ImGui.SetTooltip("Currently can only be done in manual mode");
+                            ImGui.SetTooltip("当前仅能在手动模式下完成");
                         }
                     }
                     else
@@ -1081,17 +1081,17 @@ namespace ICE.Ui
                     bool[] selectedModes;
                     if (unsupported)
                     {
-                        modes = ["Manual"];
+                        modes = ["手动"];
                         selectedModes = [mission.ManualMode];
                     }
                     else if (entry.Value.Attributes.HasFlag(MissionAttributes.ScoreTimeRemaining) || entry.Value.Attributes.HasFlag(MissionAttributes.Critical))
                     {
-                        modes = ["ASAP", "Manual"];
+                        modes = ["马上提交", "手动提交"];
                         selectedModes = [mission.TurnInASAP, mission.ManualMode];
                     }
                     else
                     {
-                        modes = ["Gold", "Silver", "Bronze", "Manual"];
+                        modes = ["金牌", "银牌", "铜牌", "手动"];
                         selectedModes =
                         [
                             mission.TurnInGold,
@@ -1213,17 +1213,17 @@ namespace ICE.Ui
         private void UpdateMissions()
         {
             ImGui.SetNextItemWidth(100);
-            if (ImGui.Button("Select Modes"))
+            if (ImGui.Button("选择模式"))
             {
                 ImGui.OpenPopup("Select Mission Profiles");
             }
 
             if (ImGui.BeginPopup("Select Mission Profiles"))
             {
-                ImGui.Checkbox($"Gold", ref selectedModes[0]);
-                ImGui.Checkbox($"Silver", ref selectedModes[1]);
-                ImGui.Checkbox($"Bronze/ASAP", ref selectedModes[2]);
-                ImGui.Checkbox($"Manual", ref selectedModes[3]);
+                ImGui.Checkbox($"金牌", ref selectedModes[0]);
+                ImGui.Checkbox($"银牌", ref selectedModes[1]);
+                ImGui.Checkbox($"铜牌/马上提交", ref selectedModes[2]);
+                ImGui.Checkbox($"手动提交", ref selectedModes[3]);
 
                 ImGui.EndPopup();
             }
@@ -1241,7 +1241,7 @@ namespace ICE.Ui
                 ImGui.EndCombo();
             }
 
-            if (ImGui.Button("Apply to selected profiles"))
+            if (ImGui.Button("应用至选择的档案"))
             {
                 var currentJob = PlayerHelper.GetClassJobId();
 

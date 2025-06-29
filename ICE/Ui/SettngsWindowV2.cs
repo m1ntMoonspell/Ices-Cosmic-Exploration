@@ -30,8 +30,8 @@ internal class SettingsWindowV2 : Window
         P.windowSystem.RemoveWindow(this);
     }
 
-    private string SelectedSetting = "Safety";
-    private string[] SettingOptions = ["Safety", "Gathering", "Overlay", "Misc", "Gamble Wheel"];
+    private string SelectedSetting = "安全设置";
+    private string[] SettingOptions = ["安全设置", "采集设置", "悬浮窗设置", "其他设置", "月球好运道"];
     private string[] DebugOptions = ["Debug", "Path Creation"];
 
     public override void Draw()
@@ -128,42 +128,42 @@ internal class SettingsWindowV2 : Window
 
     private void SafetySettings()
     {
-        if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref animationLockAbandon))
+        if (ImGui.Checkbox("[实验性功能] 解除动画锁", ref animationLockAbandon))
         {
             C.AnimationLockAbandon = animationLockAbandon;
             C.Save();
         }
-        ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
+        ImGui.Checkbox("[实验性功能] 手动解除动画锁", ref SchedulerMain.AnimationLockAbandonState);
 
-        if (ImGui.Checkbox("Stop on Errors", ref stopOnAbort))
+        if (ImGui.Checkbox("遇到错误时停止", ref stopOnAbort))
         {
             C.StopOnAbort = stopOnAbort;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "Warning! This is a safety feature to stop if something goes wrong!\n" +
-            "You have been warned. Disable at your own risk."
+            "警告！这是在遇到错误时的安全措施！\n" +
+            "在此警告之后，禁用带来的风险由你自己承担。"
         );
 
-        if (ImGui.Checkbox("Ignore non-Cosmic prompts", ref rejectUnknownYesNo))
+        if (ImGui.Checkbox("忽略非宇宙探索提示", ref rejectUnknownYesNo))
         {
             C.RejectUnknownYesno = rejectUnknownYesNo;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "Warning! This is a safety feature to avoid joining random parties!\n" +
-            "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
-            "You have been warned. Disable at your own risk."
+            "警告！这是避免加入别人队伍的安全措施！\n" +
+            "如果不激活此选项，你会接受来自别人的组队邀请。\n" +
+            "在此警告之后，禁用带来的风险由你自己承担。"
         );
-        if (ImGui.Checkbox("Add delay to mission menu", ref delayGrabMission))
+        if (ImGui.Checkbox("在任务界面增加延迟", ref delayGrabMission))
         {
             C.DelayGrabMission = delayGrabMission;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "This is here for safety! If you want to decrease the delay between missions be my guest.\n" +
-            "Safety is around... 250? If you're having animation locks you can absolutely increase it higher\n" +
-            "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+            "这项功能是为了安全而存在的！如果你想降低接取任务间的延迟，请便。\n" +
+            "安全范围大概是在250ms左右？如果你有动画锁的话你可以适当增加延迟。\n" +
+            "或者如果你不怕死的话拉到多低都没问题。I'm not your dad (will tell dad jokes though.");
         if (delayGrabMission)
         {
             ImGui.SetNextItemWidth(150);
@@ -177,15 +177,15 @@ internal class SettingsWindowV2 : Window
                 }
             }
         }
-        if (ImGui.Checkbox("Add delay to crafting menu", ref delayCraft))
+        if (ImGui.Checkbox("在生产界面增加延迟", ref delayCraft))
         {
             C.DelayCraft = delayCraft;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "This is here for safety! If you want to decrease the delay before turnin be my guest.\n" +
-            "Safety is around... 2500? If you're having animation locks you can absolutely increase it higher\n" +
-            "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+            "这项功能是为了安全而存在的！如果你想降低提交物品前的延迟，请便。\n" +
+            "安全范围大概是在2500ms左右？如果你有动画锁的话你可以适当增加延迟。\n" +
+            "或者如果你不怕死的话拉到多低都没问题。 I'm not your dad (will tell dad jokes though.");
         if (delayCraft)
         {
             ImGui.SetNextItemWidth(150);
@@ -785,7 +785,7 @@ internal class SettingsWindowV2 : Window
             C.GambaEnabled = gambaEnabled;
             C.Save();
         }
-        ImGuiEx.HelpMarker("To run this, make sure you have the gamble wheels shown at Orbitingway, and press start. It will full auto from there.");
+        ImGuiEx.HelpMarker("为了成功运行该功能，确保你已经在环行威处打开了宇宙好运道，然后点击开始。接下就就可以解放双手了。");
         if (gambaEnabled)
         {
             ImGui.SetNextItemWidth(150);
@@ -802,14 +802,14 @@ internal class SettingsWindowV2 : Window
                 C.Save();
             }
         }
-        if (ImGui.Checkbox("Prefer smaller wheel", ref gambaPreferSmallerWheel))
+        if (ImGui.Checkbox("选择更小的轮盘", ref gambaPreferSmallerWheel))
         {
             C.GambaPreferSmallerWheel = gambaPreferSmallerWheel;
             C.Save();
         }
-        ImGuiEx.HelpMarker("This will make the Gamba prefer wheels with less items.");
+        ImGuiEx.HelpMarker("这将会让该功能倾向于选择物品更少的轮盘");
         ImGui.Separator();
-        ImGui.TextUnformatted("Configure the weights for each item in the Gamba. Higher weight = more desirable.");
+        ImGui.TextUnformatted("为每个物品配置权重。更高的权重=你更想要的东西");
         ImGui.Spacing();
         foreach (GambaType type in Enum.GetValues(typeof(GambaType)))
         {
@@ -833,7 +833,7 @@ internal class SettingsWindowV2 : Window
                 ImGui.TreePop();
             }
         }
-        if (ImGui.Button("Reset Weights"))
+        if (ImGui.Button("重置权重"))
         {
             TaskGamba.EnsureGambaWeightsInitialized(true);
         }
@@ -844,13 +844,13 @@ internal class SettingsWindowV2 : Window
 
     private void Overlay()
     {
-        if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+        if (ImGui.Checkbox("显示悬浮窗", ref showOverlay))
         {
             C.ShowOverlay = showOverlay;
             C.Save();
         }
 
-        if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
+        if (ImGui.Checkbox("显示秒数", ref ShowSeconds))
         {
             C.ShowSeconds = ShowSeconds;
             C.Save();
@@ -861,7 +861,7 @@ internal class SettingsWindowV2 : Window
 
     private void Misc()
     {
-        if (ImGui.Checkbox("Enable Auto Sprint", ref EnableAutoSprint))
+        if (ImGui.Checkbox("自动冲刺", ref EnableAutoSprint))
         {
             C.EnableAutoSprint = EnableAutoSprint;
             C.Save();
