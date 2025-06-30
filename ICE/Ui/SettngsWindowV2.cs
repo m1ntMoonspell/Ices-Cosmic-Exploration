@@ -235,7 +235,7 @@ internal class SettingsWindowV2 : Window
                 {
                     int minGp = currentMinGp;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Minimum GP");
+                    ImGui.Text("最低GP");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(200);
                     if (ImGui.SliderInt($"###Slider{uniqueId}{entryName}", ref minGp, minGpLimit, maxGpLimit))
@@ -245,7 +245,7 @@ internal class SettingsWindowV2 : Window
                     }
                     int maxUse = currentMaxUse;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Maximum use count");
+                    ImGui.Text("最大使用次数");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(100);
                     if (ImGui.InputInt($"###Slider{uniqueId}{entryName}_1", ref maxUse, 1))
@@ -253,8 +253,8 @@ internal class SettingsWindowV2 : Window
                         if (maxUse != currentMaxUse)
                             onMaxUseChange(maxUse);
                     }
-                    ImGuiEx.HelpMarker("Set to -1 to allow for infinite uses \n" +
-                                       "Set to 1-> X to set maximum amount of uses per mission");
+                    ImGuiEx.HelpMarker("设置为-1即可不限制使用次数 \n" +
+                                       "设置为1到X来设置每一个任务重的使用次数");
 
                     ImGui.TreePop();
                 }
@@ -280,7 +280,7 @@ internal class SettingsWindowV2 : Window
                 {
                     int minGp = currentMinGp;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Minimum GP");
+                    ImGui.Text("最低GP");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(200);
                     if (ImGui.SliderInt($"###Slider{uniqueId}{entryName}", ref minGp, minGpLimit, maxGpLimit))
@@ -290,7 +290,7 @@ internal class SettingsWindowV2 : Window
                     }
                     int maxUse = currentMaxUse;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Maximum use count");
+                    ImGui.Text("最大使用次数");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(100);
                     if (ImGui.InputInt($"###Slider{uniqueId}{entryName}_1", ref maxUse, 1))
@@ -298,8 +298,8 @@ internal class SettingsWindowV2 : Window
                         if (maxUse != currentMaxUse)
                             onMaxUseChange(maxUse);
                     }
-                    ImGuiEx.HelpMarker("Set to -1 to allow for infinite uses \n" +
-                                       "Set to 1-> X to set maximum amount of uses per mission");
+                    ImGuiEx.HelpMarker("设置为-1即可不限制使用次数 \n" +
+                                       "设置为1到X来设置每一个任务重的使用次数");
 
                     int MinItem = MinItemUsage;
                     ImGui.Text($"Minimum BYII Item");
@@ -311,8 +311,8 @@ internal class SettingsWindowV2 : Window
                             onMinItemMaxUseChange(MinItem);
                     }
                     ImGuiEx.HelpMarker($"Set the minimum amount of items that you want BYII to activate on\n" +
-                                       $"Ex. Setting it to 2 will make it to where if you only activate if you need need 2 or more items\n" +
-                                       $"Useful if you're trying to save gp on gather x amount or dual class missions");
+                                       $"比如设置为2的话就只会在你想要2个或更多物品的时候才激活\n" +
+                                       $"在你想在采集X个物品或者双职业任务上会很有用");
 
                     ImGui.TreePop();
                 }
@@ -322,7 +322,7 @@ internal class SettingsWindowV2 : Window
 
         int maxGp = 1200;
 
-        if (ImGui.Checkbox("Self Repair on Gather", ref SelfRepairGather))
+        if (ImGui.Checkbox("采集过程中自动修理装备", ref SelfRepairGather))
         {
             if (C.SelfRepairGather != SelfRepairGather)
             {
@@ -333,7 +333,7 @@ internal class SettingsWindowV2 : Window
         if (SelfRepairGather)
         {
             ImGui.Indent(15);
-            ImGui.Text("Repair at");
+            ImGui.Text("耐久度为");
             ImGui.SameLine();
             ImGui.SetNextItemWidth(150);
             if (ImGui.SliderFloat("###Repair %", ref SelfRepairPercent, 0f, 99f, "%.0f%%"))
@@ -346,7 +346,7 @@ internal class SettingsWindowV2 : Window
             }
             ImGui.Unindent(15);
         }
-        if (ImGui.Checkbox("Extract Spiritbond on Gather", ref SelfSpiritbondGather))
+        if (ImGui.Checkbox("自动精炼魔晶石", ref SelfSpiritbondGather))
         {
             if (C.SelfSpiritbondGather != SelfSpiritbondGather)
             {
@@ -354,39 +354,39 @@ internal class SettingsWindowV2 : Window
                 C.Save();
             }
         }
-        if (ImGui.Checkbox("Auto Cordial", ref AutoCordial))
+        if (ImGui.Checkbox("自动使用强心剂", ref AutoCordial))
         {
             C.AutoCordial = AutoCordial;
             C.Save();
         }
-        ImGuiEx.HelpMarker("Will only work while using ICE and not manual mode\n" +
-                           "Will also pause pandora cordial usage while on the moon");
+        ImGuiEx.HelpMarker("只在使用ICE时有效，手动模式下无效\n" +
+                           "在月球探索时会停止pandora强心剂使用相关功能");
         if (AutoCordial)
         {
-            if (ImGui.TreeNode("Cordial Settings"))
+            if (ImGui.TreeNode("强心剂设置"))
             {
-                if (ImGui.Checkbox("Inverse Priority (Watered -> Regular -> Hi)", ref InverseCordialPrio))
+                if (ImGui.Checkbox("反转优先级 (轻型 -> 普通 -> 高级)", ref InverseCordialPrio))
                 {
                     C.inverseCordialPrio = InverseCordialPrio;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Prevent Overcap", ref PreventOvercap))
+                if (ImGui.Checkbox("防止GP溢出", ref PreventOvercap))
                 {
                     C.PreventOvercap = PreventOvercap;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Use on Fisher", ref UseOnFisher))
+                if (ImGui.Checkbox("职业为捕鱼人时使用", ref UseOnFisher))
                 {
                     C.UseOnFisher = UseOnFisher;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Only use in mission", ref useOnlyInMission))
+                if (ImGui.Checkbox("仅在任务中使用", ref useOnlyInMission))
                 {
                     C.UseOnlyInMission = useOnlyInMission;
                     C.Save();
                 }
                 ImGui.SetNextItemWidth(200);
-                if (ImGui.SliderInt("Gp Threshold", ref CordialMinGp, 0, maxGp))
+                if (ImGui.SliderInt("GP阈值", ref CordialMinGp, 0, maxGp))
                 {
                     C.CordialMinGp = CordialMinGp;
                     C.Save();
@@ -399,10 +399,10 @@ internal class SettingsWindowV2 : Window
         ImGui.Dummy(new(0, 5));
 
         ImGui.SetNextItemWidth(200);
-        ImGui.InputText("New Profile Name", ref newProfileName, 64);
+        ImGui.InputText("新方案名称", ref newProfileName, 64);
         using (ImRaii.Disabled(newProfileName == ""))
         {
-            if (ImGui.Button("Add Profile") && !string.IsNullOrWhiteSpace(newProfileName))
+            if (ImGui.Button("添加方案") && !string.IsNullOrWhiteSpace(newProfileName))
             {
                 if (!C.GatherSettings.Any(x => x.Name == newProfileName))
                 {
@@ -421,12 +421,12 @@ internal class SettingsWindowV2 : Window
         // ------------------
         ImGui.SetColumnWidth(0, 350);
 
-        ImGui.Text("Gather Profiles");
+        ImGui.Text("采集方案");
 
         bool canDelete = C.GatherSettings.Count > 1 && C.SelectedGatherIndex != 0;
         using (ImRaii.Disabled(!canDelete))
         {
-            if (ImGui.Button("Delete Selected Profile"))
+            if (ImGui.Button("删除所选方案"))
             {
                 var deletedProfile = C.GatherSettings[C.SelectedGatherIndex];
                 int deletedId = deletedProfile.Id;
@@ -467,8 +467,8 @@ internal class SettingsWindowV2 : Window
 
         GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
 
-        ImGui.Combo("Mission Type", ref MissionIndex, MissionTypes, MissionTypes.Length);
-        if (ImGui.Button("Apply to Mission Types"))
+        ImGui.Combo("任务类型", ref MissionIndex, MissionTypes, MissionTypes.Length);
+        if (ImGui.Button("应用至任务类型"))
         {
             foreach (var mission in C.Missions)
             {
@@ -525,20 +525,20 @@ internal class SettingsWindowV2 : Window
 
         // Pathfinding
         int pathfinding = entry.Pathfinding;
-        string[] modes = ["Simple", "Nearest", "Cyclic"];
+        string[] modes = ["简单", "就近", "巡回"];
         ImGui.SetNextItemWidth(100);
-        if (ImGui.Combo("Pathfinding mode", ref pathfinding, modes, modes.Length))
+        if (ImGui.Combo("寻路模式", ref pathfinding, modes, modes.Length))
         {
             entry.Pathfinding = pathfinding;
             C.Save();
         }
-        ImGuiEx.HelpMarker("Simple - From 1st node in list until the last.\nNearest - Always go to Nearest node then find a path that minimises distance through all remaining nodes.\nCyclic - Find nodes that are close together and stick to those nodes only.");
+        ImGuiEx.HelpMarker("简单 - 从第一个列表上第一个节点到最后一个节点\n就近 - 总是去最近的节点并在剩余所有节点当中计算出一条最短路径\n巡回 - 找到相近的一群节点，并只在这些节点中巡回");
         if (pathfinding == 2)
         {
             ImGui.SameLine();
             ImGui.SetNextItemWidth(100);
             int cycle = entry.TSPCycleSize;
-            if (ImGui.InputInt("Cycle size", ref cycle, 1))
+            if (ImGui.InputInt("巡回范围", ref cycle, 1))
             {
                 entry.TSPCycleSize = cycle >= 2 ? cycle : 2;
                 C.Save();
@@ -548,7 +548,7 @@ internal class SettingsWindowV2 : Window
         // GP Settings
         int minGP = entry.MinimumGP;
         ImGui.SetNextItemWidth(100);
-        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, maxGp))
+        if (ImGui.SliderInt("开始任务时最少GP", ref minGP, -1, maxGp))
         {
             entry.MinimumGP = minGP;
             C.Save();
@@ -557,12 +557,12 @@ internal class SettingsWindowV2 : Window
         // Multiply gathered items on FIRST gather loop only. Should only be used for Dual Class really.
         int gatherMult = entry.InitialGatheringItemMultiplier;
         ImGui.SetNextItemWidth(100);
-        if (ImGui.InputInt("Dual Class Craft Amount", ref gatherMult, 1))
+        if (ImGui.InputInt("双职业任务生产所需原料数", ref gatherMult, 1))
         {
             entry.InitialGatheringItemMultiplier = gatherMult >= 1 ? gatherMult : 1;
             C.Save();
         }
-        ImGuiEx.HelpMarker("This increases how many items you gather before you are 'done' before switching to crafting.\nSet this to however many items you need to craft to reach your target score.\nOnly affects Dual Class missions.");
+        ImGuiEx.HelpMarker("这会增加你切换到生产之前你采集的物品数\n把这个功能设置到你能达到目标分数所需原材料数\n这个功能只会影响双职业任务");
 
         // Boon Increase 2 (+30% Increase)
         DrawBuffSetting(
@@ -780,7 +780,7 @@ internal class SettingsWindowV2 : Window
 
     private void GambaWheel()
     {
-        if (ImGui.Checkbox("Enable Gamba", ref gambaEnabled))
+        if (ImGui.Checkbox("启用自动好运道", ref gambaEnabled))
         {
             C.GambaEnabled = gambaEnabled;
             C.Save();
@@ -789,14 +789,14 @@ internal class SettingsWindowV2 : Window
         if (gambaEnabled)
         {
             ImGui.SetNextItemWidth(150);
-            if (ImGui.SliderInt("Gamba Delay", ref gambaDelay, 50, 2000))
+            if (ImGui.SliderInt("好运道延迟", ref gambaDelay, 50, 2000))
             {
                 C.GambaDelay = gambaDelay;
                 C.Save();
             }
             ImGui.SameLine();
             ImGui.SetNextItemWidth(150);
-            if (ImGui.SliderInt("Mininum credits to keep", ref gambaCreditsMinimum, 0, 10000))
+            if (ImGui.SliderInt("最少持有的月球信用点数", ref gambaCreditsMinimum, 0, 10000))
             {
                 C.GambaCreditsMinimum = gambaCreditsMinimum;
                 C.Save();

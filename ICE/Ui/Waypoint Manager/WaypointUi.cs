@@ -33,10 +33,10 @@ public static class WaypointUi
         var paths = _pathManager.ListAllPaths();
         if (paths.Count == 0)
         {
-            ImGui.Text("No path files found.");
+            ImGui.Text("没有找到路径文件");
             ImGui.InputText("New Path Name", ref _newFileName, 64);
             ImGui.SameLine();
-            if (ImGui.Button("Create New Path"))
+            if (ImGui.Button("创建一条新的路径"))
             {
                 _currentPathName = _newFileName;
                 _currentPathFile = new PathFile { PathName = _currentPathName };
@@ -66,14 +66,14 @@ public static class WaypointUi
             ImGui.EndCombo();
         }
         ImGui.SameLine();
-        if (ImGui.Button("Delete"))
+        if (ImGui.Button("删除"))
         {
             _pathManager.Delete(_currentPathName);
         }
 
         ImGui.InputText("New Path Name", ref _newFileName, 64);
         ImGui.SameLine();
-        if (ImGui.Button("Create New Path"))
+        if (ImGui.Button("创建一条新的路径"))
         {
             _currentPathName = _newFileName;
             _currentPathFile = new PathFile { PathName = _currentPathName };
@@ -88,7 +88,7 @@ public static class WaypointUi
 
         if (_currentPathFile.Waypoints.Count > 0)
         {
-            if (ImGui.Button("Test Route"))
+            if (ImGui.Button("测试路径"))
             {
                 Vector3[] waypoints = _currentPathFile.Waypoints.Select(wp => wp.ToVector3()).ToArray();
 
@@ -139,9 +139,9 @@ public static class WaypointUi
     private static void DrawAddWaypointSection()
     {
         ImGui.Separator();
-        ImGui.Text("Add New Waypoint:");
+        ImGui.Text("添加一个新的路径点:");
 
-        if (ImGui.Button("Add Current POS"))
+        if (ImGui.Button("添加当前位置"))
         {
             _newWaypoint.X = Player.Position.X;
             _newWaypoint.Y = Player.Position.Y;
@@ -174,7 +174,7 @@ public static class WaypointUi
         }
         ImGui.Checkbox("Jump", ref _newJumpFlag);
 
-        if (ImGui.Button("Add Waypoint"))
+        if (ImGui.Button("添加路径点"))
         {
             _currentPathFile!.Waypoints.Add(WaypointUtil.FromVector3(_newWaypoint, _newJumpFlag));
             _newWaypoint = Vector3.Zero;
@@ -185,7 +185,7 @@ public static class WaypointUi
     private static void DrawSaveSection()
     {
         ImGui.Separator();
-        if (ImGui.Button("Save Path File"))
+        if (ImGui.Button("保存路径文件"))
         {
             _pathManager.Save(_currentPathFile!);
         }
