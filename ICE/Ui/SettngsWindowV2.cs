@@ -31,7 +31,7 @@ internal class SettingsWindowV2 : Window
     }
 
     private string SelectedSetting = "安全设置";
-    private string[] SettingOptions = ["安全设置", "采集设置", "悬浮窗设置", "其他设置", "月球好运道"];
+    private string[] SettingOptions = ["安全设置", "采集设置", "悬浮窗设置", "其他设置", "宇宙好运道"];
     private string[] DebugOptions = ["Debug", "Path Creation"];
 
     public override void Draw()

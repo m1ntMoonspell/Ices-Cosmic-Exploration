@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.Sdk/12.0.2">
+<Project Sdk="Dalamud.CN.NET.Sdk/12.0.2">
 
   <PropertyGroup>
     <Version>0.0.0.46</Version>
@@ -12,10 +12,18 @@
     <InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyy\-MM\-dd HH\:mm\:ss"))</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 	<NoWarn>CS8618; CS8625; CS8629; </NoWarn>
+	<NuGetAuditMode>all</NuGetAuditMode>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="ICE.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Lumina.dll" />
+    <None Include="Lumina.Excel.dll" />
+    <None Include="Newtonsoft.Json.dll" />
+    <None Include="Serilog.dll" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,5 +32,14 @@
 	
   <ItemGroup>
       <ProjectReference Include="..\ECommons\ECommons\ECommons.csproj" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Reference Update="Dalamud">
+      <Private>False</Private>
+    </Reference>
+    <Reference Update="FFXIVClientStructs">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 </Project>
