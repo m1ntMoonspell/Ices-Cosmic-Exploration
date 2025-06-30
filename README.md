@@ -7,7 +7,7 @@ Made for CN Cilent and Chinese Localization
 
 ·设置进度，品质，耐久; 宏会跨职业重复使用
 
-·在Artisan中<b>指定</b>宏和实物，否则你会后悔的ASSIGN macros/food in Artisan or u will cry
+·在Artisan中<b>指定</b>宏和食物，否则你会后悔的
 
 1.在任务表中勾选你想要的任务，然后设置你能接受的最低品质提交品质
 
