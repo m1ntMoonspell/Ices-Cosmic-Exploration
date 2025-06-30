@@ -25,4 +25,5 @@ Made for CN Cilent and Chinese Localization
 
 3.暂不支持捕鱼人
 
-![image](https://github.com/user-attachments/assets/2f2f6d09-1836-4f97-98d8-75568ae027b8)
+***
+![image](https://github.com/user-attachments/assets/ed073a17-eca1-4687-b98e-6ee0287e8d87)
