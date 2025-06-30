@@ -1,6 +1,8 @@
 # Ices Cosmic Exploration (ICE)
 Made for CN Cilent and Chinese Localization
 
+插件库: `https://raw.githubusercontent.com/m1ntMoonspell/Ices-Cosmic-Exploration/refs/heads/main/MyICE.json`
+
 国服适配和汉化
 
 生产 - 如尾图所示设置Artisan
