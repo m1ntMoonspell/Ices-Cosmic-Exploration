@@ -29,12 +29,12 @@ internal class SettingsWindow : Window
     public override void Draw()
     {
         Kofi.DrawRight();
-        ImGuiEx.EzTabBar("Ice Cosmic Settings Tab", Kofi.Text 
-            ,("Safety Settings", SafetySettings, null, true)
-            ,("Gathering Config", GatherSettings, null, true)
-            ,("Overlay", Overlay, null, true)
-            ,("Misc", Misc, null, true)
-            ,("Gamble Wheel Settings", GambaWheel, null, true)
+        ImGuiEx.EzTabBar("宇宙探索设置面板", Kofi.Text 
+            ,("安全设置", SafetySettings, null, true)
+            ,("采集配置", GatherSettings, null, true)
+            ,("悬浮窗", Overlay, null, true)
+            ,("其他设置", Misc, null, true)
+            ,("宇宙好运道", GambaWheel, null, true)
 #if DEBUG
             ,("Debug", Debug, null, true)
 #endif
@@ -51,42 +51,42 @@ internal class SettingsWindow : Window
 
     private void SafetySettings()
     {
-        if (ImGui.Checkbox("[Experimental] Animation Lock Unstuck", ref animationLockAbandon))
+        if (ImGui.Checkbox("[实验性功能] 解除动画锁", ref animationLockAbandon))
         {
             C.AnimationLockAbandon = animationLockAbandon;
             C.Save();
         }
-        ImGui.Checkbox("[Experimental] Animation Lock Manual Unstuck", ref SchedulerMain.AnimationLockAbandonState);
+        ImGui.Checkbox("[实验性功能] 手动解除动画锁", ref SchedulerMain.AnimationLockAbandonState);
 
-        if (ImGui.Checkbox("Stop on Errors", ref stopOnAbort))
+        if (ImGui.Checkbox("遇到错误时停止", ref stopOnAbort))
         {
             C.StopOnAbort = stopOnAbort;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "Warning! This is a safety feature to stop if something goes wrong!\n" +
-            "You have been warned. Disable at your own risk."
+            "警告！这是在遇到错误时的安全措施！\n" +
+            "在此警告之后，禁用带来的风险自行承担。"
         );
 
-        if (ImGui.Checkbox("Ignore non-Cosmic prompts", ref rejectUnknownYesNo))
+        if (ImGui.Checkbox("忽略非宇宙探索提示", ref rejectUnknownYesNo))
         {
             C.RejectUnknownYesno = rejectUnknownYesNo;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "Warning! This is a safety feature to avoid joining random parties!\n" +
-            "If you you uncheck this, YOU WILL JOIN random party invites.\n" +
-            "You have been warned. Disable at your own risk."
+            "警告！这是避免加入别人队伍的安全措施！\n" +
+            "如果不激活此选项，你会接受来自别人的组队邀请。\n" +
+            "在此警告之后，禁用带来的风险自行承担。"
         );
-        if (ImGui.Checkbox("Add delay to mission menu", ref delayGrabMission))
+        if (ImGui.Checkbox("在任务界面增加延迟", ref delayGrabMission))
         {
             C.DelayGrabMission = delayGrabMission;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "This is here for safety! If you want to decrease the delay between missions be my guest.\n" +
-            "Safety is around... 250? If you're having animation locks you can absolutely increase it higher\n" +
-            "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+            "这项功能是为了安全而存在的！如果你想降低接取任务间的延迟，请便。\n" +
+            "安全范围大概是在250ms左右？如果你有动画锁的话你可以适当增加延迟。\n" +
+            "或者如果你不怕死的话拉到多低都没问题。I'm not your dad (will tell dad jokes though.");
         if (delayGrabMission)
         {
             ImGui.SetNextItemWidth(150);
@@ -100,15 +100,15 @@ internal class SettingsWindow : Window
                 }
             }
         }
-        if (ImGui.Checkbox("Add delay to crafting menu", ref delayCraft))
+        if (ImGui.Checkbox("在生产界面增加延迟", ref delayCraft))
         {
             C.DelayCraft = delayCraft;
             C.Save();
         }
         ImGuiEx.HelpMarker(
-            "This is here for safety! If you want to decrease the delay before turnin be my guest.\n" +
-            "Safety is around... 2500? If you're having animation locks you can absolutely increase it higher\n" +
-            "Or if you're feeling daredevil. Lower it. I'm not your dad (will tell dad jokes though.");
+            "这项功能是为了安全而存在的！如果你想降低提交物品前的延迟，请便。\n" +
+            "安全范围大概是在2500ms左右？如果你有动画锁的话你可以适当增加延迟。\n" +
+            "或者如果你不怕死的话拉到多低都没问题。 I'm not your dad (will tell dad jokes though.");
         if (delayCraft)
         {
             ImGui.SetNextItemWidth(150);
@@ -158,7 +158,7 @@ internal class SettingsWindow : Window
                 {
                     int minGp = currentMinGp;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Minimum GP");
+                    ImGui.Text("最低GP");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(200);
                     if (ImGui.SliderInt($"###Slider{uniqueId}{entryName}", ref minGp, minGpLimit, maxGpLimit))
@@ -168,7 +168,7 @@ internal class SettingsWindow : Window
                     }
                     int maxUse = currentMaxUse;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Maximum use count");
+                    ImGui.Text("最大使用次数");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(100);
                     if (ImGui.InputInt($"###Slider{uniqueId}{entryName}_1", ref maxUse, 1))
@@ -176,8 +176,8 @@ internal class SettingsWindow : Window
                         if (maxUse != currentMaxUse)
                             onMaxUseChange(maxUse);
                     }
-                    ImGuiEx.HelpMarker("Set to -1 to allow for infinite uses \n" +
-                                       "Set to 1-> X to set maximum amount of uses per mission");
+                    ImGuiEx.HelpMarker("设置为-1即可不限制使用次数 \n" +
+                                       "设置为1到X来设置每一个任务重的使用次数");
 
                     ImGui.TreePop();
                 }
@@ -203,7 +203,7 @@ internal class SettingsWindow : Window
                 {
                     int minGp = currentMinGp;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Minimum GP");
+                    ImGui.Text("最低GP");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(200);
                     if (ImGui.SliderInt($"###Slider{uniqueId}{entryName}", ref minGp, minGpLimit, maxGpLimit))
@@ -221,8 +221,8 @@ internal class SettingsWindow : Window
                         if (maxUse != currentMaxUse)
                             onMaxUseChange(maxUse);
                     }
-                    ImGuiEx.HelpMarker("Set to -1 to allow for infinite uses \n" +
-                                       "Set to 1-> X to set maximum amount of uses per mission");
+                    ImGuiEx.HelpMarker("设置为-1即可不限制使用次数 \n" +
+                                       "设置为1到X来设置每一个任务中的最多使用次数");
 
                     int MinItem = MinItemUsage;
                     ImGui.Text($"Minimum BYII Item");
@@ -245,7 +245,7 @@ internal class SettingsWindow : Window
 
         int maxGp = 1200;
 
-        if (ImGui.Checkbox("Self Repair on Gather", ref SelfRepairGather))
+        if (ImGui.Checkbox("采集过程中自动修理装备", ref SelfRepairGather))
         {
             if (C.SelfRepairGather != SelfRepairGather)
             {
@@ -256,7 +256,7 @@ internal class SettingsWindow : Window
         if (SelfRepairGather)
         {
             ImGui.Indent(15);
-            ImGui.Text("Repair at");
+            ImGui.Text("耐久为");
             ImGui.SameLine();
             ImGui.SetNextItemWidth(150);
             if (ImGui.SliderFloat("###Repair %", ref SelfRepairPercent, 0f, 99f, "%.0f%%"))
@@ -269,7 +269,7 @@ internal class SettingsWindow : Window
             }
             ImGui.Unindent(15);
         }
-        if (ImGui.Checkbox("Extract Spiritbond on Gather", ref SelfSpiritbondGather))
+        if (ImGui.Checkbox("自动精炼魔晶石", ref SelfSpiritbondGather))
         {
             if (C.SelfSpiritbondGather != SelfSpiritbondGather)
             {
@@ -277,39 +277,39 @@ internal class SettingsWindow : Window
                 C.Save();
             }
         }
-        if (ImGui.Checkbox("Auto Cordial", ref AutoCordial))
+        if (ImGui.Checkbox("自动使用强心剂", ref AutoCordial))
         {
             C.AutoCordial = AutoCordial;
             C.Save();
         }
-        ImGuiEx.HelpMarker("Will only work while using ICE and not manual mode\n" +
-                           "Will also pause pandora cordial usage while on the moon");
+        ImGuiEx.HelpMarker("只在使用ICE时有效，手动模式下无效\n" +
+                           "在月球探索时会停止pandora强心剂使用相关功能");
         if (AutoCordial)
         {
-            if (ImGui.TreeNode("Cordial Settings"))
+            if (ImGui.TreeNode("强心剂设置"))
             {
-                if (ImGui.Checkbox("Inverse Priority (Watered -> Regular -> Hi)", ref InverseCordialPrio))
+                if (ImGui.Checkbox("反转使用优先级 (轻型 -> 普通 -> 高级)", ref InverseCordialPrio))
                 {
                     C.inverseCordialPrio = InverseCordialPrio;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Prevent Overcap", ref PreventOvercap))
+                if (ImGui.Checkbox("防止GP溢出", ref PreventOvercap))
                 {
                     C.PreventOvercap = PreventOvercap;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Use on Fisher", ref UseOnFisher))
+                if (ImGui.Checkbox("职业为捕鱼人时使用", ref UseOnFisher))
                 {
                     C.UseOnFisher = UseOnFisher;
                     C.Save();
                 }
-                if (ImGui.Checkbox("Only use in mission", ref useOnlyInMission))
+                if (ImGui.Checkbox("仅在任务中使用", ref useOnlyInMission))
                 {
                     C.UseOnlyInMission = useOnlyInMission;
                     C.Save();
                 }
                 ImGui.SetNextItemWidth(200);
-                if (ImGui.SliderInt("Gp Threshold", ref CordialMinGp, 0, maxGp))
+                if (ImGui.SliderInt("GP阈值", ref CordialMinGp, 0, maxGp))
                 {
                     C.CordialMinGp = CordialMinGp;
                     C.Save();
@@ -322,10 +322,10 @@ internal class SettingsWindow : Window
         ImGui.Dummy(new(0, 5));
 
         ImGui.SetNextItemWidth(200);
-        ImGui.InputText("New Profile Name", ref newProfileName, 64);
+        ImGui.InputText("新方案名称", ref newProfileName, 64);
         using (ImRaii.Disabled(newProfileName == ""))
         {
-            if (ImGui.Button("Add Profile") && !string.IsNullOrWhiteSpace(newProfileName))
+            if (ImGui.Button("添加方案") && !string.IsNullOrWhiteSpace(newProfileName))
             {
                 if (!C.GatherSettings.Any(x => x.Name == newProfileName))
                 {
@@ -344,12 +344,12 @@ internal class SettingsWindow : Window
         // ------------------
         ImGui.SetColumnWidth(0, 350);
 
-        ImGui.Text("Gather Profiles");
+        ImGui.Text("采集方案");
 
         bool canDelete = C.GatherSettings.Count > 1 && C.SelectedGatherIndex != 0;
         using (ImRaii.Disabled(!canDelete))
         {
-            if (ImGui.Button("Delete Selected Profile"))
+            if (ImGui.Button("删除所选方案"))
             {
                 var deletedProfile = C.GatherSettings[C.SelectedGatherIndex];
                 int deletedId = deletedProfile.Id;
@@ -390,8 +390,8 @@ internal class SettingsWindow : Window
 
         GatherBuffProfile entry = C.GatherSettings[C.SelectedGatherIndex];
 
-        ImGui.Combo("Mission Type", ref MissionIndex, MissionTypes, MissionTypes.Length);
-        if (ImGui.Button("Apply to Mission Types"))
+        ImGui.Combo("任务类型", ref MissionIndex, MissionTypes, MissionTypes.Length);
+        if (ImGui.Button("应用至任务类型"))
         {
             foreach (var mission in C.Missions)
             {
@@ -448,20 +448,20 @@ internal class SettingsWindow : Window
 
         // Pathfinding
         int pathfinding = entry.Pathfinding;
-        string[] modes = ["Simple", "Nearest", "Cyclic"];
+        string[] modes = ["简单", "就近", "巡回"];
         ImGui.SetNextItemWidth(100);
-        if (ImGui.Combo("Pathfinding mode", ref pathfinding, modes, modes.Length))
+        if (ImGui.Combo("寻路模式", ref pathfinding, modes, modes.Length))
         {
             entry.Pathfinding = pathfinding;
             C.Save();
         }
-        ImGuiEx.HelpMarker("Simple - From 1st node in list until the last.\nNearest - Always go to Nearest node then find a path that minimises distance through all remaining nodes.\nCyclic - Find nodes that are close together and stick to those nodes only.");
+        ImGuiEx.HelpMarker("简单 - 从第一个列表上第一个节点到最后一个节点\n就近 - 总是去最近的节点并在剩余所有节点当中计算出一条最短路径\n巡回 - 找到相近的一群节点，并只在这些节点中巡回");
         if (pathfinding == 2)
         {
             ImGui.SameLine();
             ImGui.SetNextItemWidth(100);
             int cycle = entry.TSPCycleSize;
-            if (ImGui.InputInt("Cycle size", ref cycle, 1))
+            if (ImGui.InputInt("巡回范围", ref cycle, 1))
             {
                 entry.TSPCycleSize = cycle >= 2 ? cycle : 2;
                 C.Save();
@@ -471,7 +471,7 @@ internal class SettingsWindow : Window
         // GP Settings
         int minGP = entry.MinimumGP;
         ImGui.SetNextItemWidth(100);
-        if (ImGui.SliderInt("Minimum GP to start mission", ref minGP, -1, maxGp))
+        if (ImGui.SliderInt("开始任务时最少GP", ref minGP, -1, maxGp))
         {
             entry.MinimumGP = minGP;
             C.Save();
@@ -480,12 +480,12 @@ internal class SettingsWindow : Window
         // Multiply gathered items on FIRST gather loop only. Should only be used for Dual Class really.
         int gatherMult = entry.InitialGatheringItemMultiplier;
         ImGui.SetNextItemWidth(100);
-        if (ImGui.InputInt("Dual Class Craft Amount", ref gatherMult, 1))
+        if (ImGui.InputInt("双职业任务生产所需原料数", ref gatherMult, 1))
         {
             entry.InitialGatheringItemMultiplier = gatherMult >= 1 ? gatherMult : 1;
             C.Save();
         }
-        ImGuiEx.HelpMarker("This increases how many items you gather before you are 'done' before switching to crafting.\nSet this to however many items you need to craft to reach your target score.\nOnly affects Dual Class missions.");
+        ImGuiEx.HelpMarker("这会增加你切换到生产之前你采集的物品数\n把这个功能设置到你能达到目标分数所需原材料数\n这个功能只会影响双职业任务");
 
         // Boon Increase 2 (+30% Increase)
         DrawBuffSetting(
@@ -703,36 +703,36 @@ internal class SettingsWindow : Window
 
     private void GambaWheel()
     {
-        if (ImGui.Checkbox("Enable Gamba", ref gambaEnabled))
+        if (ImGui.Checkbox("自动好运道", ref gambaEnabled))
         {
             C.GambaEnabled = gambaEnabled;
             C.Save();
         }
-        ImGuiEx.HelpMarker("To run this, make sure you have the gamble wheels shown at Orbitingway, and press start. It will full auto from there.");
+        ImGuiEx.HelpMarker("为了成功运行该功能，确保你已经在环行威处打开了宇宙好运道，然后点击开始。接下就就可以解放双手了。");
         if (gambaEnabled)
         {
             ImGui.SetNextItemWidth(150);
-            if (ImGui.SliderInt("Gamba Delay", ref gambaDelay, 50, 2000))
+            if (ImGui.SliderInt("好运道延迟", ref gambaDelay, 50, 2000))
             {
                 C.GambaDelay = gambaDelay;
                 C.Save();
             }
             ImGui.SameLine();
             ImGui.SetNextItemWidth(150);
-            if (ImGui.SliderInt("Mininum credits to keep", ref gambaCreditsMinimum, 0, 10000))
+            if (ImGui.SliderInt("最少持有的月球信用点数", ref gambaCreditsMinimum, 0, 10000))
             {
                 C.GambaCreditsMinimum = gambaCreditsMinimum;
                 C.Save();
             }
         }
-        if (ImGui.Checkbox("Prefer smaller wheel", ref gambaPreferSmallerWheel))
+        if (ImGui.Checkbox("选择更小的轮盘", ref gambaPreferSmallerWheel))
         {
             C.GambaPreferSmallerWheel = gambaPreferSmallerWheel;
             C.Save();
         }
-        ImGuiEx.HelpMarker("This will make the Gamba prefer wheels with less items.");
+        ImGuiEx.HelpMarker("这将会让该功能倾向于选择物品更少的轮盘");
         ImGui.Separator();
-        ImGui.TextUnformatted("Configure the weights for each item in the Gamba. Higher weight = more desirable.");
+        ImGui.TextUnformatted("为每个物品配置权重。更高的权重=你更想要的东西");
         ImGui.Spacing();
         foreach (GambaType type in Enum.GetValues(typeof(GambaType)))
         {
@@ -756,7 +756,7 @@ internal class SettingsWindow : Window
                 ImGui.TreePop();
             }
         }
-        if (ImGui.Button("Reset Weights"))
+        if (ImGui.Button("重置权重"))
         {
             TaskGamba.EnsureGambaWeightsInitialized(true);
         }
@@ -767,13 +767,13 @@ internal class SettingsWindow : Window
 
     private void Overlay()
     {
-        if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+        if (ImGui.Checkbox("显示悬浮窗", ref showOverlay))
         {
             C.ShowOverlay = showOverlay;
             C.Save();
         }
 
-        if (ImGui.Checkbox("Show Seconds", ref ShowSeconds))
+        if (ImGui.Checkbox("显示秒数", ref ShowSeconds))
         {
             C.ShowSeconds = ShowSeconds;
             C.Save();
@@ -784,7 +784,7 @@ internal class SettingsWindow : Window
 
     private void Misc()
     {
-        if (ImGui.Checkbox("Enable Auto Sprint", ref EnableAutoSprint))
+        if (ImGui.Checkbox("自动冲刺", ref EnableAutoSprint))
         {
             C.EnableAutoSprint = EnableAutoSprint;
             C.Save();

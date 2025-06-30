@@ -299,7 +299,7 @@ internal class SettingsWindowV2 : Window
                             onMaxUseChange(maxUse);
                     }
                     ImGuiEx.HelpMarker("设置为-1即可不限制使用次数 \n" +
-                                       "设置为1到X来设置每一个任务重的使用次数");
+                                       "设置为1到X来设置每一个任务中的最多使用次数");
 
                     int MinItem = MinItemUsage;
                     ImGui.Text($"Minimum BYII Item");
