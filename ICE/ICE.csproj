@@ -20,9 +20,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Dalamud.dll" />
+    <None Include="FFXIVClientStructs.dll" />
+    <None Include="ImGui.NET.dll" />
+    <None Include="ImGuiScene.dll" />
+    <None Include="InteropGenerator.Runtime.dll" />
     <None Include="Lumina.dll" />
     <None Include="Lumina.Excel.dll" />
     <None Include="Newtonsoft.Json.dll" />
+    <None Include="PInvoke.User32.dll" />
+    <None Include="PInvoke.Windows.Core.dll" />
     <None Include="Serilog.dll" />
   </ItemGroup>
 

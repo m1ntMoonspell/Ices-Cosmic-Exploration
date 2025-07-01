@@ -11,40 +11,40 @@ namespace ICE.Scheduler.Handlers
         private static readonly Dictionary<string, (JobPairs first, JobPairs second)[]> sinusRedAlert = new()
         {
             {
-                "meteorite shower",
+                "流星雨",
                 new(JobPairs first, JobPairs second)[]
                 {
                     (
-                        ("ARM/GSM", 1237, 22.6f, 14.9f),
-                        ("BSM/LTW/MIN", 1237, 16.3f, 24.4f)
+                        ("铸甲匠/雕金匠", 1237, 22.6f, 14.9f),
+                        ("锻铁匠/制革匠/采矿工", 1237, 16.3f, 24.4f)
                     )
                 }
             },
             {
-                "sporing mist",
+                "孢子雾",
                 new(JobPairs first, JobPairs second)[]
                 {
                     (
-                        ("CUL/BTN/FSH", 1237, 24.5f, 16.8f),
-                        ("CRP/LTW/WVR", 1237, 29.0f, 35.4f)
+                        ("烹调师/园艺工/捕鱼人", 1237, 24.5f, 16.8f),
+                        ("刻木匠/制革匠/裁衣匠", 1237, 29.0f, 35.4f)
                     ),
                     (
-                        ("BSM/ALC", 1237, 32.2f, 22.2f),
-                        ("CRP/WVR/BTN", 1237, 36.0f, 23.4f)
+                        ("锻铁匠/炼金术士", 1237, 32.2f, 22.2f),
+                        ("刻木匠/裁衣匠/园艺工", 1237, 36.0f, 23.4f)
                     )
                 }
             },
             {
-                "astromagnetic storm",
+                "磁暴",
                 new(JobPairs first, JobPairs second)[]
                 {
                     (
-                        ("ARM/GSM/ALC", 1237, 24.9f, 33.1f),
-                        ("MIN/FSH", 1237, 19.2f, 15.0f)
+                        ("铸甲匠/雕金匠/炼金术士", 1237, 24.9f, 33.1f),
+                        ("采矿工/捕鱼人", 1237, 19.2f, 15.0f)
                     ),
                     (
-                        ("CRP/GSM/WVR", 1237, 19.8f, 36.8f),
-                        ("CUL/MIN/FSH", 1237, 12.3f, 20.0f)
+                        ("刻木匠/雕金匠/裁衣匠", 1237, 19.8f, 36.8f),
+                        ("烹调师/采矿工/捕鱼人", 1237, 12.3f, 20.0f)
                     )
                 }
             },

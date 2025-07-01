@@ -65,7 +65,7 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (hud.LunarCredit >= C.LunarCreditsCap)
                     {
-                        DuoLog.Information($"Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
+                        DuoLog.Information($"停止运行，因为你有 {hud.LunarCredit} 月球信用点");
                         SchedulerMain.DisablePlugin();
                         return;
                     }
@@ -77,7 +77,7 @@ namespace ICE.Scheduler.Tasks
                 var (classScore, _, _, _) = MissionHandler.GetCosmicClassScores();
                 if (classScore >= C.CosmicScoreCap)
                 {
-                    DuoLog.Information($"Stopping the plugin as you have {classScore} Cosmic Score");
+                    DuoLog.Information($"停止运行，因为你达到了 {classScore} 职业技巧点");
                     SchedulerMain.DisablePlugin();
                     return;
                 }
@@ -85,7 +85,7 @@ namespace ICE.Scheduler.Tasks
 
             if (Player.Level >= C.TargetLevel && C.StopWhenLevel)
             {
-                DuoLog.Information($"Stopping the plugin as you have reached level {C.TargetLevel}");
+                DuoLog.Information($"停止运行，因为你达到了 {C.TargetLevel} 级");
                 SchedulerMain.DisablePlugin();
             }
             if (SchedulerMain.StopBeforeGrab)
@@ -99,7 +99,7 @@ namespace ICE.Scheduler.Tasks
 
             if (!(HasCritical || HasWeather || HasTimed || HasSequence || HasStandard))
             {
-                DuoLog.Error($"No missions enabled for {Svc.ClientState.LocalPlayer?.ClassJob.Value.Name}. Did you forget to set me up?");
+                DuoLog.Error($"当前职业 {Svc.ClientState.LocalPlayer?.ClassJob.Value.Name} 中无可用任务. 你是不是忘记设置了？");
                 SchedulerMain.DisablePlugin();
                 return;
             }
@@ -293,7 +293,7 @@ namespace ICE.Scheduler.Tasks
         {
             if (MissionId != 0)
             {
-                IceLogging.Debug("[Weather Mission] You already have a mission found, skipping finding weather mission");
+                IceLogging.Debug("[天气限时任务] 当前已有任务，跳过寻找天气限时任务");
                 return true;
             }
             if (EzThrottler.Throttle("FindWeatherMission"))
@@ -339,7 +339,7 @@ namespace ICE.Scheduler.Tasks
                 }
 
                 if (MissionId == 0)
-                    IceLogging.Debug("No mission was found under weather.");
+                    IceLogging.Debug("该天气下没有找到任务");
                 return true;
             }
             return false;

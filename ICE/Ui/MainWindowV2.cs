@@ -1241,7 +1241,7 @@ namespace ICE.Ui
                 ImGui.EndCombo();
             }
 
-            if (ImGui.Button("应用至选择的档案"))
+            if (ImGui.Button("应用至选择的职业"))
             {
                 var currentJob = PlayerHelper.GetClassJobId();
 

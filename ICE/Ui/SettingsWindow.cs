@@ -8,7 +8,7 @@ namespace ICE.Ui;
 internal class SettingsWindow : Window
 {
     public SettingsWindow() :
-        base($"Ice's Cosmic Exploration {P.GetType().Assembly.GetName().Version} ###ICESettingsWindow")
+        base($"Ice的宇宙探险！ {P.GetType().Assembly.GetName().Version} ###ICESettingsWindow")
     {
         Flags = ImGuiWindowFlags.None;
         SizeConstraints = new()
@@ -135,7 +135,7 @@ internal class SettingsWindow : Window
     private bool useOnlyInMission = C.UseOnlyInMission;
     private string newProfileName = "";
 
-    private string[] MissionTypes = ["Limited Nodes", "Gather x Amount", "Time Attack", "Chained Scoring", "Boon Scoring", "Chain + Boon Scoring", "Dual Class"];
+    private string[] MissionTypes = ["限定节点", "Gather x Amount", "限时任务", "Chained Scoring", "Boon Scoring", "Chain + Boon Scoring", "双职业"];
     private int MissionIndex = 0;
 
     private void GatherSettings()
@@ -213,7 +213,7 @@ internal class SettingsWindow : Window
                     }
                     int maxUse = currentMaxUse;
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Maximum use count");
+                    ImGui.Text("最大使用次数");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(100);
                     if (ImGui.InputInt($"###Slider{uniqueId}{entryName}_1", ref maxUse, 1))
@@ -235,7 +235,7 @@ internal class SettingsWindow : Window
                     }
                     ImGuiEx.HelpMarker($"Set the minimum amount of items that you want BYII to activate on\n" +
                                        $"Ex. Setting it to 2 will make it to where if you only activate if you need need 2 or more items\n" +
-                                       $"Useful if you're trying to save gp on gather x amount or dual class missions");
+                                       $"在双职业任务和采集N个数量物品上可以节省GP");
 
                     ImGui.TreePop();
                 }
@@ -489,14 +489,14 @@ internal class SettingsWindow : Window
 
         // Boon Increase 2 (+30% Increase)
         DrawBuffSetting(
-            label: "Pioneer's / Mountaineer's Gift II",
+            label: "沃土的馈赠II / 富矿的馈赠II",
             uniqueId: $"Boon2Inc{entry.Id}",
             currentEnabled: entry.Buffs.BoonIncrease2,
             currentMinGp: entry.Buffs.BoonIncrease2Gp,
             minGpLimit: 100,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Apply a 30% buff to your boon chance.",
+            ActionInfo: "额外采集奖励发生率提升30%",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.BoonIncrease2 = newVal;
@@ -517,14 +517,14 @@ internal class SettingsWindow : Window
 
         // Boon Increase 1 (+10% Increase)
         DrawBuffSetting(
-            label: "Pioneer's / Mountaineer's Gift I",
+            label: "沃土的馈赠I / 富矿的馈赠I",
             uniqueId: $"Boon1Inc{entry.Id}",
             currentEnabled: entry.Buffs.BoonIncrease1,
             currentMinGp: entry.Buffs.BoonIncrease1Gp,
             minGpLimit: 50,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Apply a 10% buff to your boon chance.",
+            ActionInfo: "额外采集奖励发生率提升10%",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.BoonIncrease1 = newVal;
@@ -545,14 +545,14 @@ internal class SettingsWindow : Window
 
         // Tidings (+2 to boon instead of +1)
         DrawBuffSetting(
-            label: "Nophica's / Nald'thal's Tidings Buff",
+            label: "诺菲卡福音 / 纳尔札尔福音",
             uniqueId: $"TidingsBuff{entry.Id}",
             currentEnabled: entry.Buffs.TidingsBool,
             currentMinGp: entry.Buffs.TidingsGp,
             minGpLimit: 200,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Increases item yield from Gatherer's Boon by 1",
+            ActionInfo: "额外采集奖励发生时的获得数增加1个",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.TidingsBool = newVal;
@@ -573,15 +573,15 @@ internal class SettingsWindow : Window
 
         // Yield II (+2 to all items on node)
         DrawBuffSetting(
-            label: "Blessed / Kings Yield II",
+            label: "天赐收成II / 莫非王土II",
             uniqueId: $"Blessed/KingsYieldIIBuff{entry.Id}",
             currentEnabled: entry.Buffs.YieldII,
             currentMinGp: entry.Buffs.YieldIIGp,
             minGpLimit: 500,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Increases the number of items obtained when gathering by 2\n" +
-                        "Will only apply when the gathering node has full durability",
+            ActionInfo: "令获得数增加2个\n" +
+                        "只会在采集点耐久度为满时使用",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.YieldII = newVal;
@@ -602,15 +602,15 @@ internal class SettingsWindow : Window
 
         // Yield I (+1 to all items on node)
         DrawBuffSetting(
-            label: "Blessed / Kings Yield I",
+            label: "天赐收成I / 莫非王土I",
             uniqueId: $"Blessed/KingsYieldIBuff{entry.Id}",
             currentEnabled: entry.Buffs.YieldI,
             currentMinGp: entry.Buffs.YieldIGp,
             minGpLimit: 400,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Increases the number of items obtained when gathering by 1\n" +
-                        "Will only apply when the gathering node has full durability",
+            ActionInfo: "令获得数增加1个\n" +
+                        "只会在采集点耐久度为满时使用",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.YieldI = newVal;
@@ -631,15 +631,15 @@ internal class SettingsWindow : Window
 
         // Bonus Integrity (+1 integrity)
         DrawBuffSetting(
-            label: "Ageless Words / Solid Reason",
+            label: "农夫之智 / 石工之理",
             uniqueId: $"Incrase Intregity{entry.Id}",
             currentEnabled: entry.Buffs.BonusIntegrity,
             currentMinGp: entry.Buffs.BonusIntegrityGp,
             minGpLimit: 300,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Increase the Integrity by 1\n" +
-                        "50% chance to grant Eureka Moment",
+            ActionInfo: "恢复1次采集次数\n" +
+                        "50%几率附加理智同兴预备状态",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.BonusIntegrity = newVal;
@@ -660,15 +660,15 @@ internal class SettingsWindow : Window
 
         // Bountiful Yield/Harvest II (+Amount based on gathering)
         DrawCustomBuffSetting(
-            label: "Bountiful Yield II / Bountiful Harvest II",
+            label: "丰收II / 高产II",
             uniqueId: $"Bountiful Yield II {entry.Id}",
             currentEnabled: entry.Buffs.BountifulYieldII,
             currentMinGp: entry.Buffs.BountifulYieldIIGp,
             minGpLimit: 100,
             maxGpLimit: maxGp,
             entryName: entry.Name,
-            ActionInfo: "Increase item's gained on next gathering attempt by 1, 2, or 3 \n" +
-                        "This is based on your gathering rating",
+            ActionInfo: "令下一次采集的获得数增加 \n" +
+                        "获得力影响获得数的增加量（最小1～最大3）",
             onEnabledChange: newVal =>
             {
                 entry.Buffs.BountifulYieldII = newVal;
